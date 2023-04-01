@@ -10,9 +10,17 @@
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
 
       <v-toolbar-title>CoCo</v-toolbar-title>
+
+      <v-spacer></v-spacer>
+
+      <v-avatar v-if="user" size="36px">
+        <v-img v-if="user.avatar" alt="Avatar" :src="user.avatar"></v-img>
+        <v-icon v-else icon="mdi-account"></v-icon>
+      </v-avatar>
     </v-app-bar>
 
     <v-main>
+      <Login />
     </v-main>
   </v-app>
 </template>
@@ -28,6 +36,12 @@ import { useAppStore } from './store/app.js'
 import { storeToRefs } from 'pinia';
 
 import SensorType from './components/SensorType.vue'
+import Login from './components/Login.vue'
 
-const { sensor_types } = storeToRefs(useAppStore())
+const { sensor_types, token, user, login_dialog } = storeToRefs(useAppStore());
+
+if (token) {
+  useAppStore().connect();
+} else // we need to show login dialog..
+  login_dialog.value = true;
 </script>

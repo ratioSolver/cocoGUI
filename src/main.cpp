@@ -9,9 +9,18 @@ int main(int argc, char const *argv[])
     coco::mongo_db mongodb;
     coco::coco_core cc(mongodb);
 
-    coco::mqtt_middleware mqtt_mw(cc);
+    cc.add_middleware(new coco::mqtt_middleware(cc));
+
+    cc.connect();
+
+    cc.load_rules({"extern/coco/rules/rules.clp"});
+
+    cc.init();
 
     coco::coco_gui::coco_gui gui(cc);
+    auto srv_st = std::async(std::launch::async, [&]
+                             { gui.start(); });
+    gui.wait_for_server_start();
 
     return 0;
 }
