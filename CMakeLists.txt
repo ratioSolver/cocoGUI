@@ -14,6 +14,8 @@ include(CMakePackageConfigHelpers)
 set(COCO_HOST "127.0.0.1" CACHE STRING "The COCO Host")
 set(COCO_PORT "8080" CACHE STRING "The COCO Port")
 
+set(COCO_ROOT "CoCo-GUI" CACHE STRING "The COCO root" FORCE)
+
 message(STATUS "CoCo GUI IP:            ${COCO_HOST}")
 message(STATUS "CoCo GUI port:          ${COCO_PORT}")
 

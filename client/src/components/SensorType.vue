@@ -1,8 +1,6 @@
 <template>
   <v-list-item>
-    <v-list-item-content>
-      <v-list-item-title>{{ sensor_type.name }}</v-list-item-title>
-    </v-list-item-content>
+    <v-list-item-title>{{ sensor_type.name }}</v-list-item-title>
   </v-list-item>
 </template>
 

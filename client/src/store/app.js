@@ -39,6 +39,11 @@ export const useAppStore = defineStore('app', {
     logout() {
       localStorage.removeItem('token');
       this.token = null;
+      this.user = null;
+      this.sensor_types = [];
+      this.sensors = [];
+      this.users = [];
+      this.login_dialog = true;
     },
     connect(url = 'ws://' + server.host + ':' + server.port + '/coco', timeout = 1000) {
       this.socket = new WebSocket(url);
@@ -52,7 +57,10 @@ export const useAppStore = defineStore('app', {
         let data = JSON.parse(msg.data);
         switch (data.type) {
           case 'connect':
-            this.user = JSON.parse(data.user);
+            if (data.success)
+              this.user = data.user;
+            else
+              this.logout();
             break;
           case 'sensor_types':
             this.sensor_types = data.sensor_types;

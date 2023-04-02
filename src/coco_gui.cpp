@@ -54,6 +54,10 @@ namespace coco::coco_gui
 
                 if (j["type"] == "connect") {
                     std::string token = j["token"];
+                    if(!cc.get_database().has_user(token)) {
+                        conn.send_text(json::json{{"type", "connect"}, {"success", false}}.to_string());
+                        return;
+                    }
                     auto& usr = cc.get_database().get_user(token);
                     if (std::find_if(usr.get_roots().begin(), usr.get_roots().end(), [&cc](const std::string &root) { return root == cc.get_database().get_root(); }) == usr.get_roots().end())
                     {
@@ -101,6 +105,23 @@ namespace coco::coco_gui
                     }
                     j_sensors["sensors"] = std::move(c_sensors);
                     conn.send_text(j_sensors.to_string());
+
+                    if (usr.get_data()["type"] == "admin") {
+                        json::json j_users;
+                        j_users["type"] = "users";
+                        json::json c_users(json::json_type::array);
+                        for (const auto &user : cc.get_database().get_users())
+                        {
+                            json::json j_u{{"id", user.get().get_id()},
+                                           {"email", user.get().get_email()},
+                                           {"first_name", user.get().get_first_name()},
+                                           {"last_name", user.get().get_last_name()},
+                                           {"type", user.get().get_data()["type"]}};
+                            c_users.push_back(std::move(j_u));
+                        }
+                        j_users["users"] = std::move(c_users);
+                        conn.send_text(j_users.to_string());
+                    }
                 } });
     }
 
