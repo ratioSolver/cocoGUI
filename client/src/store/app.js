@@ -74,5 +74,19 @@ export const useAppStore = defineStore('app', {
         }
       };
     }
+  },
+  getters: {
+    parameter_type: (state) => {
+      return (type) => {
+        switch (type) {
+          case 1: return 'int';
+          case 2: return 'float';
+          case 3: return 'bool';
+          case 4: return 'symbol';
+          case 5: return 'string';
+          default: return 'unknown';
+        }
+      };
+    }
   }
 })

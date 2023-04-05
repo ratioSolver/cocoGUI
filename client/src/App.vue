@@ -1,14 +1,15 @@
 <template>
   <v-app>
     <v-navigation-drawer v-model="drawer">
-      <v-list dense>
-        <SensorType v-for="sensor_type in sensor_types" :key="sensor_type.id" :sensor_type="sensor_type" />
-      </v-list>
-      <v-list dense>
-        <Sensor v-for="sensor in sensors" :key="sensor.id" :sensor="sensor" />
-      </v-list>
-      <v-list dense>
-        <User v-for="usr in users" :key="usr.id" :user="usr" />
+      <v-list dense v-model:selected="selected_item">
+        <v-list-subheader inset>Sensor types</v-list-subheader>
+        <SensorTypeListItem v-for="sensor_type in sensor_types" :key="sensor_type.id" :sensor_type="sensor_type" />
+        <v-divider></v-divider>
+        <v-list-subheader inset>Sensors</v-list-subheader>
+        <SensorListItem v-for="sensor in sensors" :key="sensor.id" :sensor="sensor" />
+        <v-divider></v-divider>
+        <v-list-subheader inset>Users</v-list-subheader>
+        <UserListItem v-for="user in users" :key="user.id" :user="user" />
       </v-list>
     </v-navigation-drawer>
 
@@ -27,6 +28,12 @@
     </v-app-bar>
 
     <v-main>
+      <v-window v-model="selected_item">
+        <SensorType v-for="sensor_type in sensor_types" :key="sensor_type.id" :sensor_type="sensor_type" />
+        <Sensor v-for="sensor in sensors" :key="sensor.id" :sensor="sensor" />
+        <User v-for="user in users" :key="user.id" :user="user" />
+      </v-window>
+
       <Login />
     </v-main>
   </v-app>
@@ -34,7 +41,7 @@
 
 <script>
 export default {
-  data: () => ({ drawer: false }),
+  data: () => ({ drawer: false, selected_item: null }),
 }
 </script>
 
@@ -42,8 +49,11 @@ export default {
 import { useAppStore } from './store/app.js'
 import { storeToRefs } from 'pinia';
 
+import SensorTypeListItem from './components/SensorTypeListItem.vue'
 import SensorType from './components/SensorType.vue'
+import SensorListItem from './components/SensorListItem.vue'
 import Sensor from './components/Sensor.vue'
+import UserListItem from './components/UserListItem.vue'
 import User from './components/User.vue'
 import Login from './components/Login.vue'
 
