@@ -9,5 +9,5 @@ defineProps({
     sensor_type: Object,
     required: true,
   },
-})
+});
 </script>

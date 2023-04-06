@@ -6,10 +6,13 @@
         <SensorTypeListItem v-for="sensor_type in sensor_types" :key="sensor_type.id" :sensor_type="sensor_type" />
         <v-divider></v-divider>
         <v-list-subheader inset>Sensors</v-list-subheader>
-        <SensorListItem v-for="sensor in sensors" :key="sensor.id" :sensor="sensor" />
+        <SensorListItem v-for="[id, sensor] in sensors" :key="id" :sensor="sensor" />
+        <v-divider></v-divider>
+        <v-list-subheader inset>Solvers</v-list-subheader>
+        <SolverListItem v-for="[id, solver] in solvers" :key="id" :solver="solver" />
         <v-divider></v-divider>
         <v-list-subheader inset>Users</v-list-subheader>
-        <UserListItem v-for="user in users" :key="user.id" :user="user" />
+        <UserListItem v-for="[id, user] in users" :key="id" :user="user" />
       </v-list>
     </v-navigation-drawer>
 
@@ -30,8 +33,9 @@
     <v-main>
       <v-window v-model="selected_item">
         <SensorType v-for="sensor_type in sensor_types" :key="sensor_type.id" :sensor_type="sensor_type" />
-        <Sensor v-for="sensor in sensors" :key="sensor.id" :sensor="sensor" />
-        <User v-for="user in users" :key="user.id" :user="user" />
+        <Sensor v-for="[id, sensor] in sensors" :key="id" :sensor="sensor" />
+        <Solver v-for="[id, solver] in solvers" :key="id" :solver="solver" />
+        <User v-for="[id, user] in users" :key="id" :user="user" />
       </v-window>
 
       <Login />
@@ -46,18 +50,20 @@ export default {
 </script>
 
 <script setup>
-import { useAppStore } from './store/app.js'
+import { useAppStore } from '@/store/app';
 import { storeToRefs } from 'pinia';
 
 import SensorTypeListItem from './components/SensorTypeListItem.vue'
 import SensorType from './components/SensorType.vue'
 import SensorListItem from './components/SensorListItem.vue'
 import Sensor from './components/Sensor.vue'
+import SolverListItem from './components/SolverListItem.vue'
+import Solver from './components/Solver.vue'
 import UserListItem from './components/UserListItem.vue'
 import User from './components/User.vue'
 import Login from './components/Login.vue'
 
-const { sensor_types, sensors, users, token, user, login_dialog } = storeToRefs(useAppStore());
+const { sensor_types, sensors, solvers, users, token, user, login_dialog } = storeToRefs(useAppStore());
 
 if (token) {
   useAppStore().connect();

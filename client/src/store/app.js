@@ -1,5 +1,6 @@
 // Utilities
 import { defineStore } from 'pinia'
+import { SolverD3 } from 'ratio-solver/solverD3';
 
 const server = {
   host: 'localhost',
@@ -12,8 +13,9 @@ export const useAppStore = defineStore('app', {
     user: null,
     login_dialog: false,
     sensor_types: [],
-    sensors: [],
-    users: []
+    sensors: new Map(),
+    solvers: new Map(),
+    users: new Map()
   }),
   actions: {
     login(email, password) {
@@ -41,8 +43,9 @@ export const useAppStore = defineStore('app', {
       this.token = null;
       this.user = null;
       this.sensor_types = [];
-      this.sensors = [];
-      this.users = [];
+      this.sensors.clear();
+      this.solvers.clear();
+      this.users.clear();
       this.login_dialog = true;
     },
     connect(url = 'ws://' + server.host + ':' + server.port + '/coco', timeout = 1000) {
@@ -62,14 +65,29 @@ export const useAppStore = defineStore('app', {
             else
               this.logout();
             break;
+          case 'user_connected':
+            this.users.get(data.user).connected = true;
+            break;
+          case 'user_disconnected':
+            this.users.get(data.user).connected = false;
+            break;
           case 'sensor_types':
             this.sensor_types = data.sensor_types;
             break;
           case 'sensors':
-            this.sensors = data.sensors;
+            for (let sensor of data.sensors)
+              this.sensors.set(sensor.id, sensor);
+            break;
+          case 'solvers':
+            for (let solver of data.solvers) {
+              const slv = new SolverD3(solver.name, solver.state);
+              this.solvers.set(solver.id, slv);
+              nextTick(() => { slv.init(this.get_timelines_id(slv.id), this.get_graph_id(slv.id)); });
+            }
             break;
           case 'users':
-            this.users = data.users;
+            for (let user of data.users)
+              this.users.set(user.id, user);
             break;
         }
       };
@@ -87,6 +105,8 @@ export const useAppStore = defineStore('app', {
           default: return 'unknown';
         }
       };
-    }
+    },
+    get_timelines_id: (state) => { return (id) => 'tls-' + id; },
+    get_graph_id: (state) => { return (id) => 'gr-' + id; }
   }
 })

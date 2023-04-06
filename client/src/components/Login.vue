@@ -6,10 +6,8 @@
             </v-toolbar>
             <v-card-text>
                 <v-form>
-                    <v-text-field v-model="email" prepend-icon="mdi-account" name="login" label="Login"
-                        type="text"></v-text-field>
-                    <v-text-field v-model="password" prepend-icon="mdi-lock" name="password" label="Password"
-                        type="password"></v-text-field>
+                    <v-text-field v-model="email" prepend-icon="mdi-account" name="login" label="Login" type="text" />
+                    <v-text-field v-model="password" prepend-icon="mdi-lock" name="password" label="Password" type="password" />
                 </v-form>
             </v-card-text>
             <v-card-actions>
@@ -32,7 +30,7 @@ export default {
 </script >
 
 <script setup>
-import { useAppStore } from '../store/app.js'
+import { useAppStore } from '@/store/app';
 import { storeToRefs } from 'pinia';
 
 const { login_dialog } = storeToRefs(useAppStore())

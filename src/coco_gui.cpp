@@ -1,5 +1,6 @@
 #include "coco_gui.h"
 #include "coco_db.h"
+#include "coco_executor.h"
 
 namespace coco::coco_gui
 {
@@ -39,6 +40,9 @@ namespace coco::coco_gui
                            if (users.count(connections[&conn]))
                                users.erase(connections[&conn]);
                            connections.erase(&conn);
+
+                           for (auto &[tkn, conn] : users)
+                               conn->send_text(json::json{{"type", "user_disconnect"}, {"user", tkn}}.to_string());
                        } })
             .onmessage([&](crow::websocket::connection &conn, const std::string &message, bool is_binary)
                        {
@@ -95,8 +99,7 @@ namespace coco::coco_gui
                                        {"name", sensor.get().get_name()},
                                        {"sensor_type", sensor.get().get_type().get_id()}};
                         if (sensor.get().has_location())
-                            j_s["location"] = {{"latitude", sensor.get().get_location().y},
-                                               {"longitude", sensor.get().get_location().x}};
+                            j_s["location"] = {{"y", sensor.get().get_location().y}, {"x", sensor.get().get_location().x}};
                         if (sensor.get().has_value()) {
                             j_s["value"] = json::load(sensor.get().get_value().to_string());
                             j_s["value"]["timestamp"] = sensor.get().get_last_update();
@@ -105,6 +108,28 @@ namespace coco::coco_gui
                     }
                     j_sensors["sensors"] = std::move(c_sensors);
                     conn.send_text(j_sensors.to_string());
+
+                    json::json j_solvers;
+                    j_solvers["type"] = "solvers";
+                    json::json c_solvers(json::json_type::array);
+                    for (const auto &cc_exec : cc.get_executors())
+                        c_solvers.push_back({{"id", get_id(*cc_exec)},
+                                             {"name", cc_exec->get_executor().get_name()},
+                                             {"state", ratio::executor::to_string(cc_exec->get_executor().get_state())}});
+                    j_solvers["solvers"] = std::move(c_solvers);
+                    conn.send_text(c_solvers.to_string());
+
+                    for (const auto& cc_exec: cc.get_executors()) {
+                        json::json j_sc = to_state(*cc_exec);
+                        j_sc["type"] = "state_changed";
+                        j_sc["solver_id"] = get_id(*cc_exec);
+                        conn.send_text(j_sc.to_string());
+
+                        json::json j_gr = to_graph(*cc_exec);
+                        j_gr["type"] = "graph_changed";
+                        j_gr["solver_id"] = get_id(*cc_exec);
+                        conn.send_text(j_gr.to_string());
+                    }
 
                     if (usr.get_data()["type"] == "admin") {
                         json::json j_users;
@@ -117,11 +142,17 @@ namespace coco::coco_gui
                                            {"first_name", user.get().get_first_name()},
                                            {"last_name", user.get().get_last_name()},
                                            {"type", user.get().get_data()["type"]}};
+                            if (users.count(user.get().get_id()))
+                                j_u["connected"] = true;
                             c_users.push_back(std::move(j_u));
                         }
                         j_users["users"] = std::move(c_users);
                         conn.send_text(j_users.to_string());
                     }
+
+                    for (auto &[tkn, conn] : users)
+                        if (tkn != token)
+                            conn->send_text(json::json{{"type", "user_connected"}, {"user", usr.get_id()}}.to_string());
                 } });
     }
 

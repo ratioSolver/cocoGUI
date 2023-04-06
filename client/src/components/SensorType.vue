@@ -4,12 +4,11 @@
       <v-container>
         <v-row>
           <v-col cols="12" md="6">
-            <v-text-field v-model="sensor_type.name" :rules="[v => !!v || 'Name is required']" label="Name"
-              required></v-text-field>
+            <v-text-field v-model="sensor_type.name" :rules="[v => !!v || 'Name is required']" label="Name" required />
           </v-col>
           <v-col cols="12" md="6">
             <v-text-field v-model="sensor_type.description" :rules="[v => !!v || 'Description is required']"
-              label="Description" required></v-text-field>
+              label="Description" required />
           </v-col>
         </v-row>
         <v-divider></v-divider>
@@ -49,7 +48,7 @@ defineProps({
     type: Object,
     required: true,
   },
-})
+});
 
 const { parameter_type } = storeToRefs(useAppStore());
 </script>
