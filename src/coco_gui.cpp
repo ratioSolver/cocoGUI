@@ -123,6 +123,10 @@ namespace coco::coco_gui
                         json::json j_sc = to_state(*cc_exec);
                         j_sc["type"] = "state_changed";
                         j_sc["solver_id"] = get_id(*cc_exec);
+                        json::json j_executing(json::json_type::array);
+                        for (const auto &atm : cc_exec->get_executor().get_executing())
+                            j_executing.push_back(get_id(*atm));
+                        j_sc["executing"] = std::move(j_executing);
                         conn.send_text(j_sc.to_string());
 
                         json::json j_gr = to_graph(*cc_exec);
