@@ -5,7 +5,6 @@
 
 namespace coco::coco_gui
 {
-
   class coco_gui : public coco::coco_listener
   {
   public:
@@ -14,6 +13,22 @@ namespace coco::coco_gui
     void start();
     void wait_for_server_start();
     void stop();
+
+  private:
+    void new_user(const user &u);
+    void updated_user(const user &u);
+    void removed_user(const user &u);
+
+    void new_sensor_type(const sensor_type &s);
+    void updated_sensor_type(const sensor_type &s);
+    void removed_sensor_type(const sensor_type &s);
+
+    void new_sensor(const sensor &s);
+    void updated_sensor(const sensor &s);
+    void removed_sensor(const sensor &s);
+
+    void new_sensor_value(const sensor &s, const std::chrono::milliseconds::rep &time, const json::json &value);
+    void new_sensor_state(const sensor &s, const std::chrono::milliseconds::rep &time, const json::json &state);
 
   private:
     const std::string coco_host;

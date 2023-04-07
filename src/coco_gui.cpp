@@ -28,6 +28,22 @@ namespace coco::coco_gui
             res.body = login.to_string();
             return res; });
 
+        CROW_ROUTE(app, "/sensor/<string>").methods("POST"_method)([&cc](const crow::request &req, const std::string &id)
+                                                                   {
+            auto tkn = req.get_header_value("token");
+            if (tkn.empty())
+                return crow::response(401, "Invalid token");
+            const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
+            if (!cc.get_database().has_user(tkn))
+                return crow::response(401, "Invalid token");
+            if (!cc.get_database().has_sensor(id))
+                return crow::response(404, "The sensor does not exist.");
+            auto val = json::load(req.body);
+            cc.publish_sensor_value(cc.get_database().get_sensor(id), val);
+            auto res = crow::response(200);
+            res.add_header("Access-Control-Allow-Origin", "*");
+            return res; });
+
         CROW_ROUTE(app, "/coco")
             .websocket()
             .onopen([&](crow::websocket::connection &conn)
@@ -76,17 +92,7 @@ namespace coco::coco_gui
                     json::json j_sensor_types{{"type", "sensor_types"}};
                     json::json c_sensor_types(json::json_type::array);
                     for (const auto &st : cc.get_database().get_sensor_types())
-                    {
-                        json::json j_st{{"id", st.get().get_id()},
-                                        {"name", st.get().get_name()},
-                                        {"description", st.get().get_description()}};
-                        json::json c_st_params(json::json_type::array);
-                        for (const auto &param : st.get().get_parameters())
-                            c_st_params.push_back({{"name", param.first},
-                                               {"type", static_cast<long>(param.second)}});
-                        j_st["parameters"] = std::move(c_st_params);
-                        c_sensor_types.push_back(std::move(j_st));
-                    }
+                        c_sensor_types.push_back(to_json(st.get()));
                     j_sensor_types["sensor_types"] = std::move(c_sensor_types);
                     conn.send_text(j_sensor_types.to_string());
 
@@ -94,18 +100,7 @@ namespace coco::coco_gui
                     j_sensors["type"] = "sensors";
                     json::json c_sensors(json::json_type::array);
                     for (const auto &sensor : cc.get_database().get_sensors())
-                    {
-                        json::json j_s{{"id", sensor.get().get_id()},
-                                       {"name", sensor.get().get_name()},
-                                       {"sensor_type", sensor.get().get_type().get_id()}};
-                        if (sensor.get().has_location())
-                            j_s["location"] = {{"y", sensor.get().get_location().y}, {"x", sensor.get().get_location().x}};
-                        if (sensor.get().has_value()) {
-                            j_s["value"] = json::load(sensor.get().get_value().to_string());
-                            j_s["value"]["timestamp"] = sensor.get().get_last_update();
-                        }
-                        c_sensors.push_back(std::move(j_s));
-                    }
+                        c_sensors.push_back(to_json(sensor.get()));
                     j_sensors["sensors"] = std::move(c_sensors);
                     conn.send_text(j_sensors.to_string());
 
@@ -141,11 +136,7 @@ namespace coco::coco_gui
                         json::json c_users(json::json_type::array);
                         for (const auto &user : cc.get_database().get_users())
                         {
-                            json::json j_u{{"id", user.get().get_id()},
-                                           {"email", user.get().get_email()},
-                                           {"first_name", user.get().get_first_name()},
-                                           {"last_name", user.get().get_last_name()},
-                                           {"type", user.get().get_data()["type"]}};
+                            json::json j_u = to_json(user.get());
                             if (users.count(user.get().get_id()))
                                 j_u["connected"] = true;
                             c_users.push_back(std::move(j_u));
@@ -176,5 +167,82 @@ namespace coco::coco_gui
     {
         LOG("Stopping " + cc.get_database().get_root() + " CoCo Web Server..");
         app.stop();
+    }
+
+    void coco_gui::new_user(const user &u)
+    {
+        std::string msg = json::json{{"type", "new_user"}, {"user", to_json(u)}}.to_string();
+        for (auto &[tkn, conn] : users)
+            if (cc.get_database().get_user(tkn).get_data()["type"] == "admin")
+                conn->send_text(msg);
+    }
+    void coco_gui::updated_user(const user &u)
+    {
+        std::string msg = json::json{{"type", "updated_user"}, {"user", to_json(u)}}.to_string();
+        for (auto &[tkn, conn] : users)
+            if (cc.get_database().get_user(tkn).get_data()["type"] == "admin")
+                conn->send_text(msg);
+    }
+    void coco_gui::removed_user(const user &u)
+    {
+        std::string msg = json::json{{"type", "removed_user"}, {"user", u.get_id()}}.to_string();
+        for (auto &[tkn, conn] : users)
+            if (cc.get_database().get_user(tkn).get_data()["type"] == "admin")
+                conn->send_text(msg);
+    }
+
+    void coco_gui::new_sensor_type(const sensor_type &st)
+    {
+        std::string msg = json::json{{"type", "new_sensor_type"}, {"sensor_type", to_json(st)}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+    void coco_gui::updated_sensor_type(const sensor_type &s)
+    {
+        std::string msg = json::json{{"type", "updated_sensor_type"}, {"sensor_type", to_json(s)}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+    void coco_gui::removed_sensor_type(const sensor_type &s)
+    {
+        std::string msg = json::json{{"type", "removed_sensor_type"}, {"sensor_type", s.get_id()}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+
+    void coco_gui::new_sensor(const sensor &s)
+    {
+        std::string msg = json::json{{"type", "new_sensor"}, {"sensor", to_json(s)}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+    void coco_gui::updated_sensor(const sensor &s)
+    {
+        std::string msg = json::json{{"type", "updated_sensor"}, {"sensor", to_json(s)}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+    void coco_gui::removed_sensor(const sensor &s)
+    {
+        std::string msg = json::json{{"type", "removed_sensor"}, {"sensor", s.get_id()}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+
+    void coco_gui::new_sensor_value(const sensor &s, const std::chrono::milliseconds::rep &time, const json::json &value)
+    {
+        json::json j_val{{"type", "new_sensor_value"}, {"sensor", s.get_id()}, {"value", value}};
+        j_val["value"]["timestamp"] = time;
+        std::string msg = j_val.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+    void coco_gui::new_sensor_state(const sensor &s, const std::chrono::milliseconds::rep &time, const json::json &state)
+    {
+        json::json j_val{{"type", "new_sensor_state"}, {"sensor", s.get_id()}, {"state", state}};
+        j_val["state"]["timestamp"] = time;
+        std::string msg = j_val.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
     }
 } // namespace coco_gui

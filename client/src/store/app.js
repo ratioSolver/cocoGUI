@@ -12,7 +12,7 @@ export const useAppStore = defineStore('app', {
     token: localStorage.getItem('token'),
     user: null,
     login_dialog: false,
-    sensor_types: [],
+    sensor_types: new Map(),
     sensors: new Map(),
     solvers: new Map(),
     users: new Map()
@@ -42,7 +42,7 @@ export const useAppStore = defineStore('app', {
       localStorage.removeItem('token');
       this.token = null;
       this.user = null;
-      this.sensor_types = [];
+      this.sensor_types.clear();
       this.sensors.clear();
       this.solvers.clear();
       this.users.clear();
@@ -65,6 +65,19 @@ export const useAppStore = defineStore('app', {
             else
               this.logout();
             break;
+          case 'users':
+            for (let user of data.users)
+              this.users.set(user.id, user);
+            break;
+          case 'new_user':
+            this.users.set(data.user.id, data.user);
+            break;
+          case 'updated_user':
+            this.users.set(data.user.id, data.user);
+            break;
+          case 'removed_user':
+            this.users.delete(data.user);
+            break;
           case 'user_connected':
             this.users.get(data.user).connected = true;
             break;
@@ -72,11 +85,40 @@ export const useAppStore = defineStore('app', {
             this.users.get(data.user).connected = false;
             break;
           case 'sensor_types':
-            this.sensor_types = data.sensor_types;
+            for (let sensor_type of data.sensor_types)
+              this.sensor_types.set(sensor_type.id, sensor_type);
+            break;
+          case 'new_sensor_type':
+            this.sensor_types.set(data.sensor_type.id, data.sensor_type);
+            break;
+          case 'updated_sensor_type':
+            this.sensor_types.set(data.sensor_type.id, data.sensor_type);
+            break;
+          case 'removed_sensor_type':
+            this.sensor_types.delete(data.sensor_type);
             break;
           case 'sensors':
-            for (let sensor of data.sensors)
+            for (let sensor of data.sensors) {
+              sensor.data = [];
               this.sensors.set(sensor.id, sensor);
+            }
+            break;
+          case 'new_sensor':
+            data.sensor.data = [];
+            this.sensors.set(data.sensor.id, data.sensor);
+            break;
+          case 'updated_sensor':
+            this.sensors.set(data.sensor.id, data.sensor);
+            break;
+          case 'removed_sensor':
+            this.sensors.delete(data.sensor);
+            break;
+          case 'new_sensor_value':
+            this.sensors.get(data.sensor).data.push(data.value);
+            this.sensors.get(data.sensor).value = data.value;
+            break;
+          case 'new_sensor_state':
+            this.sensors.get(data.sensor).state = data.state;
             break;
           case 'solvers':
             for (let solver of data.solvers) {
@@ -85,12 +127,26 @@ export const useAppStore = defineStore('app', {
               nextTick(() => { slv.init(this.get_timelines_id(slv.id), this.get_graph_id(slv.id)); });
             }
             break;
-          case 'users':
-            for (let user of data.users)
-              this.users.set(user.id, user);
+          case 'new_solver':
+            const slv = new SolverD3(data.solver.name, data.solver.state);
+            this.solvers.set(data.solver.id, slv);
+            nextTick(() => { slv.init(this.get_timelines_id(slv.id), this.get_graph_id(slv.id)); });
+            break;
+          case 'removed_solver':
+            this.solvers.delete(data.solver);
             break;
         }
       };
+    },
+    publish_sensor_value(sensor, value) {
+      fetch('http://' + server.host + ':' + server.port + '/sensor/' + sensor, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'token': this.token
+        },
+        body: JSON.stringify(value)
+      });
     }
   },
   getters: {

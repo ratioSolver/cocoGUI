@@ -2,7 +2,7 @@
 #include "mongo_db.h"
 #include "mqtt_middleware.h"
 
-int main(int argc, char const *argv[])
+int main()
 {
     mongocxx::instance inst{}; // This should be done only once.
 

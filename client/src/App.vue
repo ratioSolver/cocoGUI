@@ -3,7 +3,7 @@
     <v-navigation-drawer v-model="drawer">
       <v-list dense v-model:selected="selected_item">
         <v-list-subheader inset>Sensor types</v-list-subheader>
-        <SensorTypeListItem v-for="sensor_type in sensor_types" :key="sensor_type.id" :sensor_type="sensor_type" />
+        <SensorTypeListItem v-for="[id, sensor_type] in sensor_types" :key="id" :sensor_type="sensor_type" />
         <v-divider></v-divider>
         <v-list-subheader inset>Sensors</v-list-subheader>
         <SensorListItem v-for="[id, sensor] in sensors" :key="id" :sensor="sensor" />
@@ -32,7 +32,7 @@
 
     <v-main>
       <v-window v-model="selected_item">
-        <SensorType v-for="sensor_type in sensor_types" :key="sensor_type.id" :sensor_type="sensor_type" />
+        <SensorType v-for="[id, sensor_type] in sensor_types" :key="id" :sensor_type="sensor_type" />
         <Sensor v-for="[id, sensor] in sensors" :key="id" :sensor="sensor" />
         <Solver v-for="[id, solver] in solvers" :key="id" :solver="solver" />
         <User v-for="[id, user] in users" :key="id" :user="user" />
