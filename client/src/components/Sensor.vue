@@ -56,8 +56,12 @@
           <tr v-for="parameter in sensor_types.get(sensor.type).parameters" :key="parameter.name">
             <td>{{ parameter.name }}</td>
             <td>{{ parameter_type(parameter.type) }}</td>
-            <td><v-text-field v-model="value[parameter.name]" :rules="[v => !!v || 'Value is required']" label="Value"
-                required /></td>
+            <td>
+              <v-text-field v-if="input_type(parameter.type) == 'number'" v-model.number="value[parameter.name]"
+                :type="input_type(parameter.type)" :rules="[v => !!v || 'Value is required']" label="Value" required />
+              <v-text-field v-else v-model="value[parameter.name]" :type="input_type(parameter.type)"
+                :rules="[v => !!v || 'Value is required']" label="Value" required />
+            </td>
           </tr>
         </tbody>
       </v-table>
@@ -90,5 +94,5 @@ defineProps({
   },
 });
 
-const { sensor_types, parameter_type } = storeToRefs(useAppStore());
+const { sensor_types, parameter_type, input_type } = storeToRefs(useAppStore());
 </script>

@@ -1,6 +1,7 @@
 // Utilities
 import { defineStore } from 'pinia'
-import { SolverD3 } from 'ratio-solver/solverD3';
+import { SolverD3 } from 'ratio-solver/src/solverD3';
+import { nextTick } from 'vue';
 
 const server = {
   host: 'localhost',
@@ -122,15 +123,15 @@ export const useAppStore = defineStore('app', {
             break;
           case 'solvers':
             for (let solver of data.solvers) {
-              const slv = new SolverD3(solver.name, solver.state);
+              const slv = new SolverD3(solver.id, solver.name, solver.state);
               this.solvers.set(solver.id, slv);
-              nextTick(() => { slv.init(this.get_timelines_id(slv.id), this.get_graph_id(slv.id)); });
+              nextTick(() => { slv.init(this.get_timelines_id(solver.id), this.get_graph_id(solver.id)); });
             }
             break;
           case 'new_solver':
-            const slv = new SolverD3(data.solver.name, data.solver.state);
+            const slv = new SolverD3(data.solver.id, data.solver.name, data.solver.state);
             this.solvers.set(data.solver.id, slv);
-            nextTick(() => { slv.init(this.get_timelines_id(slv.id), this.get_graph_id(slv.id)); });
+            nextTick(() => { slv.init(this.get_timelines_id(solver.id), this.get_graph_id(solver.id)); });
             break;
           case 'removed_solver':
             this.solvers.delete(data.solver);
@@ -158,6 +159,18 @@ export const useAppStore = defineStore('app', {
           case 3: return 'bool';
           case 4: return 'symbol';
           case 5: return 'string';
+          default: return 'unknown';
+        }
+      };
+    },
+    input_type: (state) => {
+      return (type) => {
+        switch (type) {
+          case 1:
+          case 2: return 'number';
+          case 3: return 'checkbox';
+          case 4:
+          case 5: return 'text';
           default: return 'unknown';
         }
       };

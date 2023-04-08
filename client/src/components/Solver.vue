@@ -1,12 +1,12 @@
 <template>
-  <v-window-item :value='solver.id'>
+  <v-window-item :value='solver.id' :eager=true>
     <v-tabs v-model='tab' color='deep-purple-accent-4'>
       <v-tab value='timelines'><v-icon>mdi-chart-timeline</v-icon>Timelines</v-tab>
       <v-tab value='graph'><v-icon>mdi-graph-outline</v-icon>Graph</v-tab>
     </v-tabs>
     <v-window v-model='tab' class='fill-height'>
-      <v-window-item :id='get_timelines_id(solver.id)' value='timelines' class='fill-height' eager='true' />
-      <v-window-item :id='get_graph_id(solver.id)' value='graph' class='fill-height' eager='true' />
+      <v-window-item :id='get_timelines_id(solver.id)' value='timelines' class='fill-height' :eager=true />
+      <v-window-item :id='get_graph_id(solver.id)' value='graph' class='fill-height' :eager=true />
     </v-window>
   </v-window-item>
 </template>

@@ -6,7 +6,7 @@
 <script setup>
 defineProps({
   sensor_type: {
-    sensor_type: Object,
+    type: Object,
     required: true,
   },
 });

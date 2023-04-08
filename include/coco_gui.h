@@ -30,6 +30,9 @@ namespace coco::coco_gui
     void new_sensor_value(const sensor &s, const std::chrono::milliseconds::rep &time, const json::json &value);
     void new_sensor_state(const sensor &s, const std::chrono::milliseconds::rep &time, const json::json &state);
 
+    void new_solver(const coco_executor &exec);
+    void removed_solver(const coco_executor &exec);
+
   private:
     const std::string coco_host;
     const unsigned short coco_port;

@@ -2,8 +2,19 @@
 #include "mongo_db.h"
 #include "mqtt_middleware.h"
 
-int main()
+int main(int argc, char const *argv[])
 {
+    std::vector<std::string> rules;
+    // we parse the command line arguments..
+    for (int i = 1; i < argc - 1; i++)
+        if (std::string(argv[i]) == "-rules")
+        {
+            i++;
+            rules.clear();
+            while (i < argc && argv[i][0] != '-')
+                rules.push_back(argv[i++]);
+        }
+
     mongocxx::instance inst{}; // This should be done only once.
 
     coco::mongo_db mongodb;
@@ -13,7 +24,7 @@ int main()
 
     cc.connect();
 
-    cc.load_rules({"extern/coco/rules/rules.clp"});
+    cc.load_rules(rules);
 
     cc.init();
 

@@ -112,7 +112,7 @@ namespace coco::coco_gui
                                              {"name", cc_exec->get_executor().get_name()},
                                              {"state", ratio::executor::to_string(cc_exec->get_executor().get_state())}});
                     j_solvers["solvers"] = std::move(c_solvers);
-                    conn.send_text(c_solvers.to_string());
+                    conn.send_text(j_solvers.to_string());
 
                     for (const auto& cc_exec: cc.get_executors()) {
                         json::json j_sc = to_state(*cc_exec);
@@ -242,6 +242,19 @@ namespace coco::coco_gui
         json::json j_val{{"type", "new_sensor_state"}, {"sensor", s.get_id()}, {"state", state}};
         j_val["state"]["timestamp"] = time;
         std::string msg = j_val.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+
+    void coco_gui::new_solver(const coco_executor &exec)
+    {
+        std::string msg = json::json{{"type", "new_solver"}, {"solver", get_id(exec)}, {"name", exec.get_executor().get_name()}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+    void coco_gui::removed_solver(const coco_executor &exec)
+    {
+        std::string msg = json::json{{"type", "removed_solver"}, {"solver", get_id(exec)}}.to_string();
         for (auto &[tkn, conn] : users)
             conn->send_text(msg);
     }
