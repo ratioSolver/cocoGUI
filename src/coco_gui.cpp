@@ -115,9 +115,11 @@ namespace coco::coco_gui
                     conn.send_text(j_solvers.to_string());
 
                     for (const auto& cc_exec: cc.get_executors()) {
-                        json::json j_sc = to_state(*cc_exec);
-                        j_sc["type"] = "state_changed";
-                        j_sc["solver_id"] = get_id(*cc_exec);
+                        json::json j_sc{{"type", "state_changed"},
+                                        {"solver_id", get_id(*cc_exec)},
+                                        {"state", to_json(cc_exec->get_executor().get_solver())},
+                                        {"timelines", to_timelines(cc_exec->get_executor().get_solver())},
+                                        {"time", ratio::to_json(cc_exec->get_executor().get_current_time())}};
                         json::json j_executing(json::json_type::array);
                         for (const auto &atm : cc_exec->get_executor().get_executing())
                             j_executing.push_back(get_id(*atm));
@@ -171,6 +173,7 @@ namespace coco::coco_gui
 
     void coco_gui::new_user(const user &u)
     {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
         std::string msg = json::json{{"type", "new_user"}, {"user", to_json(u)}}.to_string();
         for (auto &[tkn, conn] : users)
             if (cc.get_database().get_user(tkn).get_data()["type"] == "admin")
@@ -178,6 +181,7 @@ namespace coco::coco_gui
     }
     void coco_gui::updated_user(const user &u)
     {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
         std::string msg = json::json{{"type", "updated_user"}, {"user", to_json(u)}}.to_string();
         for (auto &[tkn, conn] : users)
             if (cc.get_database().get_user(tkn).get_data()["type"] == "admin")
@@ -185,6 +189,7 @@ namespace coco::coco_gui
     }
     void coco_gui::removed_user(const user &u)
     {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
         std::string msg = json::json{{"type", "removed_user"}, {"user", u.get_id()}}.to_string();
         for (auto &[tkn, conn] : users)
             if (cc.get_database().get_user(tkn).get_data()["type"] == "admin")
@@ -193,18 +198,21 @@ namespace coco::coco_gui
 
     void coco_gui::new_sensor_type(const sensor_type &st)
     {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
         std::string msg = json::json{{"type", "new_sensor_type"}, {"sensor_type", to_json(st)}}.to_string();
         for (auto &[tkn, conn] : users)
             conn->send_text(msg);
     }
     void coco_gui::updated_sensor_type(const sensor_type &s)
     {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
         std::string msg = json::json{{"type", "updated_sensor_type"}, {"sensor_type", to_json(s)}}.to_string();
         for (auto &[tkn, conn] : users)
             conn->send_text(msg);
     }
     void coco_gui::removed_sensor_type(const sensor_type &s)
     {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
         std::string msg = json::json{{"type", "removed_sensor_type"}, {"sensor_type", s.get_id()}}.to_string();
         for (auto &[tkn, conn] : users)
             conn->send_text(msg);
@@ -212,18 +220,21 @@ namespace coco::coco_gui
 
     void coco_gui::new_sensor(const sensor &s)
     {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
         std::string msg = json::json{{"type", "new_sensor"}, {"sensor", to_json(s)}}.to_string();
         for (auto &[tkn, conn] : users)
             conn->send_text(msg);
     }
     void coco_gui::updated_sensor(const sensor &s)
     {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
         std::string msg = json::json{{"type", "updated_sensor"}, {"sensor", to_json(s)}}.to_string();
         for (auto &[tkn, conn] : users)
             conn->send_text(msg);
     }
     void coco_gui::removed_sensor(const sensor &s)
     {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
         std::string msg = json::json{{"type", "removed_sensor"}, {"sensor", s.get_id()}}.to_string();
         for (auto &[tkn, conn] : users)
             conn->send_text(msg);
@@ -231,6 +242,7 @@ namespace coco::coco_gui
 
     void coco_gui::new_sensor_value(const sensor &s, const std::chrono::milliseconds::rep &time, const json::json &value)
     {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
         json::json j_val{{"type", "new_sensor_value"}, {"sensor", s.get_id()}, {"value", value}};
         j_val["value"]["timestamp"] = time;
         std::string msg = j_val.to_string();
@@ -239,6 +251,7 @@ namespace coco::coco_gui
     }
     void coco_gui::new_sensor_state(const sensor &s, const std::chrono::milliseconds::rep &time, const json::json &state)
     {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
         json::json j_val{{"type", "new_sensor_state"}, {"sensor", s.get_id()}, {"state", state}};
         j_val["state"]["timestamp"] = time;
         std::string msg = j_val.to_string();
@@ -248,13 +261,141 @@ namespace coco::coco_gui
 
     void coco_gui::new_solver(const coco_executor &exec)
     {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
         std::string msg = json::json{{"type", "new_solver"}, {"solver", get_id(exec)}, {"name", exec.get_executor().get_name()}}.to_string();
         for (auto &[tkn, conn] : users)
             conn->send_text(msg);
     }
     void coco_gui::removed_solver(const coco_executor &exec)
     {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
         std::string msg = json::json{{"type", "removed_solver"}, {"solver", get_id(exec)}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+
+    void coco_gui::state_changed(const coco_executor &exec)
+    {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        json::json j_sc{{"type", "state_changed"},
+                        {"solver_id", get_id(exec)},
+                        {"state", to_json(exec.get_executor().get_solver())},
+                        {"timelines", to_timelines(exec.get_executor().get_solver())},
+                        {"time", ratio::to_json(exec.get_executor().get_current_time())}};
+        json::json j_executing(json::json_type::array);
+        for (const auto &atm : exec.get_executor().get_executing())
+            j_executing.push_back(get_id(*atm));
+        j_sc["executing"] = std::move(j_executing);
+        std::string msg = j_sc.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+
+    void coco_gui::flaw_created(const coco_executor &exec, const ratio::flaw &f)
+    {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        json::json j_msg = to_json(f);
+        j_msg["type"] = "flaw_created";
+        j_msg["solver_id"] = get_id(exec);
+        std::string msg = j_msg.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+    void coco_gui::flaw_state_changed(const coco_executor &exec, const ratio::flaw &f)
+    {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        std::string msg = json::json{{"type", "flaw_state_changed"}, {"solver_id", get_id(exec)}, {"id", get_id(f)}, {"state", f.get_solver().get_sat_core().value(f.get_phi())}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+    void coco_gui::flaw_cost_changed(const coco_executor &exec, const ratio::flaw &f)
+    {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        std::string msg = json::json{{"type", "flaw_cost_changed"}, {"solver_id", get_id(exec)}, {"id", get_id(f)}, {"cost", ratio::to_json(f.get_estimated_cost())}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+    void coco_gui::flaw_position_changed(const coco_executor &exec, const ratio::flaw &f)
+    {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        std::string msg = json::json{{"type", "flaw_position_changed"}, {"solver_id", get_id(exec)}, {"id", get_id(f)}, {"pos", ratio::to_json(f.get_solver().get_idl_theory().bounds(f.get_position()))}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+    void coco_gui::current_flaw(const coco_executor &exec, const ratio::flaw &f)
+    {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        std::string msg = json::json{{"type", "current_flaw"}, {"solver_id", get_id(exec)}, {"id", get_id(f)}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+
+    void coco_gui::resolver_created(const coco_executor &exec, const ratio::resolver &r)
+    {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        json::json j_msg = to_json(r);
+        j_msg["type"] = "resolver_created";
+        j_msg["solver_id"] = get_id(exec);
+        std::string msg = j_msg.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+    void coco_gui::resolver_state_changed(const coco_executor &exec, const ratio::resolver &r)
+    {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        std::string msg = json::json{{"type", "resolver_state_changed"}, {"solver_id", get_id(exec)}, {"id", get_id(r)}, {"state", r.get_solver().get_sat_core().value(r.get_rho())}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+    void coco_gui::current_resolver(const coco_executor &exec, const ratio::resolver &r)
+    {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        std::string msg = json::json{{"type", "current_resolver"}, {"solver_id", get_id(exec)}, {"id", get_id(r)}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+
+    void coco_gui::causal_link_added(const coco_executor &exec, const ratio::flaw &f, const ratio::resolver &r)
+    {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        std::string msg = json::json{{"type", "causal_link_added"}, {"solver_id", get_id(exec)}, {"flaw_id", get_id(f)}, {"resolver_id", get_id(r)}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+
+    void coco_gui::executor_state_changed(const coco_executor &exec, ratio::executor::executor_state state)
+    {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        std::string msg = json::json{{"type", "executor_state_changed"}, {"solver_id", get_id(exec)}, {"state", ratio::executor::to_string(state)}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+
+    void coco_gui::tick(const coco_executor &exec, const utils::rational &time)
+    {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        std::string msg = json::json{{"type", "tick"}, {"solver_id", get_id(exec)}, {"time", ratio::to_json(time)}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+
+    void coco_gui::start(const coco_executor &exec, const std::unordered_set<ratio::atom *> &atoms)
+    {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        json::json starting(json::json_type::array);
+        for (const auto &atm : atoms)
+            starting.push_back(get_id(*atm));
+        std::string msg = json::json{{"type", "start"}, {"solver_id", get_id(exec)}, {"start", std::move(starting)}}.to_string();
+        for (auto &[tkn, conn] : users)
+            conn->send_text(msg);
+    }
+    void coco_gui::end(const coco_executor &exec, const std::unordered_set<ratio::atom *> &atoms)
+    {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        json::json ending(json::json_type::array);
+        for (const auto &atm : atoms)
+            ending.push_back(get_id(*atm));
+        std::string msg = json::json{{"type", "end"}, {"solver_id", get_id(exec)}, {"end", std::move(ending)}}.to_string();
         for (auto &[tkn, conn] : users)
             conn->send_text(msg);
     }

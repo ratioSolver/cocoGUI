@@ -31,7 +31,7 @@
     </v-app-bar>
 
     <v-main>
-      <v-window v-model="selected_item">
+      <v-window v-model="selected_item" class='fill-height'>
         <SensorType v-for="[id, sensor_type] in sensor_types" :key="id" :sensor_type="sensor_type" />
         <Sensor v-for="[id, sensor] in sensors" :key="id" :sensor="sensor" />
         <Solver v-for="[id, solver] in solvers" :key="id" :solver="solver" />

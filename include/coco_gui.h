@@ -33,6 +33,27 @@ namespace coco::coco_gui
     void new_solver(const coco_executor &exec);
     void removed_solver(const coco_executor &exec);
 
+    void state_changed(const coco_executor &exec);
+
+    void flaw_created(const coco_executor &exec, const ratio::flaw &f);
+    void flaw_state_changed(const coco_executor &exec, const ratio::flaw &f);
+    void flaw_cost_changed(const coco_executor &exec, const ratio::flaw &f);
+    void flaw_position_changed(const coco_executor &exec, const ratio::flaw &f);
+    void current_flaw(const coco_executor &exec, const ratio::flaw &f);
+
+    void resolver_created(const coco_executor &exec, const ratio::resolver &r);
+    void resolver_state_changed(const coco_executor &exec, const ratio::resolver &r);
+    void current_resolver(const coco_executor &exec, const ratio::resolver &r);
+
+    void causal_link_added(const coco_executor &exec, const ratio::flaw &f, const ratio::resolver &r);
+
+    void executor_state_changed(const coco_executor &exec, ratio::executor::executor_state state);
+
+    void tick(const coco_executor &exec, const utils::rational &time);
+
+    void start(const coco_executor &exec, const std::unordered_set<ratio::atom *> &atoms);
+    void end(const coco_executor &exec, const std::unordered_set<ratio::atom *> &atoms);
+
   private:
     const std::string coco_host;
     const unsigned short coco_port;
