@@ -262,7 +262,7 @@ namespace coco::coco_gui
     void coco_gui::new_solver(const coco_executor &exec)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "new_solver"}, {"solver", get_id(exec)}, {"name", exec.get_executor().get_name()}}.to_string();
+        std::string msg = json::json{{"type", "new_solver"}, {"solver", get_id(exec)}, {"name", exec.get_executor().get_name()}, {"state", ratio::executor::to_string(exec.get_executor().get_state())}}.to_string();
         for (auto &[tkn, conn] : users)
             conn->send_text(msg);
     }

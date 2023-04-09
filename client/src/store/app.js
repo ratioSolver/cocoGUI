@@ -130,8 +130,8 @@ export const useAppStore = defineStore('app', {
             });
             break;
           case 'new_solver':
-            const slv = new SolverD3(data.solver.id, data.solver.name, data.solver.state);
-            this.solvers.set(data.solver.id, slv);
+            const slv = new SolverD3(data.solver, data.name, data.state);
+            this.solvers.set(data.solver, slv);
             nextTick(() => { slv.init(this.get_timelines_id(slv.id), this.get_graph_id(slv.id)); });
             break;
           case 'removed_solver':
