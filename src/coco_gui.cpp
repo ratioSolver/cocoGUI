@@ -127,7 +127,7 @@ namespace coco::coco_gui
                         conn.send_text(j_sc.to_string());
 
                         json::json j_gr = to_graph(*cc_exec);
-                        j_gr["type"] = "graph_changed";
+                        j_gr["type"] = "graph";
                         j_gr["solver_id"] = get_id(*cc_exec);
                         conn.send_text(j_gr.to_string());
                     }

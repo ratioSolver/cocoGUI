@@ -1,6 +1,6 @@
 // Utilities
 import { defineStore } from 'pinia'
-import { SolverD3 } from 'ratio-solver/src/solverD3';
+import { SolverD3 } from '../solverD3';
 import { nextTick } from 'vue';
 
 const server = {
@@ -122,11 +122,12 @@ export const useAppStore = defineStore('app', {
             this.sensors.get(data.sensor).state = data.state;
             break;
           case 'solvers':
-            for (let solver of data.solvers) {
-              const slv = new SolverD3(solver.id, solver.name, solver.state);
-              this.solvers.set(solver.id, slv);
-              nextTick(() => { slv.init(this.get_timelines_id(slv.id), this.get_graph_id(slv.id)); });
-            }
+            for (let solver of data.solvers)
+              this.solvers.set(solver.id, new SolverD3(solver.id, solver.name, solver.state));
+            nextTick(() => {
+              for (let [id, slv] of this.solvers)
+                slv.init(this.get_timelines_id(id), this.get_graph_id(id));
+            });
             break;
           case 'new_solver':
             const slv = new SolverD3(data.solver.id, data.solver.name, data.solver.state);
