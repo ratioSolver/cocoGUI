@@ -1,6 +1,6 @@
 // Utilities
 import { defineStore } from 'pinia'
-import { SolverD3 } from '../solverD3';
+import { SolverD3 } from 'ratio-solver/src/solverD3.js'
 import { nextTick } from 'vue';
 
 const server = {
@@ -67,6 +67,7 @@ export const useAppStore = defineStore('app', {
               this.logout();
             break;
           case 'users':
+            this.users.clear();
             for (let user of data.users)
               this.users.set(user.id, user);
             break;
@@ -86,6 +87,7 @@ export const useAppStore = defineStore('app', {
             this.users.get(data.user).connected = false;
             break;
           case 'sensor_types':
+            this.sensor_types.clear();
             for (let sensor_type of data.sensor_types)
               this.sensor_types.set(sensor_type.id, sensor_type);
             break;
@@ -99,6 +101,7 @@ export const useAppStore = defineStore('app', {
             this.sensor_types.delete(data.sensor_type);
             break;
           case 'sensors':
+            this.sensors.clear();
             for (let sensor of data.sensors) {
               sensor.data = [];
               this.sensors.set(sensor.id, sensor);
@@ -122,17 +125,18 @@ export const useAppStore = defineStore('app', {
             this.sensors.get(data.sensor).state = data.state;
             break;
           case 'solvers':
+            this.solvers.clear();
             for (let solver of data.solvers)
               this.solvers.set(solver.id, new SolverD3(solver.id, solver.name, solver.state));
             nextTick(() => {
               for (let [id, slv] of this.solvers)
-                slv.init(this.get_timelines_id(id), this.get_graph_id(id));
+                slv.init(this.get_timelines_id(id), this.get_graph_id(id), 1000, 400);
             });
             break;
           case 'new_solver':
             const slv = new SolverD3(data.solver, data.name, data.state);
             this.solvers.set(data.solver, slv);
-            nextTick(() => { slv.init(this.get_timelines_id(slv.id), this.get_graph_id(slv.id)); });
+            nextTick(() => { slv.init(this.get_timelines_id(slv.id), this.get_graph_id(slv.id), 1000, 400); });
             break;
           case 'removed_solver':
             this.solvers.delete(data.solver);
@@ -171,7 +175,8 @@ export const useAppStore = defineStore('app', {
             this.solvers.get(data.solver_id).causal_link_added(data);
             break;
           case 'executor_state_changed':
-            this.solvers.get(data.solver_id).executor_state_changed(data);
+            if (this.solvers.has(data.solver_id))
+              this.solvers.get(data.solver_id).executor_state_changed(data);
             break;
           case 'tick':
             this.solvers.get(data.solver_id).tick(data);
@@ -224,6 +229,19 @@ export const useAppStore = defineStore('app', {
           case 4:
           case 5: return 'text';
           default: return 'unknown';
+        }
+      };
+    },
+    solver_state_icon: (state) => {
+      return (type) => {
+        switch (type) {
+          case 'reasoning':
+          case 'adapting': return 'mdi-brain';
+          case 'idle': return 'mdi-pause-circle';
+          case 'executing': return 'mdi-play-circle';
+          case 'finished': return 'mdi-check-circle';
+          case 'failed': return 'mdi-alert-circle';
+          default: return null;
         }
       };
     },
