@@ -113,7 +113,7 @@ export class SensorD3 extends Sensor {
                 par_g.append('text')
                     .attr('x', 0)
                     .attr('y', d => this.sensor_y_scale(parameters.indexOf(d)) + this.sensor_y_scale.bandwidth() * 0.08)
-                    .text(d => this.type.parameter_name(d))
+                    .text(d => d)
                     .style('text-anchor', 'start');
 
                 return par_g;
@@ -123,7 +123,7 @@ export class SensorD3 extends Sensor {
                     .attr('width', this.sensor_x_scale(this.horizon) + 20);
 
                 update.select('text')
-                    .text(d => this.type.parameter_name(d));
+                    .text(d => d);
 
                 return update;
             });

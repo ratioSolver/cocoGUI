@@ -6,8 +6,6 @@ export class SensorType {
         this.description = description;
         this.parameters = parameters;
     }
-    
-    parameter_name(par) { return par.name; }
 }
 
 export class Sensor {
@@ -18,7 +16,7 @@ export class Sensor {
         this.type = type;
         this.value = value;
         this.state = state;
-        this.data = [];
+        this.data = [{ timestamp: value.timestamp, value: value }];
     }
 
     set_data(data) {
