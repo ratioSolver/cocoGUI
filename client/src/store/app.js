@@ -1,9 +1,11 @@
 // Utilities
 import { defineStore } from 'pinia'
 import { SolverD3 } from 'ratio-solver/src/solverD3.js'
+import { SensorType } from '../sensor.js'
+import { SensorD3 } from '../sensorD3.js'
 import { nextTick } from 'vue';
 
-const server = {
+export const server = {
   host: 'localhost',
   port: 8080
 }
@@ -88,27 +90,36 @@ export const useAppStore = defineStore('app', {
             break;
           case 'sensor_types':
             this.sensor_types.clear();
-            for (let sensor_type of data.sensor_types)
-              this.sensor_types.set(sensor_type.id, sensor_type);
+            for (let sensor_type of data.sensor_types) {
+              const parameters = new Map();
+              for (let parameter of sensor_type.parameters)
+                parameters.set(parameter.name, this.parameter_type(parameter.type));
+              this.sensor_types.set(sensor_type.id, new SensorType(sensor_type.id, sensor_type.name, sensor_type.description, parameters));
+            }
             break;
           case 'new_sensor_type':
-            this.sensor_types.set(data.sensor_type.id, data.sensor_type);
+            const parameters = new Map();
+            for (let parameter of data.sensor_type.parameters)
+              parameters.set(parameter.name, this.parameter_type(parameter.type));
+            this.sensor_types.set(data.sensor_type.id, new SensorType(data.sensor_type.id, data.sensor_type.name, data.sensor_type.description, parameters));
             break;
           case 'updated_sensor_type':
-            this.sensor_types.set(data.sensor_type.id, data.sensor_type);
+            const sensor_type = this.sensor_types.get(data.sensor_type.id);
+            sensor_type.name = data.sensor_type.name;
+            sensor_type.description = data.sensor_type.description;
+            sensor_type.parameters.clear();
+            for (let parameter of data.sensor_type.parameters)
+              sensor_type.parameters.set(parameter.name, this.parameter_type(parameter.type));
             break;
           case 'removed_sensor_type':
             this.sensor_types.delete(data.sensor_type);
             break;
           case 'sensors':
             this.sensors.clear();
-            for (let sensor of data.sensors) {
-              sensor.data = [];
-              this.sensors.set(sensor.id, sensor);
-            }
+            for (let sensor of data.sensors)
+              this.sensors.set(sensor.id, new SensorD3(sensor.id, sensor.name, this.sensor_types.get(sensor.type), sensor.value, sensor.state));
             break;
           case 'new_sensor':
-            data.sensor.data = [];
             this.sensors.set(data.sensor.id, data.sensor);
             break;
           case 'updated_sensor':
@@ -118,8 +129,7 @@ export const useAppStore = defineStore('app', {
             this.sensors.delete(data.sensor);
             break;
           case 'new_sensor_value':
-            this.sensors.get(data.sensor).data.push(data.value);
-            this.sensors.get(data.sensor).value = data.value;
+            this.sensors.get(data.sensor).add_value({ 'timestamp': data.timestamp, 'value': data.value });
             break;
           case 'new_sensor_state':
             this.sensors.get(data.sensor).state = data.state;
@@ -211,11 +221,11 @@ export const useAppStore = defineStore('app', {
     parameter_type: (state) => {
       return (type) => {
         switch (type) {
-          case 1: return 'int';
-          case 2: return 'float';
-          case 3: return 'bool';
-          case 4: return 'symbol';
-          case 5: return 'string';
+          case 0: return 'int';
+          case 1: return 'float';
+          case 2: return 'bool';
+          case 3: return 'symbol';
+          case 4: return 'string';
           default: return 'unknown';
         }
       };
@@ -223,11 +233,11 @@ export const useAppStore = defineStore('app', {
     input_type: (state) => {
       return (type) => {
         switch (type) {
-          case 1:
-          case 2: return 'number';
-          case 3: return 'checkbox';
-          case 4:
-          case 5: return 'text';
+          case 'int':
+          case 'float': return 'number';
+          case 'bool': return 'checkbox';
+          case 'symbol':
+          case 'string': return 'text';
           default: return 'unknown';
         }
       };
@@ -246,6 +256,7 @@ export const useAppStore = defineStore('app', {
       };
     },
     get_timelines_id: (state) => { return (id) => 'tls-' + id; },
-    get_graph_id: (state) => { return (id) => 'gr-' + id; }
+    get_graph_id: (state) => { return (id) => 'gr-' + id; },
+    get_sensor_id: (state) => { return (id) => 'sensor-' + id; },
   }
 })

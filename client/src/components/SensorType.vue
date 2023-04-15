@@ -20,9 +20,9 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="parameter in sensor_type.parameters" :key="parameter.name">
-              <td>{{ parameter.name }}</td>
-              <td>{{ parameter_type(parameter.type) }}</td>
+            <tr v-for="[name, type] in sensor_type.parameters" :key="name">
+              <td>{{ name }}</td>
+              <td>{{ type }}</td>
             </tr>
           </tbody>
         </v-table>
@@ -40,15 +40,10 @@ export default {
 </script>
 
 <script setup>
-import { useAppStore } from '@/store/app';
-import { storeToRefs } from 'pinia';
-
 defineProps({
   sensor_type: {
     type: Object,
     required: true,
   },
 });
-
-const { parameter_type } = storeToRefs(useAppStore());
 </script>
