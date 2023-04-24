@@ -24,7 +24,7 @@
       </v-row>
     </v-container>
     <v-divider></v-divider>
-    <SensorValue :sensor="sensor" />
+    <SensorValue v-if="sensor.value" :sensor="sensor" />
     <v-divider></v-divider>
     <SensorPublisher :sensor="sensor" />
   </v-window-item>

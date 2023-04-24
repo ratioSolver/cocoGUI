@@ -148,7 +148,7 @@ export class SensorD3 extends Sensor {
                     enter => {
                         const par_val_g = enter.append('path')
                             .attr('fill', 'none')
-                            .attr('stroke', 'lightblue')
+                            .attr('stroke', 'darkblue')
                             .attr('d', d3.line().curve(d3.curveMonotoneX)
                                 .x(d => this.sensor_x_scale(d.time))
                                 .y(d => num_y_scale(d.value)));

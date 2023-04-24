@@ -2,9 +2,6 @@
   <v-app>
     <v-navigation-drawer v-model="drawer">
       <v-list dense v-model:selected="selected_item">
-        <v-list-subheader inset>Sensor types</v-list-subheader>
-        <SensorTypeListItem v-for="[id, sensor_type] in sensor_types" :key="id" :sensor_type="sensor_type" />
-        <v-divider></v-divider>
         <v-list-subheader inset>Sensors</v-list-subheader>
         <SensorListItem v-for="[id, sensor] in sensors" :key="id" :sensor="sensor" />
         <v-divider></v-divider>
@@ -13,6 +10,9 @@
         <v-divider></v-divider>
         <v-list-subheader inset>Users</v-list-subheader>
         <UserListItem v-for="[id, user] in users" :key="id" :user="user" />
+        <v-list-subheader inset>Sensor types</v-list-subheader>
+        <SensorTypeListItem v-for="[id, sensor_type] in sensor_types" :key="id" :sensor_type="sensor_type" />
+        <v-divider></v-divider>
       </v-list>
     </v-navigation-drawer>
 
@@ -28,6 +28,9 @@
         <v-img v-if="user.avatar" alt="Avatar" :src="user.avatar"></v-img>
         <v-icon v-else icon="mdi-account"></v-icon>
       </v-avatar>
+      <v-btn icon="mdi-microphone" @click="useAppStore().start_speech_recognition()" />
+      <v-icon v-if="listening" icon="mdi-ear-hearing" />
+      <v-icon v-if="speaking" icon="mdi-account-voice" />
     </v-app-bar>
 
     <v-main>
@@ -39,6 +42,9 @@
       </v-window>
 
       <Login />
+      <v-snackbar v-model="recognized_text_snackbar" timeout="-1">
+        {{ recognized_text }}
+      </v-snackbar>
     </v-main>
   </v-app>
 </template>
@@ -63,7 +69,9 @@ import UserListItem from './components/UserListItem.vue'
 import User from './components/User.vue'
 import Login from './components/Login.vue'
 
-const { sensor_types, sensors, solvers, users, token, user, login_dialog } = storeToRefs(useAppStore());
+const { sensor_types, sensors, solvers, users, token, user, login_dialog, listening, recognized_text, recognized_text_snackbar, speaking } = storeToRefs(useAppStore());
+
+useAppStore().init_speech_recognition();
 
 if (token) {
   useAppStore().connect();

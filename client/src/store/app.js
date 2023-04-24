@@ -10,6 +10,8 @@ export const server = {
   port: 8080
 }
 
+const SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
+
 export const useAppStore = defineStore('app', {
   state: () => ({
     token: localStorage.getItem('token'),
@@ -18,7 +20,13 @@ export const useAppStore = defineStore('app', {
     sensor_types: new Map(),
     sensors: new Map(),
     solvers: new Map(),
-    users: new Map()
+    users: new Map(),
+    speech_recognition: new SpeechRecognition(),
+    listening: false,
+    recognized_text: '',
+    recognized_text_snackbar: false,
+    speech_synthesis: window.speechSynthesis,
+    speaking: false,
   }),
   actions: {
     login(email, password) {
@@ -215,6 +223,53 @@ export const useAppStore = defineStore('app', {
         },
         body: JSON.stringify(value)
       });
+    },
+    init_speech_recognition() {
+      this.speech_recognition.interimResults = true;
+      this.speech_recognition.onstart = () => {
+        this.listening = true;
+        this.recognized_text_snackbar = true;
+        if (this.socket && this.socket.readyState === WebSocket.OPEN)
+          this.socket.send(JSON.stringify({ 'type': 'listening', 'token': this.token }));
+      };
+      this.speech_recognition.onend = () => {
+        this.listening = false;
+        if (this.socket && this.socket.readyState === WebSocket.OPEN)
+          this.socket.send(JSON.stringify({ 'type': 'not_listening', 'token': this.token }));
+        setTimeout(() => {
+          this.recognized_text_snackbar = false;
+          this.recognized_text = '';
+        }, 2000);
+      };
+      this.speech_recognition.onresult = (event) => {
+        const text = event.results[0][0].transcript;
+        const confidence = event.results[0][0].confidence;
+        this.recognized_text = text;
+        if (event.results[0].isFinal) {
+          this.speak(text);
+          if (this.socket && this.socket.readyState === WebSocket.OPEN)
+            this.socket.send(JSON.stringify({ 'type': 'understand', 'token': this.token, 'text': text, 'confidence': confidence }));
+        }
+      };
+    },
+    start_speech_recognition() {
+      this.speech_recognition.start();
+    },
+    speak(text) {
+      if (this.speech_synthesis.speaking)
+        this.speech_synthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.onstart = () => {
+        this.speaking = true;
+        if (this.socket && this.socket.readyState === WebSocket.OPEN)
+          this.socket.send(JSON.stringify({ 'type': 'speaking', 'token': this.token }));
+      };
+      utterance.onend = () => {
+        this.speaking = false;
+        if (this.socket && this.socket.readyState === WebSocket.OPEN)
+          this.socket.send(JSON.stringify({ 'type': 'not_speaking', 'token': this.token }));
+      };
+      this.speech_synthesis.speak(utterance);
     }
   },
   getters: {
@@ -259,4 +314,4 @@ export const useAppStore = defineStore('app', {
     get_graph_id: (state) => { return (id) => 'gr-' + id; },
     get_sensor_id: (state) => { return (id) => 'sensor-' + id; },
   }
-})
+});
