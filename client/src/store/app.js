@@ -137,7 +137,7 @@ export const useAppStore = defineStore('app', {
             this.sensors.delete(data.sensor);
             break;
           case 'new_sensor_value':
-            this.sensors.get(data.sensor).add_value({ 'timestamp': data.timestamp, 'value': data.value });
+            this.sensors.get(data.sensor).add_value({ 'timestamp': data.timestamp * 1000, 'value': data.value });
             break;
           case 'new_sensor_state':
             this.sensors.get(data.sensor).state = data.state;

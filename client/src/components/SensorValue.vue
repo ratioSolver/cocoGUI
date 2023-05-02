@@ -30,7 +30,7 @@ export default {
     var d = new Date();
     d.setMonth(d.getMonth() - 1);
     d.setHours(0, 0, 0, 0);
-    fetch('http://' + server.host + ':' + server.port + '/sensor/' + this.sensor.id + '?' + new URLSearchParams({ from: d.getTime() }), {
+    fetch('http://' + server.host + ':' + server.port + '/sensor/' + this.sensor.id + '?' + new URLSearchParams({ from: d.getTime() / 1000 }), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

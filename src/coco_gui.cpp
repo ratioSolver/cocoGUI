@@ -54,11 +54,16 @@ namespace coco::coco_gui
                 return crow::response(404, "The sensor does not exist.");
             if (!req.url_params.get("from"))
                 return crow::response(400, "The from parameter is required.");
-            std::time_t from_t = std::stol(req.url_params.get("from"));
+            
+            std::chrono::system_clock::time_point from = std::chrono::system_clock::from_time_t(std::stol(req.url_params.get("from")));
+            auto from_t = std::chrono::system_clock::to_time_t(from);
             LOG_DEBUG("From: " << std::put_time(std::localtime(&from_t), "%c %Z"));
-            std::time_t to_t = req.url_params.get("to") ? std::stol(req.url_params.get("to")) : std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+            std::chrono::system_clock::time_point to = req.url_params.get("to") ? std::chrono::system_clock::from_time_t(std::stol(req.url_params.get("to"))) : std::chrono::system_clock::now();
+            auto to_t = std::chrono::system_clock::to_time_t(to);
+
             LOG_DEBUG("To: " << std::put_time(std::localtime(&to_t), "%c %Z"));
-            crow::json::wvalue c_sts = crow::json::load(json::json(cc.get_database().get_sensor_values(cc.get_database().get_sensor(id), std::chrono::system_clock::from_time_t(from_t), std::chrono::system_clock::from_time_t(to_t))).to_string());
+            crow::json::wvalue c_sts = crow::json::load(json::json(cc.get_database().get_sensor_values(cc.get_database().get_sensor(id), from, to)).to_string());
             return crow::response(c_sts); });
 
         CROW_ROUTE(app, "/coco")
@@ -257,17 +262,17 @@ namespace coco::coco_gui
             conn->send_text(msg);
     }
 
-    void coco_gui::new_sensor_value(const sensor &s, const std::chrono::milliseconds::rep &time, const json::json &value)
+    void coco_gui::new_sensor_value(const sensor &s, const std::chrono::system_clock::time_point &time, const json::json &value)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "new_sensor_value"}, {"sensor", s.get_id()}, {"timestamp", time}, {"value", value}}.to_string();
+        std::string msg = json::json{{"type", "new_sensor_value"}, {"sensor", s.get_id()}, {"timestamp", std::chrono::system_clock::to_time_t(time)}, {"value", value}}.to_string();
         for (auto &[tkn, conn] : users)
             conn->send_text(msg);
     }
-    void coco_gui::new_sensor_state(const sensor &s, const std::chrono::milliseconds::rep &time, const json::json &state)
+    void coco_gui::new_sensor_state(const sensor &s, const std::chrono::system_clock::time_point &time, const json::json &state)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "new_sensor_state"}, {"sensor", s.get_id()}, {"timestamp", time}, {"state", state}}.to_string();
+        std::string msg = json::json{{"type", "new_sensor_state"}, {"sensor", s.get_id()}, {"timestamp", std::chrono::system_clock::to_time_t(time)}, {"state", state}}.to_string();
         for (auto &[tkn, conn] : users)
             conn->send_text(msg);
     }
