@@ -3,6 +3,9 @@
     <v-container>
       <v-row>
         <v-col cols="12" md="6">
+          <v-text-field v-model="sensor.id" :rules="[v => !!v || 'Id is required']" label="Id" required readonly />
+        </v-col>
+        <v-col cols="12" md="6">
           <v-text-field v-model="sensor.name" :rules="[v => !!v || 'Name is required']" label="Name" required />
         </v-col>
         <v-col cols="12" md="6">

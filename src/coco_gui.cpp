@@ -1,6 +1,7 @@
 #include "coco_gui.h"
 #include "coco_db.h"
 #include "coco_executor.h"
+#include <iomanip>
 
 namespace coco::coco_gui
 {
@@ -47,14 +48,17 @@ namespace coco::coco_gui
         CROW_ROUTE(app, "/sensor/<string>")
         ([&cc](const crow::request &req, const std::string &id)
          {
+            LOG_DEBUG("Gettting sensor data..");
             const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
             if (!cc.get_database().has_sensor(id))
                 return crow::response(404, "The sensor does not exist.");
             if (!req.url_params.get("from"))
                 return crow::response(400, "The from parameter is required.");
-            auto from = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::from_time_t(std::stoul(req.url_params.get("from"))).time_since_epoch()).count();
-            auto to = req.url_params.get("to") ? std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::from_time_t(std::stoul(req.url_params.get("to"))).time_since_epoch()).count() : std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-            crow::json::wvalue c_sts = crow::json::load(json::json(cc.get_database().get_sensor_values(cc.get_database().get_sensor(id), from, to)).to_string());
+            std::time_t from_t = std::stol(req.url_params.get("from"));
+            LOG_DEBUG("From: " << std::put_time(std::localtime(&from_t), "%c %Z"));
+            std::time_t to_t = req.url_params.get("to") ? std::stol(req.url_params.get("to")) : std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+            LOG_DEBUG("To: " << std::put_time(std::localtime(&to_t), "%c %Z"));
+            crow::json::wvalue c_sts = crow::json::load(json::json(cc.get_database().get_sensor_values(cc.get_database().get_sensor(id), std::chrono::system_clock::from_time_t(from_t), std::chrono::system_clock::from_time_t(to_t))).to_string());
             return crow::response(c_sts); });
 
         CROW_ROUTE(app, "/coco")

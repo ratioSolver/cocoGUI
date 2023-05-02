@@ -135,9 +135,11 @@ export class SensorD3 extends Sensor {
 
     update_parameter(i, par) {
         const values = [];
-        values.push({ time: this.data[0].timestamp, from: this.origin, value: this.data[0].value[par] });
-        for (let j = 1; j < this.data.length; j++)
-            values.push({ time: this.data[j].timestamp, from: this.data[j - 1].timestamp, value: this.data[j].value[par] });
+        if (this.data && this.data.length > 0) {
+            values.push({ time: this.data[0].timestamp, from: this.origin, value: this.data[0].value[par] });
+            for (let j = 1; j < this.data.length; j++)
+                values.push({ time: this.data[j].timestamp, from: this.data[j - 1].timestamp, value: this.data[j].value[par] });
+        }
 
         switch (this.type.parameters.get(par)) {
             case 'int':
