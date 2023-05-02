@@ -28,6 +28,10 @@
         <v-img v-if="user.avatar" alt="Avatar" :src="user.avatar"></v-img>
         <v-icon v-else icon="mdi-account"></v-icon>
       </v-avatar>
+      <v-divider vertical></v-divider>
+      <v-btn icon="mdi-view-grid-plus" v-if="user" @click="useAppStore().new_sensor_type_dialog = true" />
+      <v-btn icon="mdi-plus-network" v-if="user" @click="useAppStore().new_sensor_dialog = true" />
+      <v-divider vertical></v-divider>
       <v-btn icon="mdi-microphone" @click="useAppStore().start_speech_recognition()" />
       <v-icon v-if="listening" icon="mdi-ear-hearing" />
       <v-icon v-if="speaking" icon="mdi-account-voice" />
@@ -42,6 +46,8 @@
       </v-window>
 
       <Login />
+      <NewSensorType />
+      <NewSensor />
       <v-snackbar v-model="recognized_text_snackbar" timeout="-1">
         {{ recognized_text }}
       </v-snackbar>
@@ -51,7 +57,8 @@
 
 <script>
 export default {
-  data: () => ({ drawer: false, selected_item: null }),
+    data: () => ({ drawer: false, selected_item: null }),
+    components: { NewSensorType }
 }
 </script>
 
@@ -68,6 +75,8 @@ import Solver from './components/Solver.vue'
 import UserListItem from './components/UserListItem.vue'
 import User from './components/User.vue'
 import Login from './components/Login.vue'
+import NewSensorType from './components/NewSensorType.vue';
+import NewSensor from './components/NewSensor.vue';
 
 const { sensor_types, sensors, solvers, users, token, user, login_dialog, listening, recognized_text, recognized_text_snackbar, speaking } = storeToRefs(useAppStore());
 

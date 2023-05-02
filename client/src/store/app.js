@@ -11,12 +11,15 @@ export const server = {
 }
 
 const SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
+const SpeechGrammarList = window.SpeechGrammarList || webkitSpeechGrammarList;
 
 export const useAppStore = defineStore('app', {
   state: () => ({
     token: localStorage.getItem('token'),
     user: null,
     login_dialog: false,
+    new_sensor_type_dialog: false,
+    new_sensor_dialog: false,
     sensor_types: new Map(),
     sensors: new Map(),
     solvers: new Map(),
@@ -214,6 +217,16 @@ export const useAppStore = defineStore('app', {
         }
       };
     },
+    new_sensor_type(name, description, parameters) {
+      fetch('http://' + server.host + ':' + server.port + '/sensor_type', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'token': this.token
+        },
+        body: JSON.stringify({ 'name': name, 'description': description, 'parameters': parameters })
+      });
+    },
     publish_sensor_value(sensor, value) {
       fetch('http://' + server.host + ':' + server.port + '/sensor/' + sensor, {
         method: 'POST',
@@ -226,6 +239,7 @@ export const useAppStore = defineStore('app', {
     },
     init_speech_recognition() {
       this.speech_recognition.interimResults = true;
+      this.speech_recognition.lang = 'it-IT';
       this.speech_recognition.onstart = () => {
         this.listening = true;
         this.recognized_text_snackbar = true;
