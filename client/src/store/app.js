@@ -219,13 +219,45 @@ export const useAppStore = defineStore('app', {
       };
     },
     new_sensor_type(name, description, parameters) {
+      const par_dict = {};
+      for (let par of parameters)
+        par_dict[par.name] = par.type;
       fetch('http://' + server.host + ':' + server.port + '/sensor_type', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'token': this.token
         },
-        body: JSON.stringify({ 'name': name, 'description': description, 'parameters': parameters })
+        body: JSON.stringify({ 'name': name, 'description': description, 'parameters': par_dict })
+      }).then(response => {
+        if (response.ok)
+          this.new_sensor_type_dialog = false;
+      });
+    },
+    new_sensor(name, type, location) {
+      fetch('http://' + server.host + ':' + server.port + '/sensor', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'token': this.token
+        },
+        body: JSON.stringify({ 'name': name, 'type': type, 'location': location })
+      }).then(response => {
+        if (response.ok)
+          this.new_sensor_dialog = false;
+      });
+    },
+    new_user(first_name, last_name, email, password) {
+      fetch('http://' + server.host + ':' + server.port + '/user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'token': this.token
+        },
+        body: JSON.stringify({ 'first_name': first_name, 'last_name': last_name, 'email': email, 'password': password })
+      }).then(response => {
+        if (response.ok)
+          this.new_user_dialog = false;
       });
     },
     publish_sensor_value(sensor, value) {

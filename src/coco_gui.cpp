@@ -16,18 +16,111 @@ namespace coco::coco_gui
         CROW_ROUTE(app, "/login").methods("POST"_method)([&cc](const crow::request &req)
                                                          {
             const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
-            auto x = crow::json::load(req.body);
+            auto x = json::load(req.body);
             if (!x.has("email") || !x.has("password"))
                 return crow::response(400, "Login must contain email and password");
-            auto email = x["email"].s();
-            auto password = x["password"].s();
+            std::string email = x["email"];
+            std::string password = x["password"];
             auto user = cc.get_database().get_user(email, password);
             if (!user)
                 return crow::response(401, "Invalid email or password");
-            auto res = crow::response(200);
-            json::json login{{"status", "ok"}, {"token", user->get_id()}};
-            res.body = login.to_string();
+            crow::response res(200);
+            res.add_header("Content-Type", "application/json");
+            res.body = json::json{{"status", "ok"}, {"token", user->get_id()}}.to_string();
             return res; });
+
+        CROW_ROUTE(app, "/users")
+        ([&cc]()
+         {
+            const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
+            crow::response res(200);
+            json::json users(json::json_type::array);
+            for (auto &u : cc.get_database().get_users())
+                users.push_back(to_json(u.get()));
+            res.add_header("Content-Type", "application/json");
+            res.body = users.to_string();
+            return res; });
+        
+        CROW_ROUTE(app, "/user").methods("POST"_method)([&cc](const crow::request &req)
+                                                        {
+            LOG_DEBUG("Creating new user..");
+            const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
+            auto user = json::load(req.body);
+            if (!user.has("email") || !user.has("password") || !user.has("first_name") || !user.has("last_name") || !user.has("roots"))
+                return crow::response(400, "User must contain email, password, first_name, last_name and roots");
+            std::string email = user["email"];
+            std::string password = user["password"];
+            std::string first_name = user["first_name"];
+            std::string last_name = user["last_name"];
+            std::vector<std::string> roots;
+            for (size_t i = 0; i < user["roots"].size(); ++i)
+                roots.push_back(user["roots"][i]);
+            cc.create_user(first_name, last_name, email, password, roots, user["data"]);
+            return crow::response(200); });
+
+        CROW_ROUTE(app, "/sensor_types")
+        ([&cc]()
+         {
+            const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
+            crow::response res(200);
+            json::json sensor_types(json::json_type::array);
+            for (auto &st : cc.get_database().get_sensor_types())
+                sensor_types.push_back(to_json(st.get()));
+            res.add_header("Content-Type", "application/json");
+            res.body = sensor_types.to_string();
+            return res; });
+
+        CROW_ROUTE(app, "/sensor_type").methods("POST"_method)([&cc](const crow::request &req)
+                                                               {
+            LOG_DEBUG("Creating new sensor type..");
+            const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
+            auto sensor_type = json::load(req.body);
+            if (!sensor_type.has("name") || !sensor_type.has("description") || !sensor_type.has("parameters"))
+                return crow::response(400, "Sensor type must contain name, description and parameters");
+            std::string name = sensor_type["name"];
+            std::string description = sensor_type["description"];
+            auto parameters = sensor_type["parameters"].get_object();
+            std::map<std::string, coco::parameter_type> parameters_map;
+            for (auto &[name, pt] : parameters)
+                switch (static_cast<int>(pt["type"]))
+                {
+                    case 0:
+                        parameters_map[name] = coco::parameter_type::Integer;
+                        break;
+                    case 1:
+                        parameters_map[name] = coco::parameter_type::Float;
+                        break;
+                    case 2:
+                        parameters_map[name] = coco::parameter_type::Boolean;
+                        break;
+                    case 3:
+                        parameters_map[name] = coco::parameter_type::Symbol;
+                        break;
+                    case 4:
+                        parameters_map[name] = coco::parameter_type::String;
+                        break;
+                    default:
+                        return crow::response(400, "Invalid parameter type");
+                }
+            cc.create_sensor_type(name, description, parameters_map);
+            return crow::response(200); });
+        
+        CROW_ROUTE(app, "/sensor").methods("POST"_method)([&cc](const crow::request &req)
+                                                          {
+            LOG_DEBUG("Creating new sensor..");
+            const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
+            auto x = json::load(req.body);
+            if (!x.has("name") || !x.has("type"))
+                return crow::response(400, "Sensor must contain name and type");
+            std::string name = x["name"];
+            std::string type_id = x["type"];
+            if (!cc.get_database().has_sensor_type(type_id))
+                return crow::response(400, "Sensor type does not exist");
+            coco::location_ptr l;
+            if (x.has("location"))
+                l = new coco::location{static_cast<double>(x["location"]["x"]), static_cast<double>(x["location"]["y"])};
+            cc.create_sensor(name, cc.get_database().get_sensor_type(type_id), std::move(l));
+            return crow::response(200); });
 
         CROW_ROUTE(app, "/sensor/<string>").methods("POST"_method)([&cc](const crow::request &req, const std::string &id)
                                                                    {
@@ -41,9 +134,7 @@ namespace coco::coco_gui
                 return crow::response(404, "The sensor does not exist.");
             auto val = json::load(req.body);
             cc.publish_sensor_value(cc.get_database().get_sensor(id), val);
-            auto res = crow::response(200);
-            res.add_header("Access-Control-Allow-Origin", "*");
-            return res; });
+            return crow::response(200); });
 
         CROW_ROUTE(app, "/sensor/<string>")
         ([&cc](const crow::request &req, const std::string &id)
@@ -52,19 +143,29 @@ namespace coco::coco_gui
             const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
             if (!cc.get_database().has_sensor(id))
                 return crow::response(404, "The sensor does not exist.");
-            if (!req.url_params.get("from"))
-                return crow::response(400, "The from parameter is required.");
-            
-            std::chrono::system_clock::time_point from = std::chrono::system_clock::from_time_t(std::stol(req.url_params.get("from")));
+
+            std::chrono::system_clock::time_point to;
+            if (req.url_params.get("to"))
+                to = std::chrono::system_clock::from_time_t(std::stol(req.url_params.get("to")));
+            else
+                to = std::chrono::system_clock::now();
+
+            std::chrono::system_clock::time_point from;
+            if (req.url_params.get("from"))
+                from = std::chrono::system_clock::from_time_t(std::stol(req.url_params.get("from")));
+            else
+                from = to - std::chrono::hours(24 * 30);
+
             auto from_t = std::chrono::system_clock::to_time_t(from);
             LOG_DEBUG("From: " << std::put_time(std::localtime(&from_t), "%c %Z"));
 
-            std::chrono::system_clock::time_point to = req.url_params.get("to") ? std::chrono::system_clock::from_time_t(std::stol(req.url_params.get("to"))) : std::chrono::system_clock::now();
             auto to_t = std::chrono::system_clock::to_time_t(to);
-
             LOG_DEBUG("To: " << std::put_time(std::localtime(&to_t), "%c %Z"));
-            crow::json::wvalue c_sts = crow::json::load(json::json(cc.get_database().get_sensor_values(cc.get_database().get_sensor(id), from, to)).to_string());
-            return crow::response(c_sts); });
+
+            crow::response res(200);
+            res.add_header("Content-Type", "application/json");
+            res.body = cc.get_database().get_sensor_values(cc.get_database().get_sensor(id), from, to).to_string();
+            return res; });
 
         CROW_ROUTE(app, "/coco")
             .websocket()
