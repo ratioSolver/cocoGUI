@@ -20,6 +20,7 @@ export const useAppStore = defineStore('app', {
     login_dialog: false,
     new_sensor_type_dialog: false,
     new_sensor_dialog: false,
+    new_user_dialog: false,
     sensor_types: new Map(),
     sensors: new Map(),
     solvers: new Map(),

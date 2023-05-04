@@ -5,10 +5,10 @@
         <v-toolbar-title>New sensor</v-toolbar-title>
       </v-toolbar>
       <v-card-text>
-        <v-form>
-          <v-text-field v-model="name" prepend-icon="mdi-account" name="name" label="Sensor name" type="text" required />
-          <v-text-field v-model="description" prepend-icon="mdi-lock" name="description" label="Description"
-            type="text" />
+        <v-form v-model="valid">
+          <v-text-field v-model="name" :rules="[v => !!v || 'Name is required']" name="name" label="Sensor name" type="text" clearable required />
+          <v-text-field v-model="description" name="description" label="Description"
+            type="text" clearable />
           <v-select v-model="sensor_type" :items="Array.from(sensor_types.values())" label="Sensor type" item-title="name" item-value="id" required />
         </v-form>
       </v-card-text>
@@ -24,6 +24,7 @@
 export default {
   data() {
     return {
+      valid: false,
       name: '',
       description: '',
       sensor_type: ''

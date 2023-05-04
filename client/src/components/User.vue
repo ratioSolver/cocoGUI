@@ -5,11 +5,11 @@
         <v-row>
           <v-col cols="12" md="6">
             <v-text-field v-model="user.first_name" :rules="[v => !!v || 'First name is required']" label="First name"
-              required />
+              clearable required />
           </v-col>
           <v-col cols="12" md="6">
             <v-text-field v-model="user.last_name" :rules="[v => !!v || 'Last name is required']" label="Last name"
-              required />
+              clearable required />
           </v-col>
           <v-col cols="12" md="6">
             <v-text-field v-model="user.email" :rules="[v => !!v || 'E-mail is required']" label="E-mail" required />

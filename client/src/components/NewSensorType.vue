@@ -5,10 +5,25 @@
         <v-toolbar-title>New sensor type</v-toolbar-title>
       </v-toolbar>
       <v-card-text>
-        <v-form>
-          <v-text-field v-model="name" prepend-icon="mdi-account" name="name" label="Sensor type name" type="text" />
-          <v-text-field v-model="description" prepend-icon="mdi-lock" name="description" label="Description"
-            type="text" />
+        <v-form v-model="valid">
+          <v-text-field v-model="name" :rules="[v => !!v || 'Name is required']" name="name" label="Sensor type name"
+            type="text" clearable required />
+          <v-text-field v-model="description" name="description" label="Description" type="text" clearable />
+          <v-divider></v-divider>
+          <v-table>
+            <thead>
+              <tr>
+                <th class="text-left">Parameter name</th>
+                <th class="text-left">Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="[name, type] in parameters" :key="name">
+                <td>{{ name }}</td>
+                <td>{{ type }}</td>
+              </tr>
+            </tbody>
+          </v-table>
         </v-form>
       </v-card-text>
       <v-card-actions>
@@ -23,8 +38,10 @@
 export default {
   data() {
     return {
+      valid: false,
       name: '',
-      description: ''
+      description: '',
+      parameters: {},
     }
   }
 }
