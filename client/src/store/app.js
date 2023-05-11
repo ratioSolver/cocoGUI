@@ -234,14 +234,14 @@ export const useAppStore = defineStore('app', {
           this.new_sensor_type_dialog = false;
       });
     },
-    new_sensor(name, type, location) {
+    new_sensor(name, description, type, location) {
       fetch('http://' + server.host + ':' + server.port + '/sensor', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'token': this.token
         },
-        body: JSON.stringify({ 'name': name, 'type': type, 'location': location })
+        body: JSON.stringify({ 'name': name, 'description': description, 'type': type, 'location': location })
       }).then(response => {
         if (response.ok)
           this.new_sensor_dialog = false;

@@ -6,15 +6,17 @@
       </v-toolbar>
       <v-card-text>
         <v-form v-model="valid">
-          <v-text-field v-model="name" :rules="[v => !!v || 'Name is required']" name="name" label="Sensor name" type="text" clearable required />
-          <v-text-field v-model="description" name="description" label="Description"
-            type="text" clearable />
-          <v-select v-model="sensor_type" :items="Array.from(sensor_types.values())" label="Sensor type" item-title="name" item-value="id" required />
+          <v-text-field v-model="name" :rules="[v => !!v || 'Name is required']" name="name" label="Sensor name"
+            type="text" clearable required />
+          <v-text-field v-model="description" name="description" label="Description" type="text" clearable />
+          <v-select v-model="sensor_type" :items="Array.from(sensor_types.values())" label="Sensor type" item-title="name"
+            item-value="id" required />
         </v-form>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" to="/" @click="useAppStore().new_sensor(name, description)">Create</v-btn>
+        <v-btn color="primary" to="/"
+          @click="useAppStore().new_sensor(name, description, sensor_type)">Create</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

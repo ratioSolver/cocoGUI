@@ -82,7 +82,7 @@ namespace coco::coco_gui
             auto parameters = sensor_type["parameters"].get_object();
             std::map<std::string, coco::parameter_type> parameters_map;
             for (auto &[name, pt] : parameters)
-                switch (static_cast<int>(pt["type"]))
+                switch (static_cast<int>(pt))
                 {
                     case 0:
                         parameters_map[name] = coco::parameter_type::Integer;
