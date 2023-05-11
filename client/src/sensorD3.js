@@ -88,7 +88,8 @@ export class SensorD3 extends Sensor {
 
     add_value(value) {
         super.add_value(value);
-        this.update();
+        if (this.sensor_svg)
+            this.update();
     }
 
     update() {

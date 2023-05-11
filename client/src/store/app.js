@@ -132,7 +132,7 @@ export const useAppStore = defineStore('app', {
               this.sensors.set(sensor.id, new SensorD3(sensor.id, sensor.name, this.sensor_types.get(sensor.type), sensor.value, sensor.state));
             break;
           case 'new_sensor':
-            this.sensors.set(data.sensor.id, data.sensor);
+            this.sensors.set(data.sensor.id, new SensorD3(data.sensor.id, data.sensor.name, this.sensor_types.get(data.sensor.type), data.sensor.value, data.sensor.state));
             break;
           case 'updated_sensor':
             this.sensors.set(data.sensor.id, data.sensor);

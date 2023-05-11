@@ -16,7 +16,15 @@ export class Sensor {
         this.type = type;
         this.value = value;
         this.state = state;
-        this.data = value ? [{ timestamp: value.timestamp, value: value }] : [];
+        this.data = [];
+        if (value) {
+            this.data.push({ timestamp: value.timestamp, value: value });
+            this.origin = value.timestamp;
+            this.horizon = value.timestamp;
+        } else {
+            this.origin = 0;
+            this.horizon = 1;
+        }
     }
 
     set_data(data) {
