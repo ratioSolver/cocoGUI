@@ -20,6 +20,9 @@ set(COCO_ROOT "CoCo-GUI" CACHE STRING "The COCO root" FORCE)
 message(STATUS "CoCo GUI IP:            ${COCO_HOST}")
 message(STATUS "CoCo GUI port:          ${COCO_PORT}")
 
+set(RATIONET_INCLUDE_UTILS OFF CACHE BOOL "Include utils library" FORCE)
+
+add_subdirectory(extern/rationet)
 add_subdirectory(extern/coco)
 
 file(GLOB COCO_SOURCES src/*.cpp)
@@ -27,7 +30,7 @@ file(GLOB COCO_HEADERS include/*.h)
 
 add_executable(${PROJECT_NAME} ${COCO_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/include $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/extern/crow $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> $<INSTALL_INTERFACE:> ${Boost_INCLUDE_DIRS} ${CLIPS_INCLUDE_DIR} ${LIBMONGOCXX_INCLUDE_DIR} ${LIBBSONCXX_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} PRIVATE COCO)
+target_link_libraries(${PROJECT_NAME} PRIVATE ratioNet COCO)
 target_compile_definitions(${PROJECT_NAME} PRIVATE COCO_HOST="${COCO_HOST}" COCO_PORT=${COCO_PORT})
 
 if(MSVC)

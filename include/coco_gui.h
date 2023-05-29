@@ -1,18 +1,36 @@
 #pragma once
 
+#include "server.h"
 #include "coco_listener.h"
-#include "crow_all.h"
 
 namespace coco::coco_gui
 {
-  class coco_gui : public coco::coco_listener
+  class coco_gui : public network::server, public coco::coco_listener
   {
   public:
     coco_gui(coco::coco_core &cc, const std::string &coco_host = COCO_HOST, const unsigned short coco_port = COCO_PORT);
 
-    void start();
-    void wait_for_server_start();
-    void stop();
+  private:
+    void login(network::request &req, network::response &res);
+
+    bool authorize(network::request &req, network::response &res, bool admin = false);
+
+    void get_users(network::request &req, network::response &res);
+    void create_user(network::request &req, network::response &res);
+
+    void get_sensor_types(network::request &req, network::response &res);
+    void create_sensor_type(network::request &req, network::response &res);
+
+    void get_sensors(network::request &req, network::response &res);
+    void create_sensor(network::request &req, network::response &res);
+
+    void get_sensor_values(network::request &req, network::response &res);
+    void publish_sensor_value(network::request &req, network::response &res);
+
+  private:
+    void on_ws_open(network::websocket_session &ws);
+    void on_ws_message(network::websocket_session &ws, const std::string &msg);
+    void on_ws_close(network::websocket_session &ws);
 
   private:
     void new_user(const user &u) override;
@@ -55,10 +73,10 @@ namespace coco::coco_gui
     void end(const coco_executor &exec, const std::unordered_set<ratio::atom *> &atoms) override;
 
   private:
-    const std::string coco_host;
-    const unsigned short coco_port;
-    crow::SimpleApp app;
-    std::unordered_map<crow::websocket::connection *, std::string> connections;
-    std::unordered_map<std::string, crow::websocket::connection *> users;
+    void broadcast(const std::string &&msg, bool to_all = true);
+
+  private:
+    std::unordered_map<network::websocket_session *, std::string> ws_to_user;
+    std::unordered_map<std::string, network::websocket_session *> user_to_ws;
   };
 } // namespace coco_gui

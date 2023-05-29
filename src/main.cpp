@@ -29,9 +29,7 @@ int main(int argc, char const *argv[])
     cc.init();
 
     coco::coco_gui::coco_gui gui(cc);
-    auto srv_st = std::async(std::launch::async, [&]
-                             { gui.start(); });
-    gui.wait_for_server_start();
+    gui.network::server::start();
 
     return 0;
 }

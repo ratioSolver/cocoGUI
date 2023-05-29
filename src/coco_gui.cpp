@@ -5,517 +5,595 @@
 
 namespace coco::coco_gui
 {
-    coco_gui::coco_gui(coco::coco_core &cc, const std::string &coco_host, const unsigned short coco_port) : coco::coco_listener(cc), coco_host(coco_host), coco_port(coco_port)
+    coco_gui::coco_gui(coco::coco_core &cc, const std::string &coco_host, const unsigned short coco_port) : network::server(coco_host, coco_port), coco::coco_listener(cc)
     {
-        app.loglevel(crow::LogLevel::Warning);
+        LOG_DEBUG("Creating coco_gui..");
+        add_file_route("^/$", "client/dist/index.html");
+        add_file_route("^/favicon.ico$", "client/dist");
+        add_file_route("^/assets/.*$", "client/dist");
 
-        CROW_ROUTE(app, "/")
-        ([]()
-         { return crow::mustache::load("index.html").render(); });
+        add_route(boost::beast::http::verb::post, "^/login$", std::bind(&coco_gui::login, this, std::placeholders::_1, std::placeholders::_2));
+        add_route(boost::beast::http::verb::get, "^/users$", std::bind(&coco_gui::get_users, this, std::placeholders::_1, std::placeholders::_2));
+        add_route(boost::beast::http::verb::post, "^/user$", std::bind(&coco_gui::create_user, this, std::placeholders::_1, std::placeholders::_2));
+        add_route(boost::beast::http::verb::get, "^/sensor_types$", std::bind(&coco_gui::get_sensor_types, this, std::placeholders::_1, std::placeholders::_2));
+        add_route(boost::beast::http::verb::post, "^/sensor_type$", std::bind(&coco_gui::create_sensor_type, this, std::placeholders::_1, std::placeholders::_2));
+        add_route(boost::beast::http::verb::get, "^/sensors$", std::bind(&coco_gui::get_sensors, this, std::placeholders::_1, std::placeholders::_2));
+        add_route(boost::beast::http::verb::post, "^/sensor$", std::bind(&coco_gui::create_sensor, this, std::placeholders::_1, std::placeholders::_2));
+        add_route(boost::beast::http::verb::get, "^/sensor/.*$", std::bind(&coco_gui::get_sensor_values, this, std::placeholders::_1, std::placeholders::_2));
+        add_route(boost::beast::http::verb::post, "^/sensor/.*$", std::bind(&coco_gui::publish_sensor_value, this, std::placeholders::_1, std::placeholders::_2));
 
-        CROW_ROUTE(app, "/login").methods("POST"_method)([&cc](const crow::request &req)
-                                                         {
-            const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
-            auto x = json::load(req.body);
-            if (!x.has("email") || !x.has("password"))
-                return crow::response(400, "Login must contain email and password");
-            std::string email = x["email"];
-            std::string password = x["password"];
-            auto user = cc.get_database().get_user(email, password);
-            if (!user)
-                return crow::response(401, "Invalid email or password");
-            crow::response res(200);
-            res.add_header("Content-Type", "application/json");
-            res.body = json::json{{"status", "ok"}, {"token", user->get_id()}}.to_string();
-            return res; });
+        add_ws_route("/ws")
+            .on_open(std::bind(&coco_gui::on_ws_open, this, std::placeholders::_1))
+            .on_message(std::bind(&coco_gui::on_ws_message, this, std::placeholders::_1, std::placeholders::_2))
+            .on_close(std::bind(&coco_gui::on_ws_close, this, std::placeholders::_1));
+    }
 
-        CROW_ROUTE(app, "/users")
-        ([&cc]()
-         {
-            const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
-            crow::response res(200);
-            json::json users(json::json_type::array);
-            for (auto &u : cc.get_database().get_users())
-                users.push_back(to_json(u.get()));
-            res.add_header("Content-Type", "application/json");
-            res.body = users.to_string();
-            return res; });
-        
-        CROW_ROUTE(app, "/user").methods("POST"_method)([&cc](const crow::request &req)
-                                                        {
-            LOG_DEBUG("Creating new user..");
-            const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
-            auto user = json::load(req.body);
-            if (!user.has("email") || !user.has("password") || !user.has("first_name") || !user.has("last_name") || !user.has("roots"))
-                return crow::response(400, "User must contain email, password, first_name, last_name and roots");
-            std::string email = user["email"];
-            std::string password = user["password"];
-            std::string first_name = user["first_name"];
-            std::string last_name = user["last_name"];
-            std::vector<std::string> roots;
-            for (size_t i = 0; i < user["roots"].size(); ++i)
-                roots.push_back(user["roots"][i]);
-            cc.create_user(first_name, last_name, email, password, roots, user["data"]);
-            return crow::response(200); });
+    void coco_gui::login(network::request &req, network::response &res)
+    {
+        const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
+        boost::beast::http::request<boost::beast::http::string_body> string_req{req};
 
-        CROW_ROUTE(app, "/sensor_types")
-        ([&cc]()
-         {
-            const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
-            crow::response res(200);
-            json::json sensor_types(json::json_type::array);
-            for (auto &st : cc.get_database().get_sensor_types())
-                sensor_types.push_back(to_json(st.get()));
-            res.add_header("Content-Type", "application/json");
-            res.body = sensor_types.to_string();
-            return res; });
+        auto x = json::load(string_req.body());
+        if (!x.has("email") || !x.has("password"))
+        {
+            res.result(boost::beast::http::status::bad_request);
+            res.set(boost::beast::http::field::content_type, "application/json");
+            res.body() = json::json{{"success", false}, {"message", "Login must contain email and password"}}.to_string();
+            return;
+        }
 
-        CROW_ROUTE(app, "/sensor_type").methods("POST"_method)([&cc](const crow::request &req)
-                                                               {
-            LOG_DEBUG("Creating new sensor type..");
-            const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
-            auto sensor_type = json::load(req.body);
-            if (!sensor_type.has("name") || !sensor_type.has("description") || !sensor_type.has("parameters"))
-                return crow::response(400, "Sensor type must contain name, description and parameters");
-            std::string name = sensor_type["name"];
-            std::string description = sensor_type["description"];
-            auto parameters = sensor_type["parameters"].get_object();
-            std::map<std::string, coco::parameter_type> parameters_map;
-            for (auto &[name, pt] : parameters)
-                switch (static_cast<int>(pt))
+        std::string email = x["email"];
+        std::string password = x["password"];
+        auto user = cc.get_database().get_user(email, password);
+        if (!user)
+        {
+            res.result(boost::beast::http::status::unauthorized);
+            res.set(boost::beast::http::field::content_type, "application/json");
+            res.body() = json::json{{"success", false}, {"message", "Invalid email or password"}}.to_string();
+            return;
+        }
+
+        res.set(boost::beast::http::field::content_type, "application/json");
+        res.body() = json::json{{"success", true}, {"token", user->get_id()}}.to_string();
+    }
+
+    bool coco_gui::authorize(network::request &req, network::response &res, bool admin)
+    {
+        if (!req.count("token"))
+        {
+            res.result(boost::beast::http::status::bad_request);
+            res.set(boost::beast::http::field::content_type, "application/json");
+            res.body() = json::json{{"success", false}, {"message", "Token must be provided"}}.to_string();
+            return false;
+        }
+        else if (!cc.get_database().has_user(req["token"].to_string()))
+        {
+            res.result(boost::beast::http::status::unauthorized);
+            res.set(boost::beast::http::field::content_type, "application/json");
+            res.body() = json::json{{"success", false}, {"message", "Invalid token"}}.to_string();
+            return false;
+        }
+        else if (admin && cc.get_database().get_user(req["token"].to_string()).get_data()["type"] != "admin")
+        {
+            res.result(boost::beast::http::status::forbidden);
+            res.set(boost::beast::http::field::content_type, "application/json");
+            res.body() = json::json{{"success", false}, {"message", "Only admin can get users"}}.to_string();
+            return false;
+        }
+        else
+            return true;
+    }
+
+    void coco_gui::get_users(network::request &req, network::response &res)
+    {
+        const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
+        if (!authorize(req, res, true))
+            return;
+
+        res.set(boost::beast::http::field::content_type, "application/json");
+        json::json j_users;
+        j_users["type"] = "users";
+        json::json c_users(json::json_type::array);
+        for (const auto &user : cc.get_database().get_users())
+        {
+            json::json j_u = to_json(user.get());
+            if (user_to_ws.count(user.get().get_id()))
+                j_u["connected"] = true;
+            c_users.push_back(std::move(j_u));
+        }
+        j_users["users"] = std::move(c_users);
+        res.body() = j_users.to_string();
+    }
+    void coco_gui::create_user(network::request &req, network::response &res)
+    {
+        const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
+        if (!authorize(req, res, true))
+            return;
+
+        auto x = json::load(boost::beast::http::request<boost::beast::http::string_body>{req}.body());
+        if (!x.has("email") || !x.has("password") || !x.has("roots"))
+        {
+            res.result(boost::beast::http::status::bad_request);
+            res.set(boost::beast::http::field::content_type, "application/json");
+            res.body() = json::json{{"success", false}, {"message", "Email, password and roots must be provided"}}.to_string();
+            return;
+        }
+
+        std::string email = x["email"];
+        std::string password = x["password"];
+        std::string first_name = x["first_name"];
+        std::string last_name = x["last_name"];
+        std::vector<std::string> roots;
+        for (size_t i = 0; i < x["roots"].size(); ++i)
+            roots.push_back(x["roots"][i]);
+        if (cc.get_database().has_user(email))
+        {
+            res.result(boost::beast::http::status::conflict);
+            res.set(boost::beast::http::field::content_type, "application/json");
+            res.body() = json::json{{"success", false}, {"message", "User already exists"}}.to_string();
+            return;
+        }
+
+        cc.create_user(email, password, first_name, last_name, roots, x["data"]);
+    }
+
+    void coco_gui::get_sensor_types(network::request &req, network::response &res)
+    {
+        const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
+        if (!authorize(req, res))
+            return;
+
+        res.set(boost::beast::http::field::content_type, "application/json");
+        json::json j_sensor_types;
+        j_sensor_types["type"] = "sensor_types";
+        json::json c_sensor_types(json::json_type::array);
+        for (const auto &sensor_type : cc.get_database().get_sensor_types())
+            c_sensor_types.push_back(to_json(sensor_type.get()));
+        j_sensor_types["sensor_types"] = std::move(c_sensor_types);
+        res.body() = j_sensor_types.to_string();
+    }
+    void coco_gui::create_sensor_type(network::request &req, network::response &res)
+    {
+        const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
+        if (!authorize(req, res, true))
+            return;
+
+        auto x = json::load(boost::beast::http::request<boost::beast::http::string_body>{req}.body());
+        if (!x.has("name") || !x.has("description") || !x.has("parameters"))
+        {
+            res.result(boost::beast::http::status::bad_request);
+            res.set(boost::beast::http::field::content_type, "application/json");
+            res.body() = json::json{{"success", false}, {"message", "Name, description and parameters must be provided"}}.to_string();
+            return;
+        }
+
+        std::string name = x["name"];
+        std::string description = x["description"];
+        json::json parameters = x["parameters"];
+        std::map<std::string, coco::parameter_type> parameters_map;
+        for (auto &[name, pt] : parameters.get_object())
+            switch (static_cast<int>(pt))
+            {
+            case 0:
+                parameters_map[name] = coco::parameter_type::Integer;
+                break;
+            case 1:
+                parameters_map[name] = coco::parameter_type::Float;
+                break;
+            case 2:
+                parameters_map[name] = coco::parameter_type::Boolean;
+                break;
+            case 3:
+                parameters_map[name] = coco::parameter_type::Symbol;
+                break;
+            case 4:
+                parameters_map[name] = coco::parameter_type::String;
+                break;
+            default:
+                res.result(boost::beast::http::status::bad_request);
+                res.set(boost::beast::http::field::content_type, "application/json");
+                res.body() = json::json{{"success", false}, {"message", "Invalid parameter type"}}.to_string();
+                return;
+            }
+
+        if (cc.get_database().has_sensor_type(name))
+        {
+            res.result(boost::beast::http::status::conflict);
+            res.set(boost::beast::http::field::content_type, "application/json");
+            res.body() = json::json{{"success", false}, {"message", "Sensor type already exists"}}.to_string();
+            return;
+        }
+
+        cc.create_sensor_type(name, description, parameters_map);
+    }
+
+    void coco_gui::get_sensors(network::request &req, network::response &res)
+    {
+        const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
+        if (!authorize(req, res))
+            return;
+
+        res.set(boost::beast::http::field::content_type, "application/json");
+        json::json j_sensors;
+        j_sensors["type"] = "sensors";
+        json::json c_sensors(json::json_type::array);
+        for (const auto &sensor : cc.get_database().get_sensors())
+            c_sensors.push_back(to_json(sensor.get()));
+        j_sensors["sensors"] = std::move(c_sensors);
+        res.body() = j_sensors.to_string();
+    }
+    void coco_gui::create_sensor(network::request &req, network::response &res)
+    {
+        const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
+        if (!authorize(req, res, true))
+            return;
+
+        auto x = json::load(boost::beast::http::request<boost::beast::http::string_body>{req}.body());
+        if (!x.has("name") || !x.has("type"))
+        {
+            res.result(boost::beast::http::status::bad_request);
+            res.set(boost::beast::http::field::content_type, "application/json");
+            res.body() = json::json{{"success", false}, {"message", "Name and type must be provided"}}.to_string();
+            return;
+        }
+
+        std::string name = x["name"];
+        std::string type = x["type"];
+        if (!cc.get_database().has_sensor_type(type))
+        {
+            res.result(boost::beast::http::status::not_found);
+            res.set(boost::beast::http::field::content_type, "application/json");
+            res.body() = json::json{{"success", false}, {"message", "Sensor type not found"}}.to_string();
+            return;
+        }
+
+        if (cc.get_database().has_sensor(name))
+        {
+            res.result(boost::beast::http::status::conflict);
+            res.set(boost::beast::http::field::content_type, "application/json");
+            res.body() = json::json{{"success", false}, {"message", "Sensor already exists"}}.to_string();
+            return;
+        }
+
+        coco::location_ptr l;
+        if (x.has("location"))
+            l = new coco::location{static_cast<double>(x["location"]["x"]), static_cast<double>(x["location"]["y"])};
+
+        cc.create_sensor(name, cc.get_database().get_sensor_type(type), std::move(l));
+    }
+
+    void coco_gui::get_sensor_values(network::request &req, network::response &res)
+    {
+        const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
+        if (!authorize(req, res))
+            return;
+
+        std::string sensor_id = req.target().to_string().substr(9);
+        if (!cc.get_database().has_sensor(sensor_id))
+        {
+            res.result(boost::beast::http::status::not_found);
+            res.set(boost::beast::http::field::content_type, "application/json");
+            res.body() = json::json{{"success", false}, {"message", "Sensor not found"}}.to_string();
+            return;
+        }
+
+        boost::beast::http::fields fields = req.base();
+
+        std::chrono::system_clock::time_point to;
+        if (fields.count("to"))
+            to = std::chrono::system_clock::time_point{std::chrono::milliseconds{std::stoll(fields["to"].to_string())}};
+        else
+            to = std::chrono::system_clock::now();
+
+        std::chrono::system_clock::time_point from;
+        if (fields.count("from"))
+            from = std::chrono::system_clock::time_point{std::chrono::milliseconds{std::stoll(fields["from"].to_string())}};
+        else
+            from = to - std::chrono::hours{24 * 30};
+
+#ifdef VERBOSE_LOG
+        auto from_t = std::chrono::system_clock::to_time_t(from);
+        auto to_t = std::chrono::system_clock::to_time_t(to);
+
+        LOG_DEBUG("From: " << std::put_time(std::localtime(&from_t), "%c %Z"));
+        LOG_DEBUG("To: " << std::put_time(std::localtime(&to_t), "%c %Z"));
+#endif
+
+        res.set(boost::beast::http::field::content_type, "application/json");
+        res.body() = cc.get_database().get_sensor_values(cc.get_database().get_sensor(sensor_id), from, to).to_string();
+    }
+
+    void coco_gui::publish_sensor_value(network::request &req, network::response &res)
+    {
+        const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
+        if (!authorize(req, res, true))
+            return;
+
+        std::string sensor_id = req.target().to_string().substr(9);
+        if (!cc.get_database().has_sensor(sensor_id))
+        {
+            res.result(boost::beast::http::status::not_found);
+            res.set(boost::beast::http::field::content_type, "application/json");
+            res.body() = json::json{{"success", false}, {"message", "Sensor not found"}}.to_string();
+            return;
+        }
+
+        cc.publish_sensor_value(cc.get_database().get_sensor(sensor_id), json::load(boost::beast::http::request<boost::beast::http::string_body>{req}.body()));
+    }
+
+    void coco_gui::on_ws_open(network::websocket_session &ws)
+    {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        ws_to_user[&ws] = nullptr;
+    }
+
+    void coco_gui::on_ws_message(network::websocket_session &ws, const std::string &msg)
+    {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        auto x = json::load(msg);
+        if (x.get_type() != json::json_type::object || !x.get_object().count("type") || !x.get_object().count("token"))
+        {
+            ws.close(boost::beast::websocket::close_code::bad_payload);
+            return;
+        }
+
+        if (x["type"] == "login")
+        {
+            std::string token = x["token"];
+            if (!cc.get_database().has_user(token))
+            {
+                ws.close(boost::beast::websocket::close_code::bad_payload);
+                return;
+            }
+
+            auto &usr = cc.get_database().get_user(token);
+            if (std::find_if(usr.get_roots().begin(), usr.get_roots().end(), [this](const std::string &root)
+                             { return root == cc.get_database().get_root(); }) == usr.get_roots().end())
+            {
+                ws.close(boost::beast::websocket::close_code::bad_payload);
+                return;
+            }
+
+            ws_to_user[&ws] = usr.get_id();
+            user_to_ws[usr.get_id()] = &ws;
+
+            broadcast(json::json{{"type", "user_connected"}, {"user", ws_to_user[&ws]}}.to_string(), false);
+            ws.send(json::json{{"type", "login"}, {"success", true}, {"user", to_json(usr)}}.to_string());
+
+            // we send the sensor types
+            json::json j_sensor_types{{"type", "sensor_types"}};
+            json::json c_sensor_types(json::json_type::array);
+            for (const auto &st : cc.get_database().get_sensor_types())
+                c_sensor_types.push_back(to_json(st.get()));
+            j_sensor_types["sensor_types"] = std::move(c_sensor_types);
+            ws.send(j_sensor_types.to_string());
+
+            // we send the sensors
+            json::json j_sensors{{"type", "sensors"}};
+            json::json c_sensors(json::json_type::array);
+            for (const auto &s : cc.get_database().get_sensors())
+                c_sensors.push_back(to_json(s.get()));
+            j_sensors["sensors"] = std::move(c_sensors);
+            ws.send(j_sensors.to_string());
+
+            // we send the solvers
+            json::json j_solvers{{"type", "solvers"}};
+            json::json c_solvers(json::json_type::array);
+            for (const auto &cc_exec : cc.get_executors())
+                c_solvers.push_back({{"id", get_id(*cc_exec)}, {"name", cc_exec->get_executor().get_name()}, {"state", ratio::executor::to_string(cc_exec->get_executor().get_state())}});
+            j_solvers["solvers"] = std::move(c_solvers);
+            ws.send(j_solvers.to_string());
+
+            for (const auto &cc_exec : cc.get_executors())
+            {
+                json::json j_sc = solver_state_changed_message(cc_exec->get_executor().get_solver());
+                j_sc["time"] = ratio::to_json(cc_exec->get_executor().get_current_time());
+                json::json j_executing(json::json_type::array);
+                for (const auto &atm : cc_exec->get_executor().get_executing())
+                    j_executing.push_back(get_id(*atm));
+                j_sc["executing"] = std::move(j_executing);
+                ws.send(j_sc.to_string());
+
+                json::json j_gr = to_graph(*cc_exec);
+                j_gr["type"] = "graph";
+                j_gr["solver_id"] = get_id(*cc_exec);
+                ws.send(j_gr.to_string());
+            }
+
+            if (usr.get_data()["type"] == "admin")
+            {
+                json::json j_users{{"type", "users"}};
+                json::json c_users(json::json_type::array);
+                for (const auto &u : cc.get_database().get_users())
                 {
-                    case 0:
-                        parameters_map[name] = coco::parameter_type::Integer;
-                        break;
-                    case 1:
-                        parameters_map[name] = coco::parameter_type::Float;
-                        break;
-                    case 2:
-                        parameters_map[name] = coco::parameter_type::Boolean;
-                        break;
-                    case 3:
-                        parameters_map[name] = coco::parameter_type::Symbol;
-                        break;
-                    case 4:
-                        parameters_map[name] = coco::parameter_type::String;
-                        break;
-                    default:
-                        return crow::response(400, "Invalid parameter type");
+                    json::json j_u = to_json(u.get());
+                    if (user_to_ws.count(u.get().get_id()))
+                        j_u["connected"] = true;
+                    c_users.push_back(std::move(j_u));
                 }
-            cc.create_sensor_type(name, description, parameters_map);
-            return crow::response(200); });
-        
-        CROW_ROUTE(app, "/sensor").methods("POST"_method)([&cc](const crow::request &req)
-                                                          {
-            LOG_DEBUG("Creating new sensor..");
-            const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
-            auto x = json::load(req.body);
-            if (!x.has("name") || !x.has("type"))
-                return crow::response(400, "Sensor must contain name and type");
-            std::string name = x["name"];
-            std::string type_id = x["type"];
-            if (!cc.get_database().has_sensor_type(type_id))
-                return crow::response(400, "Sensor type does not exist");
-            coco::location_ptr l;
-            if (x.has("location"))
-                l = new coco::location{static_cast<double>(x["location"]["x"]), static_cast<double>(x["location"]["y"])};
-            cc.create_sensor(name, cc.get_database().get_sensor_type(type_id), std::move(l));
-            return crow::response(200); });
+                j_users["users"] = std::move(c_users);
+                ws.send(j_users.to_string());
+            }
 
-        CROW_ROUTE(app, "/sensor/<string>").methods("POST"_method)([&cc](const crow::request &req, const std::string &id)
-                                                                   {
-            auto tkn = req.get_header_value("token");
-            if (tkn.empty())
-                return crow::response(401, "Invalid token");
-            const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
-            if (!cc.get_database().has_user(tkn))
-                return crow::response(401, "Invalid token");
-            if (!cc.get_database().has_sensor(id))
-                return crow::response(404, "The sensor does not exist.");
-            auto val = json::load(req.body);
-            cc.publish_sensor_value(cc.get_database().get_sensor(id), val);
-            return crow::response(200); });
-
-        CROW_ROUTE(app, "/sensor/<string>")
-        ([&cc](const crow::request &req, const std::string &id)
-         {
-            LOG_DEBUG("Gettting sensor data..");
-            const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
-            if (!cc.get_database().has_sensor(id))
-                return crow::response(404, "The sensor does not exist.");
-
-            std::chrono::system_clock::time_point to;
-            if (req.url_params.get("to"))
-                to = std::chrono::system_clock::from_time_t(std::stol(req.url_params.get("to")));
-            else
-                to = std::chrono::system_clock::now();
-
-            std::chrono::system_clock::time_point from;
-            if (req.url_params.get("from"))
-                from = std::chrono::system_clock::from_time_t(std::stol(req.url_params.get("from")));
-            else
-                from = to - std::chrono::hours(24 * 30);
-
-            auto from_t = std::chrono::system_clock::to_time_t(from);
-            LOG_DEBUG("From: " << std::put_time(std::localtime(&from_t), "%c %Z"));
-
-            auto to_t = std::chrono::system_clock::to_time_t(to);
-            LOG_DEBUG("To: " << std::put_time(std::localtime(&to_t), "%c %Z"));
-
-            crow::response res(200);
-            res.add_header("Content-Type", "application/json");
-            res.body = cc.get_database().get_sensor_values(cc.get_database().get_sensor(id), from, to).to_string();
-            return res; });
-
-        CROW_ROUTE(app, "/coco")
-            .websocket()
-            .onopen([&](crow::websocket::connection &conn)
-                    { std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-                connections.emplace(&conn, ""); })
-            .onclose([&](crow::websocket::connection &conn, const std::string &)
-                     { std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-                       if (connections.count(&conn))
-                       {
-                           if (users.count(connections[&conn]))
-                               users.erase(connections[&conn]);
-                           connections.erase(&conn);
-
-                           for (auto &[tkn, conn] : users)
-                               conn->send_text(json::json{{"type", "user_disconnect"}, {"user", tkn}}.to_string());
-                       } })
-            .onmessage([&](crow::websocket::connection &conn, const std::string &message, bool is_binary)
-                       {
-                std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-                if (is_binary)
-                    return;
-                json::json j = json::load(message);
-                if (j.get_type() != json::json_type::object || !j.get_object().count("type") || !j.get_object().count("token"))
-                {
-                    conn.send_text(json::json{{"type", "connect"}, {"success", false}}.to_string());
-                    return;
-                }
-
-                if (j["type"] == "connect") {
-                    std::string token = j["token"];
-                    if(!cc.get_database().has_user(token)) {
-                        conn.send_text(json::json{{"type", "connect"}, {"success", false}}.to_string());
-                        return;
-                    }
-                    auto& usr = cc.get_database().get_user(token);
-                    if (std::find_if(usr.get_roots().begin(), usr.get_roots().end(), [&cc](const std::string &root) { return root == cc.get_database().get_root(); }) == usr.get_roots().end())
-                    {
-                        conn.send_text(json::json{{"type", "connect"}, {"success", false}}.to_string());
-                        return;
-                    }
-
-                    connections[&conn] = token;
-                    users[token] = &conn;
-                    conn.send_text(json::json{{"type", "connect"}, {"success", true}, {"user", to_json(usr)}}.to_string());
-
-                    json::json j_sensor_types{{"type", "sensor_types"}};
-                    json::json c_sensor_types(json::json_type::array);
-                    for (const auto &st : cc.get_database().get_sensor_types())
-                        c_sensor_types.push_back(to_json(st.get()));
-                    j_sensor_types["sensor_types"] = std::move(c_sensor_types);
-                    conn.send_text(j_sensor_types.to_string());
-
-                    json::json j_sensors;
-                    j_sensors["type"] = "sensors";
-                    json::json c_sensors(json::json_type::array);
-                    for (const auto &sensor : cc.get_database().get_sensors())
-                        c_sensors.push_back(to_json(sensor.get()));
-                    j_sensors["sensors"] = std::move(c_sensors);
-                    conn.send_text(j_sensors.to_string());
-
-                    json::json j_solvers;
-                    j_solvers["type"] = "solvers";
-                    json::json c_solvers(json::json_type::array);
-                    for (const auto &cc_exec : cc.get_executors())
-                        c_solvers.push_back({{"id", get_id(*cc_exec)},
-                                             {"name", cc_exec->get_executor().get_name()},
-                                             {"state", ratio::executor::to_string(cc_exec->get_executor().get_state())}});
-                    j_solvers["solvers"] = std::move(c_solvers);
-                    conn.send_text(j_solvers.to_string());
-
-                    for (const auto& cc_exec: cc.get_executors()) {
-                        json::json j_sc{{"type", "state_changed"},
-                                        {"solver_id", get_id(*cc_exec)},
-                                        {"state", to_json(cc_exec->get_executor().get_solver())},
-                                        {"timelines", to_timelines(cc_exec->get_executor().get_solver())},
-                                        {"time", ratio::to_json(cc_exec->get_executor().get_current_time())}};
-                        json::json j_executing(json::json_type::array);
-                        for (const auto &atm : cc_exec->get_executor().get_executing())
-                            j_executing.push_back(get_id(*atm));
-                        j_sc["executing"] = std::move(j_executing);
-                        conn.send_text(j_sc.to_string());
-
-                        json::json j_gr = to_graph(*cc_exec);
-                        j_gr["type"] = "graph";
-                        j_gr["solver_id"] = get_id(*cc_exec);
-                        conn.send_text(j_gr.to_string());
-                    }
-
-                    if (usr.get_data()["type"] == "admin") {
-                        json::json j_users;
-                        j_users["type"] = "users";
-                        json::json c_users(json::json_type::array);
-                        for (const auto &user : cc.get_database().get_users())
-                        {
-                            json::json j_u = to_json(user.get());
-                            if (users.count(user.get().get_id()))
-                                j_u["connected"] = true;
-                            c_users.push_back(std::move(j_u));
-                        }
-                        j_users["users"] = std::move(c_users);
-                        conn.send_text(j_users.to_string());
-                    }
-
-                    for (auto &[tkn, conn] : users)
-                        if (tkn != token)
-                            conn->send_text(json::json{{"type", "user_connected"}, {"user", usr.get_id()}}.to_string());
-                } });
+            broadcast(json::json{{"type", "user_connected"}, {"user", usr.get_id()}}.to_string(), false);
+        }
     }
 
-    void coco_gui::start()
+    void coco_gui::on_ws_close(network::websocket_session &ws)
     {
-        LOG("Starting " + cc.get_database().get_root() + " CoCo Web Server on http://" + coco_host + ':' + std::to_string(coco_port) + "..");
-        app.bindaddr(coco_host).port(coco_port).run();
-    }
-
-    void coco_gui::wait_for_server_start()
-    {
-        app.wait_for_server_start();
-        LOG(cc.get_database().get_root() + " CoCo Web Server started..");
-    }
-
-    void coco_gui::stop()
-    {
-        LOG("Stopping " + cc.get_database().get_root() + " CoCo Web Server..");
-        app.stop();
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        if (ws_to_user.count(&ws))
+        {
+            if (user_to_ws.count(ws_to_user[&ws]))
+                user_to_ws.erase(ws_to_user[&ws]);
+            ws_to_user.erase(&ws);
+        }
+        broadcast(json::json{{"type", "user_disconnected"}, {"user", ws_to_user[&ws]}}.to_string(), false);
     }
 
     void coco_gui::new_user(const user &u)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "new_user"}, {"user", to_json(u)}}.to_string();
-        for (auto &[tkn, conn] : users)
-            if (cc.get_database().get_user(tkn).get_data()["type"] == "admin")
-                conn->send_text(msg);
+        broadcast(json::json{{"type", "new_user"}, {"user", to_json(u)}}.to_string(), false);
     }
     void coco_gui::updated_user(const user &u)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "updated_user"}, {"user", to_json(u)}}.to_string();
-        for (auto &[tkn, conn] : users)
-            if (cc.get_database().get_user(tkn).get_data()["type"] == "admin")
-                conn->send_text(msg);
+        broadcast(json::json{{"type", "updated_user"}, {"user", to_json(u)}}.to_string(), false);
     }
     void coco_gui::removed_user(const user &u)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "removed_user"}, {"user", u.get_id()}}.to_string();
-        for (auto &[tkn, conn] : users)
-            if (cc.get_database().get_user(tkn).get_data()["type"] == "admin")
-                conn->send_text(msg);
+        broadcast(json::json{{"type", "removed_user"}, {"user", u.get_id()}}.to_string(), false);
     }
 
     void coco_gui::new_sensor_type(const sensor_type &st)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "new_sensor_type"}, {"sensor_type", to_json(st)}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(json::json{{"type", "new_sensor_type"}, {"sensor_type", to_json(st)}}.to_string());
     }
     void coco_gui::updated_sensor_type(const sensor_type &s)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "updated_sensor_type"}, {"sensor_type", to_json(s)}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(json::json{{"type", "updated_sensor_type"}, {"sensor_type", to_json(s)}}.to_string());
     }
     void coco_gui::removed_sensor_type(const sensor_type &s)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "removed_sensor_type"}, {"sensor_type", s.get_id()}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(json::json{{"type", "removed_sensor_type"}, {"sensor_type", s.get_id()}}.to_string());
     }
 
     void coco_gui::new_sensor(const sensor &s)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "new_sensor"}, {"sensor", to_json(s)}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(json::json{{"type", "new_sensor"}, {"sensor", to_json(s)}}.to_string());
     }
     void coco_gui::updated_sensor(const sensor &s)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "updated_sensor"}, {"sensor", to_json(s)}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(json::json{{"type", "updated_sensor"}, {"sensor", to_json(s)}}.to_string());
     }
     void coco_gui::removed_sensor(const sensor &s)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "removed_sensor"}, {"sensor", s.get_id()}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(json::json{{"type", "removed_sensor"}, {"sensor", s.get_id()}}.to_string());
     }
 
     void coco_gui::new_sensor_value(const sensor &s, const std::chrono::system_clock::time_point &time, const json::json &value)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "new_sensor_value"}, {"sensor", s.get_id()}, {"timestamp", std::chrono::system_clock::to_time_t(time)}, {"value", value}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(json::json{{"type", "new_sensor_value"}, {"sensor", s.get_id()}, {"timestamp", std::chrono::system_clock::to_time_t(time)}, {"value", value}}.to_string());
     }
     void coco_gui::new_sensor_state(const sensor &s, const std::chrono::system_clock::time_point &time, const json::json &state)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "new_sensor_state"}, {"sensor", s.get_id()}, {"timestamp", std::chrono::system_clock::to_time_t(time)}, {"state", state}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(json::json{{"type", "new_sensor_state"}, {"sensor", s.get_id()}, {"timestamp", std::chrono::system_clock::to_time_t(time)}, {"state", state}}.to_string());
     }
 
     void coco_gui::new_solver(const coco_executor &exec)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "new_solver"}, {"solver", get_id(exec)}, {"name", exec.get_executor().get_name()}, {"state", ratio::executor::to_string(exec.get_executor().get_state())}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(solver_created_message(exec.get_executor()).to_string());
     }
     void coco_gui::removed_solver(const coco_executor &exec)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "removed_solver"}, {"solver", get_id(exec)}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(solver_destroyed_message(exec.get_executor()).to_string());
     }
 
     void coco_gui::state_changed(const coco_executor &exec)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        json::json j_sc{{"type", "state_changed"},
-                        {"solver_id", get_id(exec)},
-                        {"state", to_json(exec.get_executor().get_solver())},
-                        {"timelines", to_timelines(exec.get_executor().get_solver())},
-                        {"time", ratio::to_json(exec.get_executor().get_current_time())}};
+        json::json j_sc = solver_state_changed_message(exec.get_executor().get_solver());
+        j_sc["time"] = ratio::to_json(exec.get_executor().get_current_time());
         json::json j_executing(json::json_type::array);
         for (const auto &atm : exec.get_executor().get_executing())
             j_executing.push_back(get_id(*atm));
         j_sc["executing"] = std::move(j_executing);
-        std::string msg = j_sc.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(j_sc.to_string());
     }
 
-    void coco_gui::flaw_created(const coco_executor &exec, const ratio::flaw &f)
+    void coco_gui::flaw_created(const coco_executor &, const ratio::flaw &f)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        json::json j_msg = to_json(f);
-        j_msg["type"] = "flaw_created";
-        j_msg["solver_id"] = get_id(exec);
-        std::string msg = j_msg.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(flaw_created_message(f));
     }
-    void coco_gui::flaw_state_changed(const coco_executor &exec, const ratio::flaw &f)
+    void coco_gui::flaw_state_changed(const coco_executor &, const ratio::flaw &f)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "flaw_state_changed"}, {"solver_id", get_id(exec)}, {"id", get_id(f)}, {"state", f.get_solver().get_sat_core().value(f.get_phi())}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(flaw_state_changed_message(f));
     }
-    void coco_gui::flaw_cost_changed(const coco_executor &exec, const ratio::flaw &f)
+    void coco_gui::flaw_cost_changed(const coco_executor &, const ratio::flaw &f)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "flaw_cost_changed"}, {"solver_id", get_id(exec)}, {"id", get_id(f)}, {"cost", ratio::to_json(f.get_estimated_cost())}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(flaw_cost_changed_message(f));
     }
-    void coco_gui::flaw_position_changed(const coco_executor &exec, const ratio::flaw &f)
+    void coco_gui::flaw_position_changed(const coco_executor &, const ratio::flaw &f)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "flaw_position_changed"}, {"solver_id", get_id(exec)}, {"id", get_id(f)}, {"pos", ratio::to_json(f.get_solver().get_idl_theory().bounds(f.get_position()))}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(flaw_position_changed_message(f));
     }
-    void coco_gui::current_flaw(const coco_executor &exec, const ratio::flaw &f)
+    void coco_gui::current_flaw(const coco_executor &, const ratio::flaw &f)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "current_flaw"}, {"solver_id", get_id(exec)}, {"id", get_id(f)}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(current_flaw_message(f));
     }
 
-    void coco_gui::resolver_created(const coco_executor &exec, const ratio::resolver &r)
+    void coco_gui::resolver_created(const coco_executor &, const ratio::resolver &r)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        json::json j_msg = to_json(r);
-        j_msg["type"] = "resolver_created";
-        j_msg["solver_id"] = get_id(exec);
-        std::string msg = j_msg.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(resolver_created_message(r));
     }
-    void coco_gui::resolver_state_changed(const coco_executor &exec, const ratio::resolver &r)
+    void coco_gui::resolver_state_changed(const coco_executor &, const ratio::resolver &r)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "resolver_state_changed"}, {"solver_id", get_id(exec)}, {"id", get_id(r)}, {"state", r.get_solver().get_sat_core().value(r.get_rho())}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(resolver_state_changed_message(r));
     }
-    void coco_gui::current_resolver(const coco_executor &exec, const ratio::resolver &r)
+    void coco_gui::current_resolver(const coco_executor &, const ratio::resolver &r)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "current_resolver"}, {"solver_id", get_id(exec)}, {"id", get_id(r)}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(current_resolver_message(r));
     }
 
-    void coco_gui::causal_link_added(const coco_executor &exec, const ratio::flaw &f, const ratio::resolver &r)
+    void coco_gui::causal_link_added(const coco_executor &, const ratio::flaw &f, const ratio::resolver &r)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "causal_link_added"}, {"solver_id", get_id(exec)}, {"flaw_id", get_id(f)}, {"resolver_id", get_id(r)}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(causal_link_added_message(f, r));
     }
 
-    void coco_gui::executor_state_changed(const coco_executor &exec, ratio::executor::executor_state state)
+    void coco_gui::executor_state_changed(const coco_executor &exec, ratio::executor::executor_state)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "executor_state_changed"}, {"solver_id", get_id(exec)}, {"state", ratio::executor::to_string(state)}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(executor_state_changed_message(exec.get_executor()));
     }
 
     void coco_gui::tick(const coco_executor &exec, const utils::rational &time)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        std::string msg = json::json{{"type", "tick"}, {"solver_id", get_id(exec)}, {"time", ratio::to_json(time)}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(tick_message(exec.get_executor(), time));
     }
 
     void coco_gui::start(const coco_executor &exec, const std::unordered_set<ratio::atom *> &atoms)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        json::json starting(json::json_type::array);
-        for (const auto &atm : atoms)
-            starting.push_back(get_id(*atm));
-        std::string msg = json::json{{"type", "start"}, {"solver_id", get_id(exec)}, {"start", std::move(starting)}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(starting_message(exec.get_executor(), atoms));
     }
     void coco_gui::end(const coco_executor &exec, const std::unordered_set<ratio::atom *> &atoms)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        json::json ending(json::json_type::array);
-        for (const auto &atm : atoms)
-            ending.push_back(get_id(*atm));
-        std::string msg = json::json{{"type", "end"}, {"solver_id", get_id(exec)}, {"end", std::move(ending)}}.to_string();
-        for (auto &[tkn, conn] : users)
-            conn->send_text(msg);
+        broadcast(ending_message(exec.get_executor(), atoms));
+    }
+
+    void coco_gui::broadcast(const std::string &&msg, bool to_all)
+    {
+        std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
+        utils::c_ptr<network::message> m = new network::message(msg);
+        if (to_all)
+            for (auto &[tkn, conn] : user_to_ws)
+                conn->send(m);
+        else
+            for (auto &[tkn, conn] : user_to_ws)
+                if (cc.get_database().get_user(tkn).get_data()["type"] == "admin")
+                    conn->send(m);
     }
 } // namespace coco_gui
