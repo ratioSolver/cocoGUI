@@ -25,13 +25,16 @@ set(RATIONET_INCLUDE_UTILS OFF CACHE BOOL "Include utils library" FORCE)
 add_subdirectory(extern/rationet)
 add_subdirectory(extern/coco)
 
-file(GLOB COCO_SOURCES src/*.cpp)
-file(GLOB COCO_HEADERS include/*.h)
+file(GLOB COCO_SOURCES src/coco_gui.cpp)
+file(GLOB COCO_HEADERS include/coco_gui.h)
 
-add_executable(${PROJECT_NAME} ${COCO_SOURCES})
+add_library(${PROJECT_NAME} STATIC ${COCO_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/include $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/extern/crow $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> $<INSTALL_INTERFACE:> ${Boost_INCLUDE_DIRS} ${CLIPS_INCLUDE_DIR} ${LIBMONGOCXX_INCLUDE_DIR} ${LIBBSONCXX_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} PRIVATE ratioNet COCO)
-target_compile_definitions(${PROJECT_NAME} PRIVATE COCO_HOST="${COCO_HOST}" COCO_PORT=${COCO_PORT})
+target_link_libraries(${PROJECT_NAME} PUBLIC ratioNet COCO)
+target_compile_definitions(${PROJECT_NAME} PUBLIC COCO_HOST="${COCO_HOST}" COCO_PORT=${COCO_PORT})
+
+add_executable(${PROJECT_NAME}Server src/main.cpp)
+target_link_libraries(${PROJECT_NAME}Server PRIVATE ${PROJECT_NAME})
 
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /W4)
