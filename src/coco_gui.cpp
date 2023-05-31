@@ -22,7 +22,7 @@ namespace coco::coco_gui
         add_route(boost::beast::http::verb::get, "^/sensor/.*$", std::bind(&coco_gui::get_sensor_values, this, std::placeholders::_1, std::placeholders::_2));
         add_route(boost::beast::http::verb::post, "^/sensor/.*$", std::bind(&coco_gui::publish_sensor_value, this, std::placeholders::_1, std::placeholders::_2));
 
-        add_ws_route("/ws")
+        add_ws_route("/coco")
             .on_open(std::bind(&coco_gui::on_ws_open, this, std::placeholders::_1))
             .on_message(std::bind(&coco_gui::on_ws_message, this, std::placeholders::_1, std::placeholders::_2))
             .on_close(std::bind(&coco_gui::on_ws_close, this, std::placeholders::_1));
@@ -31,9 +31,7 @@ namespace coco::coco_gui
     void coco_gui::login(network::request &req, network::response &res)
     {
         const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
-        boost::beast::http::request<boost::beast::http::string_body> string_req{req};
-
-        auto x = json::load(string_req.body());
+        auto x = json::load(boost::beast::buffers_to_string(req.body().data()));
         if (!x.has("email") || !x.has("password"))
         {
             res.result(boost::beast::http::status::bad_request);
@@ -110,7 +108,7 @@ namespace coco::coco_gui
         if (!authorize(req, res, true))
             return;
 
-        auto x = json::load(boost::beast::http::request<boost::beast::http::string_body>{req}.body());
+        auto x = json::load(boost::beast::buffers_to_string(req.body().data()));
         if (!x.has("email") || !x.has("password") || !x.has("roots"))
         {
             res.result(boost::beast::http::status::bad_request);
@@ -158,7 +156,7 @@ namespace coco::coco_gui
         if (!authorize(req, res, true))
             return;
 
-        auto x = json::load(boost::beast::http::request<boost::beast::http::string_body>{req}.body());
+        auto x = json::load(boost::beast::buffers_to_string(req.body().data()));
         if (!x.has("name") || !x.has("description") || !x.has("parameters"))
         {
             res.result(boost::beast::http::status::bad_request);
@@ -228,7 +226,7 @@ namespace coco::coco_gui
         if (!authorize(req, res, true))
             return;
 
-        auto x = json::load(boost::beast::http::request<boost::beast::http::string_body>{req}.body());
+        auto x = json::load(boost::beast::buffers_to_string(req.body().data()));
         if (!x.has("name") || !x.has("type"))
         {
             res.result(boost::beast::http::status::bad_request);
@@ -268,7 +266,8 @@ namespace coco::coco_gui
         if (!authorize(req, res))
             return;
 
-        std::string sensor_id = req.target().to_string().substr(9);
+        std::size_t query_start = req.target().find('?', 8);
+        std::string sensor_id = query_start == std::string::npos ? req.target().substr(8).to_string() : req.target().substr(8, query_start - 8).to_string();
         if (!cc.get_database().has_sensor(sensor_id))
         {
             res.result(boost::beast::http::status::not_found);
@@ -276,18 +275,28 @@ namespace coco::coco_gui
             res.body() = json::json{{"success", false}, {"message", "Sensor not found"}}.to_string();
             return;
         }
-
-        boost::beast::http::fields fields = req.base();
+        std::map<std::string, std::string> fields;
+        if (query_start != std::string::npos)
+        {
+            std::string query = req.target().substr(query_start + 1).to_string();
+            std::regex r("([^=&?]+)=([^=&?]+)");
+            std::smatch m;
+            while (std::regex_search(query, m, r))
+            {
+                fields[m[1].str()] = m[2].str();
+                query = m.suffix().str();
+            }
+        }
 
         std::chrono::system_clock::time_point to;
         if (fields.count("to"))
-            to = std::chrono::system_clock::time_point{std::chrono::milliseconds{std::stoll(fields["to"].to_string())}};
+            to = std::chrono::system_clock::time_point{std::chrono::milliseconds{std::stoll(fields["to"])}};
         else
             to = std::chrono::system_clock::now();
 
         std::chrono::system_clock::time_point from;
         if (fields.count("from"))
-            from = std::chrono::system_clock::time_point{std::chrono::milliseconds{std::stoll(fields["from"].to_string())}};
+            from = std::chrono::system_clock::time_point{std::chrono::milliseconds{std::stoll(fields["from"])}};
         else
             from = to - std::chrono::hours{24 * 30};
 
@@ -309,7 +318,7 @@ namespace coco::coco_gui
         if (!authorize(req, res, true))
             return;
 
-        std::string sensor_id = req.target().to_string().substr(9);
+        std::string sensor_id = req.target().to_string().substr(8);
         if (!cc.get_database().has_sensor(sensor_id))
         {
             res.result(boost::beast::http::status::not_found);
@@ -318,13 +327,13 @@ namespace coco::coco_gui
             return;
         }
 
-        cc.publish_sensor_value(cc.get_database().get_sensor(sensor_id), json::load(boost::beast::http::request<boost::beast::http::string_body>{req}.body()));
+        cc.publish_sensor_value(cc.get_database().get_sensor(sensor_id), json::load(boost::beast::buffers_to_string(req.body().data())));
     }
 
     void coco_gui::on_ws_open(network::websocket_session &ws)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        ws_to_user[&ws] = nullptr;
+        ws_to_user[&ws] = "";
     }
 
     void coco_gui::on_ws_message(network::websocket_session &ws, const std::string &msg)
@@ -342,7 +351,7 @@ namespace coco::coco_gui
             std::string token = x["token"];
             if (!cc.get_database().has_user(token))
             {
-                ws.close(boost::beast::websocket::close_code::bad_payload);
+                ws.send(json::json{{"type", "login"}, {"success", false}}.to_string());
                 return;
             }
 
@@ -380,7 +389,7 @@ namespace coco::coco_gui
             json::json j_solvers{{"type", "solvers"}};
             json::json c_solvers(json::json_type::array);
             for (const auto &cc_exec : cc.get_executors())
-                c_solvers.push_back({{"id", get_id(*cc_exec)}, {"name", cc_exec->get_executor().get_name()}, {"state", ratio::executor::to_string(cc_exec->get_executor().get_state())}});
+                c_solvers.push_back({{"id", get_id(cc_exec->get_executor().get_solver())}, {"name", cc_exec->get_executor().get_name()}, {"state", ratio::executor::to_string(cc_exec->get_executor().get_state())}});
             j_solvers["solvers"] = std::move(c_solvers);
             ws.send(j_solvers.to_string());
 
@@ -396,7 +405,7 @@ namespace coco::coco_gui
 
                 json::json j_gr = to_graph(*cc_exec);
                 j_gr["type"] = "graph";
-                j_gr["solver_id"] = get_id(*cc_exec);
+                j_gr["solver_id"] = get_id(cc_exec->get_executor().get_solver());
                 ws.send(j_gr.to_string());
             }
 
@@ -516,72 +525,72 @@ namespace coco::coco_gui
     void coco_gui::flaw_created(const coco_executor &, const ratio::flaw &f)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        broadcast(flaw_created_message(f));
+        broadcast(flaw_created_message(f).to_string());
     }
     void coco_gui::flaw_state_changed(const coco_executor &, const ratio::flaw &f)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        broadcast(flaw_state_changed_message(f));
+        broadcast(flaw_state_changed_message(f).to_string());
     }
     void coco_gui::flaw_cost_changed(const coco_executor &, const ratio::flaw &f)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        broadcast(flaw_cost_changed_message(f));
+        broadcast(flaw_cost_changed_message(f).to_string());
     }
     void coco_gui::flaw_position_changed(const coco_executor &, const ratio::flaw &f)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        broadcast(flaw_position_changed_message(f));
+        broadcast(flaw_position_changed_message(f).to_string());
     }
     void coco_gui::current_flaw(const coco_executor &, const ratio::flaw &f)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        broadcast(current_flaw_message(f));
+        broadcast(current_flaw_message(f).to_string());
     }
 
     void coco_gui::resolver_created(const coco_executor &, const ratio::resolver &r)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        broadcast(resolver_created_message(r));
+        broadcast(resolver_created_message(r).to_string());
     }
     void coco_gui::resolver_state_changed(const coco_executor &, const ratio::resolver &r)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        broadcast(resolver_state_changed_message(r));
+        broadcast(resolver_state_changed_message(r).to_string());
     }
     void coco_gui::current_resolver(const coco_executor &, const ratio::resolver &r)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        broadcast(current_resolver_message(r));
+        broadcast(current_resolver_message(r).to_string());
     }
 
     void coco_gui::causal_link_added(const coco_executor &, const ratio::flaw &f, const ratio::resolver &r)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        broadcast(causal_link_added_message(f, r));
+        broadcast(causal_link_added_message(f, r).to_string());
     }
 
     void coco_gui::executor_state_changed(const coco_executor &exec, ratio::executor::executor_state)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        broadcast(executor_state_changed_message(exec.get_executor()));
+        broadcast(executor_state_changed_message(exec.get_executor()).to_string());
     }
 
     void coco_gui::tick(const coco_executor &exec, const utils::rational &time)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        broadcast(tick_message(exec.get_executor(), time));
+        broadcast(tick_message(exec.get_executor(), time).to_string());
     }
 
     void coco_gui::start(const coco_executor &exec, const std::unordered_set<ratio::atom *> &atoms)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        broadcast(starting_message(exec.get_executor(), atoms));
+        broadcast(start_message(exec.get_executor(), atoms).to_string());
     }
     void coco_gui::end(const coco_executor &exec, const std::unordered_set<ratio::atom *> &atoms)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
-        broadcast(ending_message(exec.get_executor(), atoms));
+        broadcast(end_message(exec.get_executor(), atoms).to_string());
     }
 
     void coco_gui::broadcast(const std::string &&msg, bool to_all)

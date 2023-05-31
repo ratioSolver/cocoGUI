@@ -66,7 +66,7 @@ export const useAppStore = defineStore('app', {
     connect(url = 'ws://' + server.host + ':' + server.port + '/coco', timeout = 1000) {
       this.socket = new WebSocket(url);
       this.socket.onopen = () => {
-        this.socket.send(JSON.stringify({ 'type': 'connect', 'token': this.token }));
+        this.socket.send(JSON.stringify({ 'type': 'login', 'token': this.token }));
       };
       this.socket.onclose = () => {
         setTimeout(() => { this.connect(url, timeout); }, timeout);
@@ -74,7 +74,7 @@ export const useAppStore = defineStore('app', {
       this.socket.onmessage = (msg) => {
         let data = JSON.parse(msg.data);
         switch (data.type) {
-          case 'connect':
+          case 'login':
             if (data.success)
               this.user = data.user;
             else
@@ -95,10 +95,12 @@ export const useAppStore = defineStore('app', {
             this.users.delete(data.user);
             break;
           case 'user_connected':
-            this.users.get(data.user).connected = true;
+            if (this.users.has(data.user))
+              this.users.get(data.user).connected = true;
             break;
           case 'user_disconnected':
-            this.users.get(data.user).connected = false;
+            if (this.users.has(data.user))
+              this.users.get(data.user).connected = false;
             break;
           case 'sensor_types':
             this.sensor_types.clear();
@@ -155,13 +157,13 @@ export const useAppStore = defineStore('app', {
                 slv.init(this.get_timelines_id(id), this.get_graph_id(id), 1000, 400);
             });
             break;
-          case 'new_solver':
-            const slv = new SolverD3(data.solver, data.name, data.state);
-            this.solvers.set(data.solver, slv);
+          case 'solver_created':
+            const slv = new SolverD3(data.solver_id, data.name, data.state);
+            this.solvers.set(data.solver_id, slv);
             nextTick(() => { slv.init(this.get_timelines_id(slv.id), this.get_graph_id(slv.id), 1000, 400); });
             break;
-          case 'removed_solver':
-            this.solvers.delete(data.solver);
+          case 'solver_destroyed':
+            this.solvers.delete(data.solver_id);
             break;
           case 'state_changed':
             this.solvers.get(data.solver_id).state_changed(data);
