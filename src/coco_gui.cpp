@@ -15,6 +15,8 @@ namespace coco::coco_gui
         add_route(boost::beast::http::verb::post, "^/login$", std::bind(&coco_gui::login, this, std::placeholders::_1, std::placeholders::_2));
         add_route(boost::beast::http::verb::get, "^/users$", std::bind(&coco_gui::get_users, this, std::placeholders::_1, std::placeholders::_2));
         add_route(boost::beast::http::verb::post, "^/user$", std::bind(&coco_gui::create_user, this, std::placeholders::_1, std::placeholders::_2));
+        add_route(boost::beast::http::verb::put, "^/user/.*$", std::bind(&coco_gui::update_user, this, std::placeholders::_1, std::placeholders::_2));
+        add_route(boost::beast::http::verb::delete_, "^/user/.*$", std::bind(&coco_gui::delete_user, this, std::placeholders::_1, std::placeholders::_2));
         add_route(boost::beast::http::verb::get, "^/sensor_types$", std::bind(&coco_gui::get_sensor_types, this, std::placeholders::_1, std::placeholders::_2));
         add_route(boost::beast::http::verb::post, "^/sensor_type$", std::bind(&coco_gui::create_sensor_type, this, std::placeholders::_1, std::placeholders::_2));
         add_route(boost::beast::http::verb::get, "^/sensors$", std::bind(&coco_gui::get_sensors, this, std::placeholders::_1, std::placeholders::_2));
@@ -133,6 +135,57 @@ namespace coco::coco_gui
         }
 
         cc.create_user(email, password, first_name, last_name, roots, x["data"]);
+    }
+    void coco_gui::update_user(network::request &req, network::response &res)
+    {
+        const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
+        if (!authorize(req, res, true))
+            return;
+
+        std::string user_id = req.target().to_string().substr(6);
+        if (!cc.get_database().has_user(user_id))
+        {
+            res.result(boost::beast::http::status::not_found);
+            res.set(boost::beast::http::field::content_type, "application/json");
+            res.body() = json::json{{"success", false}, {"message", "User not found"}}.to_string();
+            return;
+        }
+
+        auto x = json::load(boost::beast::buffers_to_string(req.body().data()));
+        if (x.has("email"))
+            cc.get_database().set_user_email(user_id, x["email"]);
+        if (x.has("password"))
+            cc.get_database().set_user_password(user_id, x["password"]);
+        if (x.has("first_name"))
+            cc.get_database().set_user_first_name(user_id, x["first_name"]);
+        if (x.has("last_name"))
+            cc.get_database().set_user_last_name(user_id, x["last_name"]);
+        if (x.has("roots"))
+        {
+            std::vector<std::string> roots;
+            for (size_t i = 0; i < x["roots"].size(); ++i)
+                roots.push_back(x["roots"][i]);
+            cc.get_database().set_user_roots(user_id, roots);
+        }
+        if (x.has("data"))
+            cc.get_database().set_user_data(user_id, x["data"]);
+    }
+    void coco_gui::delete_user(network::request &req, network::response &res)
+    {
+        const std::lock_guard<std::recursive_mutex> lock(cc.get_mutex());
+        if (!authorize(req, res, true))
+            return;
+
+        std::string user_id = req.target().to_string().substr(6);
+        if (!cc.get_database().has_user(user_id))
+        {
+            res.result(boost::beast::http::status::not_found);
+            res.set(boost::beast::http::field::content_type, "application/json");
+            res.body() = json::json{{"success", false}, {"message", "User not found"}}.to_string();
+            return;
+        }
+
+        cc.get_database().delete_user(user_id);
     }
 
     void coco_gui::get_sensor_types(network::request &req, network::response &res)

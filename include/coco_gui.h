@@ -17,6 +17,8 @@ namespace coco::coco_gui
 
     void get_users(network::request &req, network::response &res);
     void create_user(network::request &req, network::response &res);
+    void update_user(network::request &req, network::response &res);
+    void delete_user(network::request &req, network::response &res);
 
     void get_sensor_types(network::request &req, network::response &res);
     void create_sensor_type(network::request &req, network::response &res);
