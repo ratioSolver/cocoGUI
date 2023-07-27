@@ -27,7 +27,7 @@ namespace coco::coco_gui
         add_ws_route("/coco")
             .on_open(std::bind(&coco_gui::on_ws_open, this, std::placeholders::_1))
             .on_message(std::bind(&coco_gui::on_ws_message, this, std::placeholders::_1, std::placeholders::_2))
-            .on_close(std::bind(&coco_gui::on_ws_close, this, std::placeholders::_1));
+            .on_error(std::bind(&coco_gui::on_ws_error, this, std::placeholders::_1, std::placeholders::_2));
     }
 
     void coco_gui::login(network::request &req, network::response &res)
@@ -481,7 +481,7 @@ namespace coco::coco_gui
         }
     }
 
-    void coco_gui::on_ws_close(network::websocket_session &ws)
+    void coco_gui::on_ws_error(network::websocket_session &ws, const boost::system::error_code &)
     {
         std::lock_guard<std::recursive_mutex> _(cc.get_mutex());
         if (ws_to_user.count(&ws))
