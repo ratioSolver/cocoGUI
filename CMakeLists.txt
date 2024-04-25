@@ -9,9 +9,9 @@ add_subdirectory(extern/coco)
 add_subdirectory(extern/rationet)
 
 add_executable(CoCoGUI src/main.cpp src/coco_server.cpp)
-add_dependencies(CoCoGUI oRatioLib)
+add_dependencies(CoCoGUI CoCo ratioNet)
 target_link_libraries(CoCoGUI PUBLIC CoCo ratioNet)
-target_include_directories(CoCoGUI PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+target_include_directories(CoCoGUI PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> ${CLIPS_INCLUDE_DIR} ${LIBMONGOCXX_INCLUDE_DIR} ${LIBBSONCXX_INCLUDE_DIR})
 
 if(MSVC)
     target_compile_options(CoCoGUI PRIVATE /W4)
