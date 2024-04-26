@@ -1,6 +1,8 @@
-#include "coco_core.hpp"
+#include "coco_server.hpp"
 
-int main(int argc, char const *argv[])
+int main([[maybe_unused]] int argc, [[maybe_unused]] char const *argv[])
 {
+    coco::coco_server server;
+    server.start();
     return 0;
 }

@@ -9,5 +9,8 @@ namespace coco
     {
     public:
         coco_server();
+
+    private:
+        std::unique_ptr<network::response> index(network::request &req);
     };
 } // namespace coco
