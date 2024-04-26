@@ -1,5 +1,5 @@
 {
-  "name": "CoCo",
+  "name": "coco",
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
@@ -10,7 +10,15 @@
     "@mdi/font": "7.0.96",
     "roboto-fontface": "*",
     "vue": "^3.4.0",
-    "vuetify": "^3.5.0"
+    "vuetify": "^3.5.0",
+    "pinia": "^2.0.23",
+    "plotly.js-dist-min": "^2.27.1",
+    "chroma-js": "2.4.2",
+    "cytoscape": "^3.28.1",
+    "cytoscape-dagre": "^2.5.0",
+    "cytoscape-popper": "^2.0.0",
+    "cytoscape-edgehandles": "^4.0.1",
+    "tippy.js": "^6.3.7"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
