@@ -6,6 +6,7 @@
 
 // Plugins
 import { registerPlugins } from '@/plugins'
+import { useAppStore } from '@/store/app';
 
 // Components
 import App from './App.vue'
@@ -18,3 +19,4 @@ const app = createApp(App)
 registerPlugins(app)
 
 app.mount('#app')
+useAppStore().connect()

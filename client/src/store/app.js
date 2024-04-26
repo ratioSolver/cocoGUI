@@ -8,7 +8,7 @@ export const useAppStore = defineStore('app', {
     messages: [],
   }),
   actions: {
-    connect(url = 'ws://' + location.host + '/restart', timeout = 1000) {
+    connect(url = 'ws://' + location.host + '/coco', timeout = 1000) {
       this.socket = new WebSocket(url);
       this.socket.onopen = () => {
         this.socket.send(JSON.stringify({ 'type': 'login' }));
