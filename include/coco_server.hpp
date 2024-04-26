@@ -12,5 +12,6 @@ namespace coco
 
     private:
         std::unique_ptr<network::response> index(network::request &req);
+        std::unique_ptr<network::response> assets(network::request &req);
     };
 } // namespace coco
