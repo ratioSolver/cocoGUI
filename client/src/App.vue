@@ -3,7 +3,9 @@
     <v-navigation-drawer v-model="drawer">
       <v-list dense v-model:selected="window_model">
         <v-list-item value="chat" title="Chat" prepend-icon="mdi-message-text-outline" />
-        <v-list-subheader v-if="sorted_sensors(sensors).size > 0" inset>Sensors</v-list-subheader>
+        <v-list-subheader v-if="solvers.size > 0" inset>Solvers</v-list-subheader>
+        <SolverListItem v-for="[id, solver] in solvers" :key="id" :solver="solver" />
+        <v-list-subheader v-if="sensors.size > 0" inset>Sensors</v-list-subheader>
         <SensorListItem v-for="[id, sensor] in sorted_sensors(sensors)" :key="id" :sensor="sensor" />
       </v-list>
     </v-navigation-drawer>
@@ -35,6 +37,6 @@ const { sensors, solvers, messages } = storeToRefs(useAppStore());
 
 <script>
 function sorted_sensors(sensors) {
-  return new Map([...sensors].filter(([id, sensor]) => !sensor.name.startsWith('part_')).sort((s1, s2) => s1[1].name.localeCompare(s2[1].name)));
+  return new Map([...sensors].sort((s1, s2) => s1[1].name.localeCompare(s2[1].name)));
 }
 </script>
