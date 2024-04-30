@@ -5,6 +5,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined")
 include(CTest)
 enable_testing()
 
+set(ENABLE_VISUALIZATION ON CACHE BOOL "Enable visualization" FORCE)
+
 add_subdirectory(extern/coco)
 add_subdirectory(extern/rationet)
 
