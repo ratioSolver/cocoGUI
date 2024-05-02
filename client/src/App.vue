@@ -7,6 +7,8 @@
         <SolverListItem v-for="[id, solver] in solvers" :key="id" :solver="solver" />
         <v-list-subheader v-if="sensors.size > 0" inset>Sensors</v-list-subheader>
         <SensorListItem v-for="[id, sensor] in sorted_sensors(sensors)" :key="id" :sensor="sensor" />
+        <v-list-subheader v-if="sensor_types.size > 0" inset>Sensor Types</v-list-subheader>
+        <SensorTypeListItem v-for="[id, sensor_type] in sensor_types" :key="id" :sensor_type="sensor_type" />
       </v-list>
     </v-navigation-drawer>
 
@@ -18,7 +20,9 @@
     <v-main>
       <v-window v-model="window_model" class="fill-height">
         <Chat />
+        <Solver v-for="[id, solver] in solvers" :key="id" :solver="solver" />
         <Sensor v-for="[id, sensor] in sorted_sensors(sensors)" :key="id" :sensor="sensor" />
+        <SensorType v-for="[id, sensor_type] in sensor_types" :key="id" :sensor_type="sensor_type" />
       </v-window>
     </v-main>
   </v-app>
@@ -32,7 +36,7 @@ import { storeToRefs } from 'pinia';
 const drawer = ref(false)
 const window_model = ref(['chat']);
 
-const { sensors, solvers, messages } = storeToRefs(useAppStore());
+const { sensors, sensor_types, solvers } = storeToRefs(useAppStore());
 </script>
 
 <script>
