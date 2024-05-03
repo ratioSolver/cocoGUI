@@ -1,5 +1,6 @@
 #include <thread>
 #include <fstream>
+#include <mongocxx/instance.hpp>
 #include "coco_server.hpp"
 #include "logging.hpp"
 
@@ -21,24 +22,25 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char const *argv[])
 
     LOG_INFO("starting oRatio server");
 
+    mongocxx::instance inst{}; // This should be done only once.
+
     coco::coco_server server;
     auto srv_ft = std::async(std::launch::async, [&server]
                              { server.start(); });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    auto s = std::make_shared<ratio::solver>();
-    s->init();
+    auto &s = server.create_solver("oRatio").get_solver();
     try
     {
-        s->read(prob_names);
+        s.read(prob_names);
 
-        if (s->solve())
+        if (s.solve())
         {
             LOG_INFO("hurray!! we have found a solution..");
             std::ofstream sol_file;
             sol_file.open(sol_name);
-            sol_file << to_json(*s).to_string();
+            sol_file << to_json(s).to_string();
             sol_file.close();
         }
         else
