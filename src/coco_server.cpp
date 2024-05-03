@@ -1,9 +1,10 @@
 #include "coco_server.hpp"
+#include "mongo_db.hpp"
 #include "logging.hpp"
 
 namespace coco
 {
-    coco_server::coco_server() : network::server()
+    coco_server::coco_server() : coco_core(std::make_unique<mongo_db>()), network::server()
     {
         add_route(network::GET, "^/$", std::bind(&coco_server::index, this, std::placeholders::_1));
         add_route(network::GET, "^(/assets/.+)|/.+\\.ico|/.+\\.png", std::bind(&coco_server::assets, this, std::placeholders::_1));

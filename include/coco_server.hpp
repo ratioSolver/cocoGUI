@@ -1,14 +1,17 @@
 #pragma once
 
+#include "coco_db.hpp"
 #include "coco_core.hpp"
 #include "server.hpp"
 
 namespace coco
 {
-    class coco_server : public network::server
+    class coco_server : public coco::coco_core, private network::server
     {
     public:
         coco_server();
+
+        void start() { network::server::start(); }
 
     private:
         std::unique_ptr<network::response> index(network::request &req);
