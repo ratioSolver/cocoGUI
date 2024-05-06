@@ -6,18 +6,8 @@ namespace coco
 {
     coco_server::coco_server() : coco_core(std::make_unique<mongo_db>()), network::server()
     {
-        json::json open_api_servers(json::json_type::array);
-        open_api_servers.push_back({{"url", "http://" SERVER_HOST ":" + std::to_string(SERVER_PORT)}});
-        j_open_api["servers"] = std::move(open_api_servers);
-        json::json open_api_paths(json::json_type::array);
-        json::json open_api_index_path{{"url", "/"}, {"method", "GET"}, {"summary", "Index"}, {"description", "Index page"}};
-        open_api_paths.push_back(std::move(open_api_index_path));
-        json::json open_api_assets_path{{"url", "/assets/{file}"}, {"method", "GET"}, {"summary", "Assets"}, {"description", "Assets"}};
-        open_api_paths.push_back(std::move(open_api_assets_path));
-        json::json open_api_api_path{{"url", "/api"}, {"method", "GET"}, {"summary", "API"}, {"description", "API"}};
-        open_api_paths.push_back(std::move(open_api_api_path));
-        j_open_api["paths"] = std::move(open_api_paths);
-        LOG_INFO(j_open_api);
+        LOG_DEBUG(j_open_api);
+        LOG_DEBUG(j_async_api);
 
         add_route(network::GET, "^/$", std::bind(&coco_server::index, this, std::placeholders::_1));
         add_route(network::GET, "^(/assets/.+)|/.+\\.ico|/.+\\.png", std::bind(&coco_server::assets, this, std::placeholders::_1));
