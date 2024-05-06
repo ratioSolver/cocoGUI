@@ -44,19 +44,19 @@ namespace coco
                                   {"solver", {{"type", "object"}, {"properties", {{"id", {{"type", "string"}}}, {"name", {{"type", "string"}}}, {"state", {{"type", "string"}, {"enum", {"reasoning", "adapting", "idle", "executing", "finished", "failed"}}}}}}}}}}};
         json::json j_open_api{
             {"openapi", "3.0.0"},
-            {"info", {{"title", "Coco API"}, {"version", "1.0"}}},
+            {"info", {{"title", "CoCo API"}, {"description", "The combined deduCtiOn and abduCtiOn (CoCo) API"}, {"version", "1.0"}}},
             {"servers", json::to_array({{"url", "http://" SERVER_HOST ":" + std::to_string(SERVER_PORT)}})},
             {"paths",
              {{"/", {{"get", {{"summary", "Index"}, {"description", "Index page"}, {"responses", {{"200", {{"description", "Index page"}}}}}}}}},
               {"/assets/{file}", {{"get", {{"summary", "Assets"}, {"description", "Assets"}, {"parameters", json::to_array({{{"name", "file"}, {"in", "path"}, {"required", true}, {"schema", {{"type", "string"}}}}})}, {"responses", {{"200", {{"description", "Index page"}}}}}}}}},
-              {"/open_api", {{"get", {{"summary", "Open API"}, {"description", "Open API"}, {"responses", {{"200", {{"description", "Open API Specification"}}}}}}}}},
-              {"/async_api", {{"get", {{"summary", "Async API"}, {"description", "Async API"}, {"responses", {{"200", {{"description", "Async API Specification"}}}}}}}}},
-              {"/sensor_types", {{"get", {{"summary", "Sensor types"}, {"description", "Sensor types"}, {"responses", {{"200", {{"description", "The stored sensor types"}, {"content", {{"application/json", {{"schema", {{"type", "array"}, {"items", {{"$ref", "#/components/schemas/sensor_type"}}}}}}}}}}}}}}}}},
-              {"/sensors", {{"get", {{"summary", "Sensors"}, {"description", "Sensors"}, {"responses", {{"200", {{"description", "The stored sensors"}, {"content", {{"application/json", {{"schema", {{"type", "array"}, {"items", {{"$ref", "#/components/schemas/sensor"}}}}}}}}}}}}}}}}}}},
+              {"/open_api", {{"get", {{"summary", "Retrieve OpenAPI Specification"}, {"description", "Endpoint to fetch the OpenAPI Specification document"}, {"responses", {{"200", {{"description", "Successful response with OpenAPI Specification document"}}}}}}}}},
+              {"/async_api", {{"get", {{"summary", "Retrieve AsyncAPI Specification"}, {"description", "Endpoint to fetch the AsyncAPI Specification document"}, {"responses", {{"200", {{"description", "Successful response with AsyncAPI Specification document"}}}}}}}}},
+              {"/sensor_types", {{"get", {{"summary", "Retrieve CoCo sensor types"}, {"description", "Endpoint to fetch all the managed sensor types"}, {"responses", {{"200", {{"description", "Successful response with the stored sensor types"}, {"content", {{"application/json", {{"schema", {{"type", "array"}, {"items", {{"$ref", "#/components/schemas/sensor_type"}}}}}}}}}}}}}}}}},
+              {"/sensors", {{"get", {{"summary", "Retrieve CoCo sensors"}, {"description", "Endpoint to fetch all the managed sensors"}, {"responses", {{"200", {{"description", "Successful response with the stored sensors"}, {"content", {{"application/json", {{"schema", {{"type", "array"}, {"items", {{"$ref", "#/components/schemas/sensor"}}}}}}}}}}}}}}}}}}},
             {"components", j_components}};
         json::json j_async_api{
             {"asyncapi", "3.0.0"},
-            {"info", {{"title", "Coco API"}, {"version", "1.0"}}},
+            {"info", {{"title", "CoCo API"}, {"description", "The combined deduCtiOn and abduCtiOn (CoCo) WebSocket API"}, {"version", "1.0"}}},
             {"servers", {"coco", {{"host", SERVER_HOST ":" + std::to_string(SERVER_PORT)}, {"pathname", "/coco"}, {"protocol", "ws"}}}},
             {"channels", {{"coco", {{"address", "/"}}}}},
             {"components", j_components}};
