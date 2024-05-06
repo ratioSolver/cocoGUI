@@ -1,3 +1,4 @@
+import { Solver } from '@/solver';
 import { defineStore } from 'pinia'
 
 export const useAppStore = defineStore('app', {
@@ -20,7 +21,14 @@ export const useAppStore = defineStore('app', {
         console.log('WebSocket Error: ' + error);
         setTimeout(() => { this.connect(url, timeout); }, timeout);
       };
-      this.socket.onmessage = (e) => {
+      this.socket.onmessage = (msg) => {
+        let data = JSON.parse(msg.data);
+        switch (data.type) {
+          case 'solvers':
+            this.solvers.clear();
+            for (const solver of data.solvers)
+              this.solvers.set(solver.id, new Solver(solver.id, solver.name, solver.state));
+        }
       };
     },
     send_message(message) {

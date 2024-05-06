@@ -24,10 +24,21 @@ namespace coco
         void on_ws_close(network::ws_session &ws);
         void on_ws_error(network::ws_session &ws);
 
+        void new_solver(const coco_executor &exec) override;
+        void deleted_solver(const uintptr_t id) override;
+
+    private:
+        void broadcast(const json::json &msg)
+        {
+            for (auto client : clients)
+                client->send(msg.to_string());
+        }
+
     private:
         json::json j_components{{"schemas",
                                  {{"sensor_type", {{"type", "object"}, {"properties", {{"id", {{"type", "string"}}}, {"name", {{"type", "string"}}}, {"description", {{"type", "string"}}}}}}},
-                                  {"sensor", {{"type", "object"}, {"properties", {{"id", {{"type", "string"}}}, {"type", {{"type", "string"}}}, {"name", {{"type", "string"}}}, {"description", {{"type", "string"}}}}}}}}}};
+                                  {"sensor", {{"type", "object"}, {"properties", {{"id", {{"type", "string"}}}, {"type", {{"type", "string"}}}, {"name", {{"type", "string"}}}, {"description", {{"type", "string"}}}}}}},
+                                  {"solver", {{"type", "object"}, {"properties", {{"id", {{"type", "string"}}}, {"name", {{"type", "string"}}}, {"state", {{"type", "string"}, {"enum", {"reasoning", "adapting", "idle", "executing", "finished", "failed"}}}}}}}}}}};
         json::json j_open_api{
             {"openapi", "3.0.0"},
             {"info", {{"title", "Coco API"}, {"version", "1.0"}}},

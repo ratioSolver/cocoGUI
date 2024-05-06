@@ -40,4 +40,15 @@ namespace coco
     }
     void coco_server::on_ws_close(network::ws_session &ws) { clients.erase(&ws); }
     void coco_server::on_ws_error(network::ws_session &ws) { clients.erase(&ws); }
+
+    void coco_server::new_solver(const coco_executor &exec)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(new_executor_message(exec));
+    }
+    void coco_server::deleted_solver(const uintptr_t id)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(ratio::executor::deleted_executor_message(id));
+    }
 } // namespace coco
