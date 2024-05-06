@@ -19,6 +19,9 @@ namespace coco
         std::unique_ptr<network::response> open_api(network::request &req);
         std::unique_ptr<network::response> async_api(network::request &req);
 
+        std::unique_ptr<network::response> sensor_types(network::request &req);
+        std::unique_ptr<network::response> sensors(network::request &req);
+
         void on_ws_open(network::ws_session &ws);
         void on_ws_message(network::ws_session &ws, const std::string &msg);
         void on_ws_close(network::ws_session &ws);
@@ -46,8 +49,10 @@ namespace coco
             {"paths",
              {{"/", {{"get", {{"summary", "Index"}, {"description", "Index page"}, {"responses", {{"200", {{"description", "Index page"}}}}}}}}},
               {"/assets/{file}", {{"get", {{"summary", "Assets"}, {"description", "Assets"}, {"parameters", json::to_array({{{"name", "file"}, {"in", "path"}, {"required", true}, {"schema", {{"type", "string"}}}}})}, {"responses", {{"200", {{"description", "Index page"}}}}}}}}},
-              {"/open_api", {{"get", {{"summary", "Open API"}, {"description", "Open API"}, {"responses", {{"200", {{"description", "Index page"}}}}}}}}},
-              {"/async_api", {{"get", {{"summary", "Async API"}, {"description", "Async API"}, {"responses", {{"200", {{"description", "Index page"}}}}}}}}}}},
+              {"/open_api", {{"get", {{"summary", "Open API"}, {"description", "Open API"}, {"responses", {{"200", {{"description", "Open API Specification"}}}}}}}}},
+              {"/async_api", {{"get", {{"summary", "Async API"}, {"description", "Async API"}, {"responses", {{"200", {{"description", "Async API Specification"}}}}}}}}},
+              {"/sensor_types", {{"get", {{"summary", "Sensor types"}, {"description", "Sensor types"}, {"responses", {{"200", {{"description", "The stored sensor types"}, {"content", {{"application/json", {{"schema", {{"type", "array"}, {"items", {{"$ref", "#/components/schemas/sensor_type"}}}}}}}}}}}}}}}}},
+              {"/sensors", {{"get", {{"summary", "Sensors"}, {"description", "Sensors"}, {"responses", {{"200", {{"description", "The stored sensors"}, {"content", {{"application/json", {{"schema", {{"type", "array"}, {"items", {{"$ref", "#/components/schemas/sensor"}}}}}}}}}}}}}}}}}}},
             {"components", j_components}};
         json::json j_async_api{
             {"asyncapi", "3.0.0"},

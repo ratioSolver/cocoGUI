@@ -28,6 +28,21 @@ namespace coco
     std::unique_ptr<network::response> coco_server::open_api(network::request &) { return std::make_unique<network::json_response>(j_open_api); }
     std::unique_ptr<network::response> coco_server::async_api(network::request &) { return std::make_unique<network::json_response>(j_async_api); }
 
+    std::unique_ptr<network::response> coco_server::sensor_types(network::request &)
+    {
+        json::json sts(json::json_type::array);
+        for (auto &st : get_sensor_types())
+            sts.push_back(to_json(st));
+        return std::make_unique<network::json_response>(std::move(sts));
+    }
+    std::unique_ptr<network::response> coco_server::sensors(network::request &)
+    {
+        json::json ss(json::json_type::array);
+        for (auto &s : get_sensors())
+            ss.push_back(to_json(s));
+        return std::make_unique<network::json_response>(std::move(ss));
+    }
+
     void coco_server::on_ws_open(network::ws_session &ws) { clients.insert(&ws); }
     void coco_server::on_ws_message(network::ws_session &ws, const std::string &msg)
     {
