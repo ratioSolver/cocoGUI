@@ -12,9 +12,11 @@ export const useAppStore = defineStore('app', {
     connect(url = 'ws://' + location.host + '/coco', timeout = 1000) {
       this.socket = new WebSocket(url);
       this.socket.onopen = () => {
+        console.log('WebSocket connected');
         this.socket.send(JSON.stringify({ 'type': 'login' }));
       };
       this.socket.onclose = () => {
+        console.log('WebSocket disconnected');
         setTimeout(() => { this.connect(url, timeout); }, timeout);
       };
       this.socket.onerror = (error) => {
@@ -23,6 +25,7 @@ export const useAppStore = defineStore('app', {
       };
       this.socket.onmessage = (msg) => {
         let data = JSON.parse(msg.data);
+        console.log(data);
         switch (data.type) {
           case 'solvers':
             this.solvers.clear();
