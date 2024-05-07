@@ -30,6 +30,8 @@ namespace coco
         void new_solver(const coco_executor &exec) override;
         void deleted_solver(const uintptr_t id) override;
 
+        void state_changed(const coco_executor &exec) override;
+
     private:
         void broadcast(const json::json &msg)
         {

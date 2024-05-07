@@ -93,4 +93,10 @@ namespace coco
         std::lock_guard<std::recursive_mutex> _(mtx);
         broadcast(ratio::executor::deleted_executor_message(id));
     }
+
+    void coco_server::state_changed(const coco_executor &exec)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(ratio::executor::state_changed_message(exec));
+    }
 } // namespace coco
