@@ -25,7 +25,7 @@ namespace coco
         void on_ws_open(network::ws_session &ws);
         void on_ws_message(network::ws_session &ws, const std::string &msg);
         void on_ws_close(network::ws_session &ws);
-        void on_ws_error(network::ws_session &ws);
+        void on_ws_error(network::ws_session &ws, const boost::system::error_code &);
 
         void new_solver(const coco_executor &exec) override;
         void deleted_solver(const uintptr_t id) override;
@@ -33,8 +33,9 @@ namespace coco
     private:
         void broadcast(const json::json &msg)
         {
+            auto msg_str = msg.to_string();
             for (auto client : clients)
-                client->send(msg.to_string());
+                client->send(msg_str);
         }
 
     private:

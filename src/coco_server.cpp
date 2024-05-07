@@ -14,7 +14,7 @@ namespace coco
         add_route(network::GET, "^/open_api$", std::bind(&coco_server::open_api, this, std::placeholders::_1));
         add_route(network::GET, "^/async_api$", std::bind(&coco_server::async_api, this, std::placeholders::_1));
 
-        add_ws_route("/coco").on_open(std::bind(&coco_server::on_ws_open, this, std::placeholders::_1)).on_message(std::bind(&coco_server::on_ws_message, this, std::placeholders::_1, std::placeholders::_2)).on_close(std::bind(&coco_server::on_ws_close, this, std::placeholders::_1)).on_error(std::bind(&coco_server::on_ws_error, this, std::placeholders::_1));
+        add_ws_route("/coco").on_open(std::bind(&coco_server::on_ws_open, this, std::placeholders::_1)).on_message(std::bind(&coco_server::on_ws_message, this, std::placeholders::_1, std::placeholders::_2)).on_close(std::bind(&coco_server::on_ws_close, this, std::placeholders::_1)).on_error(std::bind(&coco_server::on_ws_error, this, std::placeholders::_1, std::placeholders::_2));
     }
 
     std::unique_ptr<network::response> coco_server::index(network::request &) { return std::make_unique<network::file_response>("client/dist/index.html"); }
@@ -43,7 +43,34 @@ namespace coco
         return std::make_unique<network::json_response>(std::move(ss));
     }
 
-    void coco_server::on_ws_open(network::ws_session &ws) { clients.insert(&ws); }
+    void coco_server::on_ws_open(network::ws_session &ws)
+    {
+        clients.insert(&ws);
+
+        // we send the sensor types
+        json::json j_sensor_types{{"type", "sensor_types"}};
+        json::json c_sensor_types(json::json_type::array);
+        for (const auto &st : get_sensor_types())
+            c_sensor_types.push_back(to_json(st.get()));
+        j_sensor_types["sensor_types"] = std::move(c_sensor_types);
+        ws.send(j_sensor_types.to_string());
+
+        // we send the sensors
+        json::json j_sensors{{"type", "sensors"}};
+        json::json c_sensors(json::json_type::array);
+        for (const auto &s : get_sensors())
+            c_sensors.push_back(to_json(s.get()));
+        j_sensors["sensors"] = std::move(c_sensors);
+        ws.send(j_sensors.to_string());
+
+        // we send the solvers
+        json::json j_solvers{{"type", "solvers"}};
+        json::json c_solvers(json::json_type::array);
+        for (const auto &cc_exec : get_solvers())
+            c_solvers.push_back(to_json(cc_exec.get()));
+        j_solvers["solvers"] = std::move(c_solvers);
+        ws.send(j_solvers.to_string());
+    }
     void coco_server::on_ws_message(network::ws_session &ws, const std::string &msg)
     {
         auto x = json::load(msg);
@@ -54,7 +81,7 @@ namespace coco
         }
     }
     void coco_server::on_ws_close(network::ws_session &ws) { clients.erase(&ws); }
-    void coco_server::on_ws_error(network::ws_session &ws) { clients.erase(&ws); }
+    void coco_server::on_ws_error(network::ws_session &ws, const boost::system::error_code &) { clients.erase(&ws); }
 
     void coco_server::new_solver(const coco_executor &exec)
     {
