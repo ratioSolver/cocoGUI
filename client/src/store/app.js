@@ -31,6 +31,13 @@ export const useAppStore = defineStore('app', {
             this.solvers.clear();
             for (const solver of data.solvers)
               this.solvers.set(solver.id, new Solver(solver.id, solver.name, solver.state));
+            break;
+          case 'new_executor':
+            this.solvers.set(data.id, new Solver(data.id, data.name, data.state));
+            break;
+          case 'deleted_executor':
+            this.solvers.delete(data.id);
+            break;
         }
       };
     },

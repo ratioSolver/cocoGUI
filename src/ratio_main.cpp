@@ -28,7 +28,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char const *argv[])
     auto srv_ft = std::async(std::launch::async, [&server]
                              { server.start(); });
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
     auto &s = server.create_solver("oRatio").get_solver();
     try
