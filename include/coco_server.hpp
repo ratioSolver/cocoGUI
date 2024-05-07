@@ -32,6 +32,10 @@ namespace coco
 
         void state_changed(const coco_executor &exec) override;
 
+        void executor_state_changed(const coco_executor &exec, ratio::executor::executor_state state) override;
+
+        void tick(const coco_executor &exec, const utils::rational &time) override;
+
     private:
         void broadcast(const json::json &msg)
         {

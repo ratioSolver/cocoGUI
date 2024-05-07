@@ -38,6 +38,12 @@ export const useAppStore = defineStore('app', {
           case 'deleted_executor':
             this.solvers.delete(data.id);
             break;
+          case 'executor_state':
+            this.solvers.get(data.id).state_changed(data);
+            break;
+          case 'executor_state_changed':
+            this.solvers.get(data.id).state = data.state;
+            break;
         }
       };
     },

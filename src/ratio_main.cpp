@@ -30,29 +30,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char const *argv[])
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-    auto &s = server.create_solver("oRatio").get_solver();
-    try
-    {
-        s.read(prob_names);
-
-        if (s.solve())
-        {
-            LOG_INFO("hurray!! we have found a solution..");
-            std::ofstream sol_file;
-            sol_file.open(sol_name);
-            sol_file << to_json(s).to_string();
-            sol_file.close();
-        }
-        else
-        {
-            LOG_INFO("the problem is unsolvable..");
-        }
-    }
-    catch (const std::exception &ex)
-    {
-        LOG_FATAL("exception: " + std::string(ex.what()));
-        return 1;
-    }
+    auto &exec = server.create_solver("oRatio");
+    exec.adapt(prob_names);
+    exec.ratio::executor::executor::tick();
 
     return 0;
 }

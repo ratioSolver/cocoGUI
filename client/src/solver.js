@@ -32,11 +32,16 @@ export class Solver {
         this.edge_listeners = new Map();
     }
 
+    /**
+     * Handles the state change message.
+     * 
+     * @param {Object} message - The state change message.
+     */
     state_changed(message) {
-        this.items.clear(); if (message.state.items) for (const itm of message.state.items) this.items.set(parseInt(itm.id), itm);
-        this.atoms.clear(); if (message.state.atoms) for (const atm of message.state.atoms) this.atoms.set(parseInt(atm.id), atm);
+        this.items.clear(); if (message.items) for (const itm of message.items) this.items.set(parseInt(itm.id), itm);
+        this.atoms.clear(); if (message.atoms) for (const atm of message.atoms) this.atoms.set(parseInt(atm.id), atm);
 
-        this.exprs = this.exprs_to_map(message.state.exprs);
+        this.exprs = this.exprs_to_map(message.exprs);
         for (const itm of this.items.values())
             if (itm.exprs)
                 itm.exprs = this.exprs_to_map(itm.exprs);
@@ -46,16 +51,19 @@ export class Solver {
 
         const origin_var = this.exprs.get('origin');
         const horizon_var = this.exprs.get('horizon');
-        this.origin = origin_var.value.num / origin_var.value.den;
-        this.horizon = horizon_var.value.num / horizon_var.value.den;
+        this.origin = origin_var.num / origin_var.den;
+        this.horizon = horizon_var.num / horizon_var.den;
 
         this.timelines.clear();
-        for (const tl of message.timelines)
-            this.timelines.set(tl.id, tl);
+        if (message.timelines)
+            for (const tl of message.timelines)
+                this.timelines.set(tl.id, tl);
 
         this.executing_tasks.clear();
-        for (const atm of message.executing)
-            this.executing_tasks.add(this.atoms.get(atm));
+        if (message.executing)
+            for (const atm of message.executing)
+                this.executing_tasks.add(this.atoms.get(atm));
+
         this.current_time = message.time.num / message.time.den;
 
         this.state_listeners.forEach(l => l(this));
@@ -389,46 +397,60 @@ export class Solver {
         return '\u03C3' + atm.sigma + ' ' + atm.type + '(' + pars.join(',') + '<br>)';
     }
 
+    /**
+     * Converts a value to its string representation.
+     * 
+     * @param {object} val - The value to convert.
+     * @returns {string} The string representation of the value.
+     */
     val_to_string(val) {
         switch (val.type) {
-            case 'bool': return val.value;
+            case 'bool': return val.val;
+            case 'int':
             case 'real':
-                const lb = val.value.lb ? val.value.lb.num / val.value.lb.den : Number.NEGATIVE_INFINITY;
-                const ub = val.value.ub ? val.value.ub.num / val.value.ub.den : Number.POSITIVE_INFINITY;
+            case 'time':
+                const lb = val.lb ? val.lb.num / val.lb.den : Number.NEGATIVE_INFINITY;
+                const ub = val.ub ? val.ub.num / val.ub.den : Number.POSITIVE_INFINITY;
                 if (lb == ub)
-                    return val.value.num / val.value.den;
+                    return val.val.num / val.val.den;
                 else
-                    return val.value.num / val.value.den + ' [' + lb + ', ' + ub + ']';
-            case 'string': return val.value;
+                    return val.val.num / val.val.den + ' [' + lb + ', ' + ub + ']';
+            case 'string': return val.val;
             default:
-                return Array.isArray(val.value) ? '[' + val.value.map(itm => itm.name).sort().join(',') + ']' : val.name;
+                return Array.isArray(val) ? '[' + val.map(itm => itm.name).sort().join(',') + ']' : val.name;
         }
     }
 
-    exprs_to_map(xprs_array) {
-        const xprs = new Map();
-
-        for (const xpr of xprs_array.sort((a, b) => a.name.localeCompare(b.name))) {
+    /**
+     * Converts an object of expressions to a Map.
+     *
+     * @param {Object} xprs - The object of expressions to be converted.
+     * @returns {Map} - The converted Map.
+     */
+    exprs_to_map(xprs) {
+        const c_xprs = new Map();
+        for (const key in xprs) {
+            const xpr = xprs[key];
             switch (xpr.type) {
                 case 'bool':
                 case 'int':
                 case 'real':
+                case 'time':
                 case 'string':
-                    xprs.set(xpr.name, { 'type': xpr.type, 'value': xpr.value });
+                    c_xprs.set(key, xpr);
                     break;
                 default:
-                    if (typeof xpr.value == 'object') {
-                        if (xpr.value.vals.length == 1)
-                            xprs.set(xpr.name, this.items.has(xpr.value.vals[0]) ? this.items.get(xpr.value.vals[0]) : this.atoms.get(xpr.value.vals[0]));
+                    if (xpr.vals) {
+                        if (xpr.vals.length == 1)
+                            c_xprs.set(key, this.items.has(xpr.vals[0]) ? this.items.get(xpr.vals[0]) : this.atoms.get(xpr.vals[0]));
                         else
-                            xprs.set(xpr.name, xpr.value.vals.map(itm_id => this.items.has(itm_id) ? this.items.get(itm_id) : this.atoms.get(itm_id)));
+                            c_xprs.set(key, xpr.vals.map(itm_id => this.items.has(itm_id) ? this.items.get(itm_id) : this.atoms.get(itm_id)));
                     } else
-                        xprs.set(xpr.name, this.items.has(xpr.value) ? this.items.get(xpr.value) : this.atoms.get(xpr.value));
+                        c_xprs.set(key, this.items.has(xpr) ? this.items.get(xpr) : this.atoms.get(xpr));
                     break;
             }
         }
-
-        return xprs;
+        return c_xprs;
     }
 
     flaw_label(flaw) {
