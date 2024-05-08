@@ -416,8 +416,12 @@ export class Solver {
                 else
                     return val.val.num / val.val.den + ' [' + lb + ', ' + ub + ']';
             case 'string': return val.val;
-            default:
-                return Array.isArray(val) ? '[' + val.map(itm => itm.name).sort().join(',') + ']' : val.name;
+            case 'enum':
+                return '[' + val.map(itm => itm.name).sort().join(',') + ']';
+            case 'object':
+                return val.name;
+            default: // should not happen
+                return val;
         }
     }
 
@@ -439,14 +443,14 @@ export class Solver {
                 case 'string':
                     c_xprs.set(key, xpr);
                     break;
-                default:
+                default: // enum or object, we replace the id with the object
                     if (xpr.vals) {
                         if (xpr.vals.length == 1)
                             c_xprs.set(key, this.items.has(xpr.vals[0]) ? this.items.get(xpr.vals[0]) : this.atoms.get(xpr.vals[0]));
                         else
                             c_xprs.set(key, xpr.vals.map(itm_id => this.items.has(itm_id) ? this.items.get(itm_id) : this.atoms.get(itm_id)));
                     } else
-                        c_xprs.set(key, this.items.has(xpr) ? this.items.get(xpr) : this.atoms.get(xpr));
+                        c_xprs.set(key, this.items.has(xpr.val) ? this.items.get(xpr) : this.atoms.get(xpr));
                     break;
             }
         }

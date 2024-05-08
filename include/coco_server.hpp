@@ -3,6 +3,10 @@
 #include "coco_db.hpp"
 #include "coco_core.hpp"
 #include "server.hpp"
+#include "agent.hpp"
+#include "state_variable.hpp"
+#include "reusable_resource.hpp"
+#include "consumable_resource.hpp"
 
 namespace coco
 {
@@ -48,6 +52,23 @@ namespace coco
         json::json j_components{{"schemas",
                                  {{"sensor_type", {{"type", "object"}, {"properties", {{"id", {{"type", "string"}}}, {"name", {{"type", "string"}}}, {"description", {{"type", "string"}}}}}}},
                                   {"sensor", {{"type", "object"}, {"properties", {{"id", {{"type", "string"}}}, {"type", {{"type", "string"}}}, {"name", {{"type", "string"}}}, {"description", {{"type", "string"}}}}}}},
+                                  {"rational", ratio::rational_schema["rational"]},
+                                  {"inf_rational", ratio::inf_rational_schema["inf_rational"]},
+                                  {"value", ratio::value_schema["value"]},
+                                  {"bool_value", ratio::bool_value_schema["bool_value"]},
+                                  {"int_value", ratio::int_value_schema["int_value"]},
+                                  {"real_value", ratio::real_value_schema["real_value"]},
+                                  {"time_value", ratio::time_value_schema["time_value"]},
+                                  {"string_value", ratio::string_value_schema["string_value"]},
+                                  {"enum_value", ratio::enum_value_schema["enum_value"]},
+                                  {"object_value", ratio::object_value_schema["object_value"]},
+                                  {"agent", ratio::agent_schema["agent"]},
+                                  {"state_variable_value", ratio::state_variable_value_schema["state_variable_value"]},
+                                  {"state_variable", ratio::state_variable_schema["state_variable"]},
+                                  {"reusable_resource_value", ratio::reusable_resource_value_schema["reusable_resource_value"]},
+                                  {"reusable_resource", ratio::reusable_resource_schema["reusable_resource"]},
+                                  {"consumable_resource_value", ratio::consumable_resource_value_schema["consumable_resource_value"]},
+                                  {"consumable_resource", ratio::consumable_resource_schema["consumable_resource"]},
                                   {"solver", {{"type", "object"}, {"properties", {{"id", {{"type", "string"}}}, {"name", {{"type", "string"}}}, {"state", {{"type", "string"}, {"enum", {"reasoning", "adapting", "idle", "executing", "finished", "failed"}}}}}}}}}}};
         json::json j_open_api{
             {"openapi", "3.0.0"},
