@@ -9,10 +9,10 @@ namespace coco
         LOG_DEBUG(j_open_api);
         LOG_DEBUG(j_async_api);
 
-        add_route(network::GET, "^/$", std::bind(&coco_server::index, this, std::placeholders::_1));
-        add_route(network::GET, "^(/assets/.+)|/.+\\.ico|/.+\\.png", std::bind(&coco_server::assets, this, std::placeholders::_1));
-        add_route(network::GET, "^/open_api$", std::bind(&coco_server::open_api, this, std::placeholders::_1));
-        add_route(network::GET, "^/async_api$", std::bind(&coco_server::async_api, this, std::placeholders::_1));
+        add_route(network::Get, "^/$", std::bind(&coco_server::index, this, std::placeholders::_1));
+        add_route(network::Get, "^(/assets/.+)|/.+\\.ico|/.+\\.png", std::bind(&coco_server::assets, this, std::placeholders::_1));
+        add_route(network::Get, "^/open_api$", std::bind(&coco_server::open_api, this, std::placeholders::_1));
+        add_route(network::Get, "^/async_api$", std::bind(&coco_server::async_api, this, std::placeholders::_1));
 
         add_ws_route("/coco").on_open(std::bind(&coco_server::on_ws_open, this, std::placeholders::_1)).on_message(std::bind(&coco_server::on_ws_message, this, std::placeholders::_1, std::placeholders::_2)).on_close(std::bind(&coco_server::on_ws_close, this, std::placeholders::_1)).on_error(std::bind(&coco_server::on_ws_error, this, std::placeholders::_1, std::placeholders::_2));
     }
