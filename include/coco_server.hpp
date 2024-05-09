@@ -43,7 +43,7 @@ namespace coco
     private:
         void broadcast(const json::json &msg)
         {
-            auto msg_str = msg.to_string();
+            auto msg_str = msg.dump();
             for (auto client : clients)
                 client->send(msg_str);
         }
@@ -77,10 +77,10 @@ namespace coco
         json::json j_open_api{
             {"openapi", "3.0.0"},
             {"info", {{"title", "CoCo API"}, {"description", "The combined deduCtiOn and abduCtiOn (CoCo) API"}, {"version", "1.0"}}},
-            {"servers", json::to_array({{"url", "http://" SERVER_HOST ":" + std::to_string(SERVER_PORT)}})},
+            {"servers", std::vector<json::json>{{"url", "http://" SERVER_HOST ":" + std::to_string(SERVER_PORT)}}},
             {"paths",
              {{"/", {{"get", {{"summary", "Index"}, {"description", "Index page"}, {"responses", {{"200", {{"description", "Index page"}}}}}}}}},
-              {"/assets/{file}", {{"get", {{"summary", "Assets"}, {"description", "Assets"}, {"parameters", json::to_array({{{"name", "file"}, {"in", "path"}, {"required", true}, {"schema", {{"type", "string"}}}}})}, {"responses", {{"200", {{"description", "Index page"}}}}}}}}},
+              {"/assets/{file}", {{"get", {{"summary", "Assets"}, {"description", "Assets"}, {"parameters", std::vector<json::json>{{{"name", "file"}, {"in", "path"}, {"required", true}, {"schema", {{"type", "string"}}}}}}, {"responses", {{"200", {{"description", "Index page"}}}}}}}}},
               {"/open_api", {{"get", {{"summary", "Retrieve OpenAPI Specification"}, {"description", "Endpoint to fetch the OpenAPI Specification document"}, {"responses", {{"200", {{"description", "Successful response with OpenAPI Specification document"}}}}}}}}},
               {"/async_api", {{"get", {{"summary", "Retrieve AsyncAPI Specification"}, {"description", "Endpoint to fetch the AsyncAPI Specification document"}, {"responses", {{"200", {{"description", "Successful response with AsyncAPI Specification document"}}}}}}}}},
               {"/sensor_types", {{"get", {{"summary", "Retrieve CoCo sensor types"}, {"description", "Endpoint to fetch all the managed sensor types"}, {"responses", {{"200", {{"description", "Successful response with the stored sensor types"}, {"content", {{"application/json", {{"schema", {{"type", "array"}, {"items", {{"$ref", "#/components/schemas/sensor_type"}}}}}}}}}}}}}}}}},

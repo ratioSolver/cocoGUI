@@ -53,7 +53,7 @@ namespace coco
         for (const auto &st : get_sensor_types())
             c_sensor_types.push_back(to_json(st.get()));
         j_sensor_types["sensor_types"] = std::move(c_sensor_types);
-        ws.send(j_sensor_types.to_string());
+        ws.send(j_sensor_types.dump());
 
         // we send the sensors
         json::json j_sensors{{"type", "sensors"}};
@@ -61,7 +61,7 @@ namespace coco
         for (const auto &s : get_sensors())
             c_sensors.push_back(to_json(s.get()));
         j_sensors["sensors"] = std::move(c_sensors);
-        ws.send(j_sensors.to_string());
+        ws.send(j_sensors.dump());
 
         // we send the solvers
         json::json j_solvers{{"type", "solvers"}};
@@ -69,12 +69,12 @@ namespace coco
         for (const auto &cc_exec : get_solvers())
             c_solvers.push_back(to_json(cc_exec.get()));
         j_solvers["solvers"] = std::move(c_solvers);
-        ws.send(j_solvers.to_string());
+        ws.send(j_solvers.dump());
     }
     void coco_server::on_ws_message(network::ws_session &ws, const std::string &msg)
     {
         auto x = json::load(msg);
-        if (x.get_type() != json::json_type::object || !x.get_object().count("type"))
+        if (x.get_type() != json::json_type::object || !x.contains("type"))
         {
             ws.close();
             return;
