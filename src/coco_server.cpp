@@ -70,6 +70,13 @@ namespace coco
             c_solvers.push_back(to_json(cc_exec.get()));
         j_solvers["solvers"] = std::move(c_solvers);
         ws.send(j_solvers.dump());
+
+        // we send the executors
+        for (const auto &cc_exec : get_solvers())
+        {
+            ws.send(state_message(cc_exec.get()).dump());
+            ws.send(graph_message(cc_exec.get().get_solver().get_graph()).dump());
+        }
     }
     void coco_server::on_ws_message(network::ws_session &ws, const std::string &msg)
     {
