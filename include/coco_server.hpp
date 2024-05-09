@@ -3,6 +3,7 @@
 #include "coco_db.hpp"
 #include "coco_core.hpp"
 #include "server.hpp"
+#include "graph.hpp"
 #include "agent.hpp"
 #include "state_variable.hpp"
 #include "reusable_resource.hpp"
@@ -66,6 +67,9 @@ namespace coco
                                   {"atom", ratio::atom_schema["atom"]},
                                   {"solver_state", ratio::solver_state_schema["solver_state"]},
                                   {"solver_timeline", ratio::solver_timeline_schema["solver_timeline"]},
+                                  {"flaw", ratio::flaw_schema["flaw"]},
+                                  {"resolver", ratio::resolver_schema["resolver"]},
+                                  {"solver_graph", ratio::solver_graph_schema["solver_graph"]},
                                   {"agent_timeline", ratio::agent_timeline_schema["agent_timeline"]},
                                   {"state_variable_timeline_value", ratio::state_variable_timeline_value_schema["state_variable_timeline_value"]},
                                   {"state_variable_timeline", ratio::state_variable_timeline_schema["state_variable_timeline"]},
