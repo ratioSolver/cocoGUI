@@ -24,8 +24,8 @@ namespace coco
         std::unique_ptr<network::response> open_api(network::request &req);
         std::unique_ptr<network::response> async_api(network::request &req);
 
-        std::unique_ptr<network::response> sensor_types(network::request &req);
-        std::unique_ptr<network::response> sensors(network::request &req);
+        std::unique_ptr<network::response> types(network::request &req);
+        std::unique_ptr<network::response> items(network::request &req);
 
         void on_ws_open(network::ws_session &ws);
         void on_ws_message(network::ws_session &ws, const std::string &msg);
@@ -51,8 +51,15 @@ namespace coco
 
     private:
         json::json j_components{{"schemas",
-                                 {{"sensor_type", {{"type", "object"}, {"properties", {{"id", {{"type", "string"}}}, {"name", {{"type", "string"}}}, {"description", {{"type", "string"}}}}}}},
-                                  {"sensor", {{"type", "object"}, {"properties", {{"id", {{"type", "string"}}}, {"type", {{"type", "string"}}}, {"name", {{"type", "string"}}}, {"description", {{"type", "string"}}}}}}},
+                                 {{"parameter", parameter_schema["parameter"]},
+                                  {"integer_parameter", integer_parameter_schema["integer_parameter"]},
+                                  {"real_parameter", real_parameter_schema["real_parameter"]},
+                                  {"boolean_parameter", boolean_parameter_schema["boolean_parameter"]},
+                                  {"symbol_parameter", symbol_parameter_schema["symbol_parameter"]},
+                                  {"string_parameter", string_parameter_schema["string_parameter"]},
+                                  {"array_parameter", array_parameter_schema["array_parameter"]},
+                                  {"coco_type", coco_type_schema["coco_type"]},
+                                  {"coco_item", coco_item_schema["coco_item"]},
                                   {"rational", ratio::rational_schema["rational"]},
                                   {"inf_rational", ratio::inf_rational_schema["inf_rational"]},
                                   {"value", ratio::value_schema["value"]},
@@ -77,18 +84,56 @@ namespace coco
                                   {"reusable_resource_timeline", ratio::reusable_resource_timeline_schema["reusable_resource_timeline"]},
                                   {"consumable_resource_timeline_value", ratio::consumable_resource_timeline_value_schema["consumable_resource_timeline_value"]},
                                   {"consumable_resource_timeline", ratio::consumable_resource_timeline_schema["consumable_resource_timeline"]},
-                                  {"solver", {{"type", "object"}, {"properties", {{"id", {{"type", "string"}}}, {"name", {{"type", "string"}}}, {"state", {{"type", "string"}, {"enum", {"reasoning", "adapting", "idle", "executing", "finished", "failed"}}}}}}}}}}};
+                                  {"executor", ratio::executor::executor_schema["executor"]}}}};
         json::json j_open_api{
             {"openapi", "3.0.0"},
-            {"info", {{"title", "CoCo API"}, {"description", "The combined deduCtiOn and abduCtiOn (CoCo) API"}, {"version", "1.0"}}},
+            {"info",
+             {{"title", "CoCo API"},
+              {"description", "The combined deduCtiOn and abduCtiOn (CoCo) API"},
+              {"version", "1.0"}}},
             {"servers", std::vector<json::json>{{"url", "http://" SERVER_HOST ":" + std::to_string(SERVER_PORT)}}},
             {"paths",
-             {{"/", {{"get", {{"summary", "Index"}, {"description", "Index page"}, {"responses", {{"200", {{"description", "Index page"}}}}}}}}},
-              {"/assets/{file}", {{"get", {{"summary", "Assets"}, {"description", "Assets"}, {"parameters", std::vector<json::json>{{{"name", "file"}, {"in", "path"}, {"required", true}, {"schema", {{"type", "string"}}}}}}, {"responses", {{"200", {{"description", "Index page"}}}}}}}}},
-              {"/open_api", {{"get", {{"summary", "Retrieve OpenAPI Specification"}, {"description", "Endpoint to fetch the OpenAPI Specification document"}, {"responses", {{"200", {{"description", "Successful response with OpenAPI Specification document"}}}}}}}}},
-              {"/async_api", {{"get", {{"summary", "Retrieve AsyncAPI Specification"}, {"description", "Endpoint to fetch the AsyncAPI Specification document"}, {"responses", {{"200", {{"description", "Successful response with AsyncAPI Specification document"}}}}}}}}},
-              {"/sensor_types", {{"get", {{"summary", "Retrieve CoCo sensor types"}, {"description", "Endpoint to fetch all the managed sensor types"}, {"responses", {{"200", {{"description", "Successful response with the stored sensor types"}, {"content", {{"application/json", {{"schema", {{"type", "array"}, {"items", {{"$ref", "#/components/schemas/sensor_type"}}}}}}}}}}}}}}}}},
-              {"/sensors", {{"get", {{"summary", "Retrieve CoCo sensors"}, {"description", "Endpoint to fetch all the managed sensors"}, {"responses", {{"200", {{"description", "Successful response with the stored sensors"}, {"content", {{"application/json", {{"schema", {{"type", "array"}, {"items", {{"$ref", "#/components/schemas/sensor"}}}}}}}}}}}}}}}}}}},
+             {{"/",
+               {{"get",
+                 {{"summary", "Index"},
+                  {"description", "Index page"},
+                  {"responses",
+                   {{"200", {{"description", "Index page"}}}}}}}}},
+              {"/assets/{file}",
+               {{"get",
+                 {{"summary", "Assets"},
+                  {"description", "Assets"},
+                  {"parameters", std::vector<json::json>{{{"name", "file"}, {"in", "path"}, {"required", true}, {"schema", {{"type", "string"}}}}}},
+                  {"responses",
+                   {{"200", {{"description", "Index page"}}}}}}}}},
+              {"/open_api",
+               {{"get",
+                 {{"summary", "Retrieve OpenAPI Specification"},
+                  {"description", "Endpoint to fetch the OpenAPI Specification document"},
+                  {"responses",
+                   {{"200", {{"description", "Successful response with OpenAPI Specification document"}}}}}}}}},
+              {"/async_api",
+               {{"get",
+                 {{"summary", "Retrieve AsyncAPI Specification"},
+                  {"description", "Endpoint to fetch the AsyncAPI Specification document"},
+                  {"responses",
+                   {{"200", {{"description", "Successful response with AsyncAPI Specification document"}}}}}}}}},
+              {"/types",
+               {{"get",
+                 {{"summary", "Retrieve all the CoCo types"},
+                  {"description", "Endpoint to fetch all the managed types"},
+                  {"responses",
+                   {{"200",
+                     {{"description", "Successful response with the stored types"},
+                      {"content", {{"application/json", {{"schema", {{"type", "array"}, {"items", {{"$ref", "#/components/schemas/coco_type"}}}}}}}}}}}}}}}}},
+              {"/items",
+               {{"get",
+                 {{"summary", "Retrieve all the CoCo items"},
+                  {"description", "Endpoint to fetch all the managed items"},
+                  {"responses",
+                   {{"200",
+                     {{"description", "Successful response with the stored items"},
+                      {"content", {{"application/json", {{"schema", {{"type", "array"}, {"items", {{"$ref", "#/components/schemas/coco_item"}}}}}}}}}}}}}}}}}}},
             {"components", j_components}};
         json::json j_async_api{
             {"asyncapi", "3.0.0"},

@@ -28,17 +28,17 @@ namespace coco
     std::unique_ptr<network::response> coco_server::open_api(network::request &) { return std::make_unique<network::json_response>(j_open_api); }
     std::unique_ptr<network::response> coco_server::async_api(network::request &) { return std::make_unique<network::json_response>(j_async_api); }
 
-    std::unique_ptr<network::response> coco_server::sensor_types(network::request &)
+    std::unique_ptr<network::response> coco_server::types(network::request &)
     {
         json::json sts(json::json_type::array);
-        for (auto &st : get_sensor_types())
+        for (auto &st : get_types())
             sts.push_back(to_json(st));
         return std::make_unique<network::json_response>(std::move(sts));
     }
-    std::unique_ptr<network::response> coco_server::sensors(network::request &)
+    std::unique_ptr<network::response> coco_server::items(network::request &)
     {
         json::json ss(json::json_type::array);
-        for (auto &s : get_sensors())
+        for (auto &s : get_items())
             ss.push_back(to_json(s));
         return std::make_unique<network::json_response>(std::move(ss));
     }
@@ -48,20 +48,20 @@ namespace coco
         clients.insert(&ws);
 
         // we send the sensor types
-        json::json j_sensor_types{{"type", "sensor_types"}};
-        json::json c_sensor_types(json::json_type::array);
-        for (const auto &st : get_sensor_types())
-            c_sensor_types.push_back(to_json(st.get()));
-        j_sensor_types["sensor_types"] = std::move(c_sensor_types);
-        ws.send(j_sensor_types.dump());
+        json::json j_types{{"type", "types"}};
+        json::json c_types(json::json_type::array);
+        for (const auto &st : get_types())
+            c_types.push_back(to_json(st.get()));
+        j_types["types"] = std::move(c_types);
+        ws.send(j_types.dump());
 
-        // we send the sensors
-        json::json j_sensors{{"type", "sensors"}};
-        json::json c_sensors(json::json_type::array);
-        for (const auto &s : get_sensors())
-            c_sensors.push_back(to_json(s.get()));
-        j_sensors["sensors"] = std::move(c_sensors);
-        ws.send(j_sensors.dump());
+        // we send the items
+        json::json j_items{{"type", "items"}};
+        json::json c_items(json::json_type::array);
+        for (const auto &s : get_items())
+            c_items.push_back(to_json(s.get()));
+        j_items["items"] = std::move(c_items);
+        ws.send(j_items.dump());
 
         // we send the solvers
         json::json j_solvers{{"type", "solvers"}};
