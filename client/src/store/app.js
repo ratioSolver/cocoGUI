@@ -21,7 +21,6 @@ export const useAppStore = defineStore('app', {
       };
       this.socket.onerror = (error) => {
         console.log('WebSocket Error: ' + error);
-        setTimeout(() => { this.connect(url, timeout); }, timeout);
       };
       this.socket.onmessage = (msg) => {
         let data = JSON.parse(msg.data);
