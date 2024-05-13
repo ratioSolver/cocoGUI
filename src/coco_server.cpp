@@ -74,8 +74,8 @@ namespace coco
         // we send the executors
         for (const auto &cc_exec : get_solvers())
         {
-            ws.send(state_message(cc_exec.get()).dump());
-            ws.send(graph_message(cc_exec.get().get_solver().get_graph()).dump());
+            ws.send(make_state_message(cc_exec.get()).dump());
+            ws.send(make_graph_message(cc_exec.get().get_solver().get_graph()).dump());
         }
     }
     void coco_server::on_ws_message(network::ws_session &ws, const std::string &msg)
@@ -93,7 +93,7 @@ namespace coco
     void coco_server::new_solver(const coco_executor &exec)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        broadcast(new_executor_message(exec));
+        broadcast(make_executor_message(exec));
     }
     void coco_server::deleted_solver(const uintptr_t id)
     {
@@ -104,7 +104,7 @@ namespace coco
     void coco_server::state_changed(const coco_executor &exec)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        broadcast(ratio::executor::state_message(exec));
+        broadcast(make_state_message(exec));
     }
 
     void coco_server::executor_state_changed(const coco_executor &exec, ratio::executor::executor_state)
@@ -116,6 +116,6 @@ namespace coco
     void coco_server::tick(const coco_executor &exec, const utils::rational &)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        broadcast(ratio::executor::tick_message(exec));
+        broadcast(ratio::executor::make_tick_message(exec));
     }
 } // namespace coco
