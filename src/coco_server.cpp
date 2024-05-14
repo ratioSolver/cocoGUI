@@ -98,7 +98,7 @@ namespace coco
     void coco_server::deleted_solver(const uintptr_t id)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        broadcast(ratio::executor::deleted_executor_message(id));
+        broadcast(ratio::executor::make_deleted_executor_message(id));
     }
 
     void coco_server::state_changed(const coco_executor &exec)
@@ -107,15 +107,63 @@ namespace coco
         broadcast(make_state_message(exec));
     }
 
+    void coco_server::flaw_created(const coco_executor &, const ratio::flaw &f)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_flaw_created_message(f));
+    }
+    void coco_server::flaw_state_changed(const coco_executor &, const ratio::flaw &f)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_flaw_state_changed_message(f));
+    }
+    void coco_server::flaw_cost_changed(const coco_executor &, const ratio::flaw &f)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_flaw_cost_changed_message(f));
+    }
+    void coco_server::flaw_position_changed(const coco_executor &, const ratio::flaw &f)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_flaw_position_changed_message(f));
+    }
+    void coco_server::current_flaw(const coco_executor &, const ratio::flaw &f)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_current_flaw_message(f));
+    }
+
+    void coco_server::resolver_created(const coco_executor &, const ratio::resolver &r)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_resolver_created_message(r));
+    }
+    void coco_server::resolver_state_changed(const coco_executor &, const ratio::resolver &r)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_resolver_state_changed_message(r));
+    }
+    void coco_server::current_resolver(const coco_executor &, const ratio::resolver &r)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_current_resolver_message(r));
+    }
+
+    void coco_server::causal_link_added(const coco_executor &, const ratio::flaw &f, const ratio::resolver &r)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_causal_link_added_message(f, r));
+    }
+
     void coco_server::executor_state_changed(const coco_executor &exec, ratio::executor::executor_state)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        broadcast(ratio::executor::state_changed_message(exec));
+        broadcast(make_state_changed_message(exec));
     }
 
     void coco_server::tick(const coco_executor &exec, const utils::rational &)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        broadcast(ratio::executor::make_tick_message(exec));
+        broadcast(make_tick_message(exec));
     }
 } // namespace coco

@@ -71,6 +71,9 @@ function recompute_timelines() {
   let start_domain = 0;
   y_axes.clear();
   traces.clear();
+  if (props.solver.timelines.size == 0)
+    return;
+
   let domain_size = 1 / props.solver.timelines.size;
   const domain_separator = 0.05 * domain_size;
   for (const [id, tl] of props.solver.timelines) {
@@ -80,9 +83,9 @@ function recompute_timelines() {
       y_axes.set(id, 'y' + i);
     traces.set(id, []);
     switch (tl.type) {
-      case 'Agent':
+      case 'Solver':
         tl.values = tl.values.map(atm_id => props.solver.atoms.get(atm_id));
-        const ends = [0];
+        const slv_ends = [0];
         for (const val of tl.values) {
           if (val.exprs.has('at')) {
             val.from = val.exprs.get('at').value.num / val.exprs.get('at').value.den;
@@ -91,7 +94,27 @@ function recompute_timelines() {
             val.from = val.exprs.get('start').value.num / val.exprs.get('start').value.den;
             val.to = val.exprs.get('end').value.num / val.exprs.get('end').value.den;
           }
-          val.y = values_y(val.from, val.from === val.to ? val.from + 0.1 : val.to, ends);
+          val.y = values_y(val.from, val.from === val.to ? val.from + 0.1 : val.to, slv_ends);
+          val.text = props.solver.slv_value_title(val);
+          traces.get(id).push({ x: [val.from, val.to], y: [val.y, val.y], name: val.text, text: [val.text], type: 'scatter', opacity: 0.7, mode: 'lines+text', line: { width: 30 }, textposition: 'middle right', yaxis: y_axes.get(id) });
+        }
+        if (i == 1)
+          layout['yaxis'] = { title: props.solver.timeline_name(tl), domain: [start_domain + domain_separator, start_domain + domain_size - domain_separator], zeroline: false, showticklabels: false, showgrid: false };
+        else
+          layout['yaxis' + i] = { title: props.solver.timeline_name(tl), domain: [start_domain + domain_separator, start_domain + domain_size - domain_separator], zeroline: false, showticklabels: false, showgrid: false };
+        break;
+      case 'Agent':
+        tl.values = tl.values.map(atm_id => props.solver.atoms.get(atm_id));
+        const agnt_ends = [0];
+        for (const val of tl.values) {
+          if (val.exprs.has('at')) {
+            val.from = val.exprs.get('at').value.num / val.exprs.get('at').value.den;
+            val.to = val.from + 1;
+          } else {
+            val.from = val.exprs.get('start').value.num / val.exprs.get('start').value.den;
+            val.to = val.exprs.get('end').value.num / val.exprs.get('end').value.den;
+          }
+          val.y = values_y(val.from, val.from === val.to ? val.from + 0.1 : val.to, agnt_ends);
           val.text = props.solver.ag_value_title(val);
           traces.get(id).push({ x: [val.from, val.to], y: [val.y, val.y], name: val.text, text: [val.text], type: 'scatter', opacity: 0.7, mode: 'lines+text', line: { width: 30 }, textposition: 'middle right', yaxis: y_axes.get(id) });
         }

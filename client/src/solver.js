@@ -342,10 +342,44 @@ export class Solver {
 
     timeline_name(tl) { return tl.name; }
 
+    /**
+     * Returns the title of the given solver value.
+     *
+     * @param {any} ag_val - The value to get the title for.
+     * @returns {string} The title of the value.
+     */
+    slv_value_title(ag_val) { return this.atom_title(ag_val); }
+
+    /**
+     * Returns the content of the given solver value.
+     *
+     * @param {any} ag_val - The solver value to get the content of.
+     * @returns {any} The content of the given solver value.
+     */
+    slv_value_content(ag_val) { return this.atom_content(ag_val); }
+
+    /**
+     * Returns the title of the given agent value.
+     *
+     * @param {any} ag_val - The value to get the title for.
+     * @returns {string} The title of the agent value.
+     */
     ag_value_title(ag_val) { return this.atom_title(ag_val); }
 
+    /**
+     * Returns the content of the given agent value.
+     *
+     * @param {any} ag_val - The agent value.
+     * @returns {any} The content of the agent value.
+     */
     ag_value_content(ag_val) { return this.atom_content(ag_val); }
 
+    /**
+     * Returns the title of a state-variable value object.
+     * 
+     * @param {Object} sv_val - The state-variable value object.
+     * @returns {string} The title of the state-variable value object.
+     */
     sv_value_title(sv_val) {
         switch (sv_val.atoms.length) {
             case 0: return '';
@@ -354,6 +388,12 @@ export class Solver {
         }
     }
 
+    /**
+     * Returns the content of a state-variable value object.
+     *
+     * @param {Object} sv_val - The state-variable value object.
+     * @returns {string} The content of the state-variable value object.
+     */
     sv_value_content(sv_val) {
         switch (sv_val.atoms.length) {
             case 0: return '';
@@ -362,6 +402,12 @@ export class Solver {
         }
     }
 
+    /**
+     * Returns the content of a reusable-resource value object.
+     *
+     * @param {Object} sv_val - The reusable-resource value object.
+     * @returns {string} The content of the reusable-resource value object.
+     */
     rr_value_content(rr_val) {
         switch (rr_val.atoms.length) {
             case 0: return '0: [' + rr_val.from + ', ' + rr_val.to + ']';
@@ -370,6 +416,12 @@ export class Solver {
         }
     }
 
+    /**
+     * Returns the content of a consumable-resource value object.
+     *
+     * @param {Object} sv_val - The consumable-resource value object.
+     * @returns {string} The content of the consumable-resource value object.
+     */
     cr_value_content(cr_val) {
         switch (cr_val.atoms.length) {
             case 0: return cr_val.start + ': [' + cr_val.from + ', ' + cr_val.to + ']';

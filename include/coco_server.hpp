@@ -37,6 +37,18 @@ namespace coco
 
     void state_changed(const coco_executor &exec) override;
 
+    void flaw_created(const coco_executor &exec, const ratio::flaw &f) override;
+    void flaw_state_changed(const coco_executor &exec, const ratio::flaw &f) override;
+    void flaw_cost_changed(const coco_executor &exec, const ratio::flaw &f) override;
+    void flaw_position_changed(const coco_executor &exec, const ratio::flaw &f) override;
+    void current_flaw(const coco_executor &exec, const ratio::flaw &f) override;
+
+    void resolver_created(const coco_executor &exec, const ratio::resolver &r) override;
+    void resolver_state_changed(const coco_executor &exec, const ratio::resolver &r) override;
+    void current_resolver(const coco_executor &exec, const ratio::resolver &r) override;
+
+    void causal_link_added(const coco_executor &exec, const ratio::flaw &f, const ratio::resolver &r) override;
+
     void executor_state_changed(const coco_executor &exec, ratio::executor::executor_state state) override;
 
     void tick(const coco_executor &exec, const utils::rational &time) override;
