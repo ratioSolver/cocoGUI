@@ -101,6 +101,17 @@ namespace coco
         broadcast(ratio::executor::make_deleted_executor_message(id));
     }
 
+    void coco_server::new_reactive_rule(const rule &r)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_reactive_rule_message(r));
+    }
+    void coco_server::new_deliberative_rule(const rule &r)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_deliberative_rule_message(r));
+    }
+
     void coco_server::state_changed(const coco_executor &exec)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);

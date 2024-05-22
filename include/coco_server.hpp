@@ -35,6 +35,9 @@ namespace coco
     void new_solver(const coco_executor &exec) override;
     void deleted_solver(const uintptr_t id) override;
 
+    void new_reactive_rule(const rule &r) override;
+    void new_deliberative_rule(const rule &r) override;
+
     void state_changed(const coco_executor &exec) override;
 
     void flaw_created(const coco_executor &exec, const ratio::flaw &f) override;
