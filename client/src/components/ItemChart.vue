@@ -1,16 +1,16 @@
 <template>
-  <v-container fluid :id="sensor.id" :style="{ height: sensor.type.parameters.size * 200 + 'px' }" />
+  <v-container fluid :id="item.id" :style="{ height: item.type.parameters.size * 200 + 'px' }" />
 </template>
 
 <script setup>
-import { Sensor, BooleanParameter, IntegerParameter, FloatParameter, StringParameter, SymbolParameter } from '@/sensor';
+import { Item, BooleanParameter, IntegerParameter, FloatParameter, StringParameter, SymbolParameter } from '@/item';
 import { onMounted, onUnmounted } from 'vue';
 import Plotly from 'plotly.js-dist-min';
 import chroma from 'chroma-js'
 
 const props = defineProps({
-  sensor: {
-    type: Sensor,
+  item: {
+    type: Item,
     required: true
   }
 });
@@ -24,12 +24,12 @@ const config = { responsive: true };
 const colors = new Map();
 
 const values_listener = (values, timestamps) => {
-  for (const [par_name, par] of props.sensor.type.parameters)
+  for (const [par_name, par] of props.item.type.parameters)
     vals_ys.set(par_name, []);
 
   for (let i = 0; i < values.length; i++) {
     vals_xs.push(timestamps[i]);
-    for (const [par_name, par] of props.sensor.type.parameters)
+    for (const [par_name, par] of props.item.type.parameters)
       if (values[i].hasOwnProperty(par_name))
         vals_ys.get(par_name).push(values[i][par_name]);
       else if (vals_ys.get(par_name).length > 0)
@@ -40,9 +40,9 @@ const values_listener = (values, timestamps) => {
 
   let i = 1;
   let start_domain = 0;
-  let domain_size = 1 / props.sensor.type.parameters.size;
+  let domain_size = 1 / props.item.type.parameters.size;
   const domain_separator = 0.05 * domain_size;
-  for (const [par_name, par] of props.sensor.type.parameters) {
+  for (const [par_name, par] of props.item.type.parameters) {
     if (par instanceof FloatParameter || par instanceof IntegerParameter) {
       if (i == 1) {
         y_axes.set(par_name, 'y');
@@ -94,12 +94,12 @@ const values_listener = (values, timestamps) => {
     i++;
   }
 
-  Plotly.newPlot(props.sensor.id, Array.from(traces.values()).flat(), layout, config);
+  Plotly.newPlot(props.item.id, Array.from(traces.values()).flat(), layout, config);
 };
 
 const value_listener = (value, timestamp) => {
   vals_xs.push(timestamp);
-  for (const [par_name, par] of props.sensor.type.parameters) {
+  for (const [par_name, par] of props.item.type.parameters) {
     let c_value;
     if (value.hasOwnProperty(par_name))
       c_value = value[par_name];
@@ -121,16 +121,16 @@ const value_listener = (value, timestamp) => {
     }
   }
   layout.datarevision = timestamp;
-  Plotly.react(props.sensor.id, Array.from(traces.values()).flat(), layout, config);
+  Plotly.react(props.item.id, Array.from(traces.values()).flat(), layout, config);
 };
 
 onMounted(() => {
-  props.sensor.add_values_listener(values_listener);
-  props.sensor.add_value_listener(value_listener);
+  props.item.add_values_listener(values_listener);
+  props.item.add_value_listener(value_listener);
 });
 
 onUnmounted(() => {
-  props.sensor.remove_values_listener(values_listener);
-  props.sensor.remove_value_listener(value_listener);
+  props.item.remove_values_listener(values_listener);
+  props.item.remove_value_listener(value_listener);
 });
 </script>

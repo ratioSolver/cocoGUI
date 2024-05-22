@@ -8,7 +8,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="[name, par] in sensor.type.parameters" :key="name">
+        <tr v-for="[name, par] in item.type.parameters" :key="name">
           <td>{{ name }}</td>
           <td>
             <v-text-field v-if="input_type(par) == 'number'" v-model.number="value[name]" :type="input_type(par)"
@@ -23,31 +23,31 @@
         </tr>
       </tbody>
     </v-table>
-    <v-btn block @click="new_sensor_data(sensor.id, value)">Publish</v-btn>
+    <v-btn block @click="new_item_data(item.id, value)">Publish</v-btn>
   </v-container>
 </template>
 
 <script setup>
-import { BooleanParameter, FloatParameter, IntegerParameter, Sensor, StringParameter, SymbolParameter } from '@/sensor';
+import { BooleanParameter, FloatParameter, IntegerParameter, Item, StringParameter, SymbolParameter } from '@/item';
 import { reactive } from 'vue';
 
 const props = defineProps({
-  sensor: {
-    type: Sensor,
+  item: {
+    type: Item,
     required: true
   }
 });
 
 const value = reactive({});
-props.sensor.type.parameters.forEach((parameter) => {
-  if (props.sensor.lastValue && props.sensor.lastValue[parameter.name])
-    value[parameter.name] = props.sensor.lastValue[parameter.name];
+props.item.type.parameters.forEach((parameter) => {
+  if (props.item.lastValue && props.item.lastValue[parameter.name])
+    value[parameter.name] = props.item.lastValue[parameter.name];
   else
     value[parameter.name] = parameter.default_value;
 });
 
-function new_sensor_data(sensor_id, value) {
-  fetch('http://' + location.host + '/sensor/' + sensor_id, {
+function new_item_data(item_id, value) {
+  fetch('http://' + location.host + '/item/' + item_id, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(value)

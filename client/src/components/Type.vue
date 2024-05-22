@@ -1,13 +1,13 @@
 <template>
-  <v-window-item class="fill-height" :value="sensor_type.id">
-    <v-card :title="sensor_type.name" :subtitle="sensor_type.description">
+  <v-window-item class="fill-height" :value="item_type.id">
+    <v-card :title="item_type.name" :subtitle="item_type.description">
       <v-container>
         <v-row>
           <v-col cols="6">
-            <v-text-field v-model="sensor_type.name" :rules="[v => !!v || 'Name is required']" label="Name" required />
+            <v-text-field v-model="item_type.name" :rules="[v => !!v || 'Name is required']" label="Name" required />
           </v-col>
           <v-col cols="6">
-            <v-text-field v-model="sensor_type.description" :rules="[v => !!v || 'Description is required']"
+            <v-text-field v-model="item_type.description" :rules="[v => !!v || 'Description is required']"
               label="Description" required />
           </v-col>
         </v-row>
@@ -20,7 +20,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="[name, type] in sensor_type.parameters" :key="name">
+            <tr v-for="[name, type] in item_type.parameters" :key="name">
               <td>{{ name }}</td>
               <td>{{ type }}</td>
             </tr>
@@ -32,11 +32,11 @@
 </template>
 
 <script setup>
-import { SensorType } from '@/sensor';
+import { Type } from '@/item';
 
 const props = defineProps({
-  sensor_type: {
-    type: SensorType,
+  item_type: {
+    type: Type,
     required: true
   }
 });

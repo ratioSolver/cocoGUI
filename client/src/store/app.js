@@ -3,8 +3,8 @@ import { defineStore } from 'pinia'
 
 export const useAppStore = defineStore('app', {
   state: () => ({
-    sensor_types: new Map(),
-    sensors: new Map(),
+    types: new Map(),
+    items: new Map(),
     solvers: new Map(),
     messages: [],
   }),

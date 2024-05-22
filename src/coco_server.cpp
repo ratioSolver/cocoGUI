@@ -47,7 +47,7 @@ namespace coco
     {
         clients.insert(&ws);
 
-        // we send the sensor types
+        // we send the types
         json::json j_types{{"type", "types"}};
         json::json c_types(json::json_type::array);
         for (const auto &st : get_types())
@@ -62,6 +62,22 @@ namespace coco
             c_items.push_back(to_json(s.get()));
         j_items["items"] = std::move(c_items);
         ws.send(j_items.dump());
+
+        // we send the reactive rules
+        json::json j_reactive_rules{{"type", "reactive_rules"}};
+        json::json c_reactive_rules(json::json_type::array);
+        for (const auto &r : get_reactive_rules())
+            c_reactive_rules.push_back(to_json(r.get()));
+        j_reactive_rules["reactive_rules"] = std::move(c_reactive_rules);
+        ws.send(j_reactive_rules.dump());
+
+        // we send the deliberative rules
+        json::json j_deliberative_rules{{"type", "deliberative_rules"}};
+        json::json c_deliberative_rules(json::json_type::array);
+        for (const auto &r : get_deliberative_rules())
+            c_deliberative_rules.push_back(to_json(r.get()));
+        j_deliberative_rules["deliberative_rules"] = std::move(c_deliberative_rules);
+        ws.send(j_deliberative_rules.dump());
 
         // we send the solvers
         json::json j_solvers{{"type", "solvers"}};
