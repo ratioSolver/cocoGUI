@@ -1,10 +1,10 @@
 <template>
-  <v-window-item class="fill-height" :value="rule.id" eager @group:selected="lazy_load">
+  <v-window-item class="fill-height" :value="rule.id" eager>
     <v-card :title="rule.name">
       <v-container>
         <v-row>
           <v-col cols="12">
-            <v-textarea :id="get_rule_id(rule)" v-model="code" readonly rows="10" />
+            <div v-html="code"></div>
           </v-col>
         </v-row>
       </v-container>
@@ -13,7 +13,7 @@
 </template>
 
 <script setup>
-import hljs from 'highlight.js/lib/core'
+import { ref, onMounted } from 'vue'
 import { Rule } from '@/solver';
 
 const props = defineProps({
@@ -26,9 +26,48 @@ const props = defineProps({
 const code = ref('');
 
 onMounted(() => {
-  code.value = rule.content.toString();
-  hljs.highlightBlock(document.getElementById(get_rule_id(rule)));
+  code.value = hljs.highlight(props.rule.content.toString(), { language: 'clips' }).value;
 });
+</script>
 
-const get_rule_id = (rule) => 'rule-' + rule.id;
+<script>
+import 'highlight.js/styles/default.min.css'
+import hljs from 'highlight.js/lib/core'
+
+hljs.registerLanguage('clips', function (hljs) {
+  return {
+    case_insensitive: true,
+    keywords: {
+      keyword: 'defrule deftemplate deffunction slot multislot assert retract modify bind type return',
+      literal: 'nil SYMBOL STRING NUMBER TRUE FALSE'
+    },
+    contains: [
+      hljs.COMMENT(';', '$'),
+      {
+        className: 'variable',
+        begin: '\\?[a-zA-Z][a-zA-Z0-9_-]*'
+      },
+      {
+        className: 'string',
+        begin: '"', end: '"'
+      },
+      {
+        className: 'number',
+        begin: '\\b\\d+(\\.\\d+)?\\b'
+      },
+      {
+        className: 'punctuation',
+        begin: '[:,()]'
+      },
+      {
+        className: 'built_in',
+        begin: '\\b(eq|do-for-fact|do-for-all-facts)\\b'
+      },
+      {
+        className: 'operator',
+        begin: '\\b(and|or|not|=>|<=>)\\b'
+      }
+    ]
+  };
+});
 </script>
