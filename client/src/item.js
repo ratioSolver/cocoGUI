@@ -17,7 +17,7 @@ export class IntegerParameter extends Parameter {
     }
 }
 
-export class FloatParameter extends Parameter {
+export class RealParameter extends Parameter {
 
     constructor(name, min, max, default_value = min) {
         super(name, default_value);

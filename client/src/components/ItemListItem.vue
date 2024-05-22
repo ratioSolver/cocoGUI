@@ -1,6 +1,5 @@
 <template>
-  <v-list-item :value="item.id" :title="item.name" :subtitle="item.description" prepend-icon="mdi-thermometer"
-    three-line />
+  <v-list-item :value="item.id" :title="item.name" :subtitle="item.description" prepend-icon="mdi-circle" three-line />
 </template>
 
 <script setup>

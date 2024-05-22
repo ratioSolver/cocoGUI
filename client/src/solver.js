@@ -614,3 +614,12 @@ export class Solver {
     remove_new_edge_listener(listener) { this.new_edge_listeners.delete(listener); }
     remove_edge_listener(edge, listener) { this.edge_listeners.get(edge).delete(listener); }
 }
+
+export class Rule {
+
+    constructor(id, name, content) {
+        this.id = id;
+        this.name = name;
+        this.content = content;
+    }
+}

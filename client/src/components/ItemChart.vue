@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { Item, BooleanParameter, IntegerParameter, FloatParameter, StringParameter, SymbolParameter } from '@/item';
+import { Item, BooleanParameter, IntegerParameter, RealParameter, StringParameter, SymbolParameter } from '@/item';
 import { onMounted, onUnmounted } from 'vue';
 import Plotly from 'plotly.js-dist-min';
 import chroma from 'chroma-js'
@@ -43,7 +43,7 @@ const values_listener = (values, timestamps) => {
   let domain_size = 1 / props.item.type.parameters.size;
   const domain_separator = 0.05 * domain_size;
   for (const [par_name, par] of props.item.type.parameters) {
-    if (par instanceof FloatParameter || par instanceof IntegerParameter) {
+    if (par instanceof RealParameter || par instanceof IntegerParameter) {
       if (i == 1) {
         y_axes.set(par_name, 'y');
         traces.set(par_name, [{ x: vals_xs, y: vals_ys.get(par_name), name: par_name, type: 'scatter', yaxis: y_axes.get(par_name) }]);
@@ -107,7 +107,7 @@ const value_listener = (value, timestamp) => {
       c_value = vals_ys.get(par_name)[vals_ys.get(par_name).length - 1];
     else
       c_value = par.default_value;
-    if (par instanceof FloatParameter || par instanceof IntegerParameter)
+    if (par instanceof RealParameter || par instanceof IntegerParameter)
       traces.get(par_name)[0].y.push(c_value);
     else if (par instanceof BooleanParameter || par instanceof StringParameter || par instanceof SymbolParameter) {
       if (traces.get(par_name).length > 0)
