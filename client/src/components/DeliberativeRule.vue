@@ -4,7 +4,7 @@
       <v-container>
         <v-row>
           <v-col cols="12">
-            <v-textarea :id="get_rule_id(rule)" v-model="code" readonly rows="10" />
+            <div v-html="code"></div>
           </v-col>
         </v-row>
       </v-container>
@@ -14,7 +14,6 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import hljs from 'highlight.js/lib/core'
 import { Rule } from '@/solver';
 
 const props = defineProps({
@@ -27,9 +26,52 @@ const props = defineProps({
 const code = ref('');
 
 onMounted(() => {
-  code.value = props.rule.content.toString();
-  hljs.highlightElement(document.getElementById(get_rule_id(props.rule)));
+  code.value = hljs.highlight(props.rule.content.toString(), { language: 'riddle' }).value;
 });
+</script>
 
-const get_rule_id = (rule) => 'rule-' + rule.id;
+<script>
+import 'highlight.js/styles/default.min.css'
+import hljs from 'highlight.js/lib/core'
+
+hljs.registerLanguage('riddle', function (hljs) {
+  return {
+    case_insensitive: false,
+    keywords: {
+      keyword: 'class predicate fact goal new for this void return bool int real time string typedef enum',
+      built_in: 'Impulse Interval Agent StateVariable ReusableResource ConsumableResource',
+      literal: 'true false'
+    },
+    contains: [
+      {
+        className: 'comment',
+        begin: '//', end: '$'
+      },
+      {
+        className: 'comment',
+        begin: '/\\*', end: '\\*/'
+      },
+      {
+        className: 'variable',
+        begin: '\\[a-zA-Z][a-zA-Z0-9_-]*'
+      },
+      {
+        className: 'number',
+        begin: '\\b\\d+(\\.\\d+)?'
+      },
+      {
+        className: 'string',
+        begin: '"', end: '"'
+      },
+      {
+        className: 'punctuation',
+        begin: '[:,()]'
+      },
+      {
+        className: 'operator',
+        begin: '\\b(&|\\\||\\\^|or|!|<|>|->|>=|<=|==|\\\+|-|\\\*|/)\\b'
+      }
+    ]
+  };
+});
 </script>

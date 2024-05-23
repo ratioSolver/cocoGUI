@@ -65,7 +65,7 @@ hljs.registerLanguage('clips', function (hljs) {
       },
       {
         className: 'operator',
-        begin: '\\b(and|or|not|=>|<=>)\\b'
+        begin: '\\b(and|or|not|=>|<=>|\\\+|-|\\\*|/)\\b'
       }
     ]
   };
