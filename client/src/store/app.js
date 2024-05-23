@@ -12,7 +12,7 @@ export const useAppStore = defineStore('app', {
     messages: [],
   }),
   actions: {
-    connect(url = 'ws://' + location.host + '/coco', timeout = 1000) {
+    connect(url = 'ws://localhost:8080/coco', timeout = 1000) {
       this.socket = new WebSocket(url);
       this.socket.onopen = () => {
         console.log('WebSocket connected');
@@ -78,7 +78,7 @@ export const useAppStore = defineStore('app', {
             this.solvers.get(data.id).graph(data);
             break;
           case 'flaw_created':
-            this.solvers.get(data.id).flaw_created(data);
+            this.solvers.get(data.solver_id).flaw_created(data);
             break;
           case 'flaw_state_changed':
             this.solvers.get(data.id).flaw_state_changed(data);
@@ -93,7 +93,7 @@ export const useAppStore = defineStore('app', {
             this.solvers.get(data.id).current_flaw_changed(data);
             break;
           case 'resolver_created':
-            this.solvers.get(data.id).resolver_created(data);
+            this.solvers.get(data.solver_id).resolver_created(data);
             break;
           case 'resolver_state_changed':
             this.solvers.get(data.id).resolver_state_changed(data);

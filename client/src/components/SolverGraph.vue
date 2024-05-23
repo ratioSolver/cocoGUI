@@ -121,11 +121,11 @@ onUnmounted(() => {
 <script>
 function stroke_style(node) {
   switch (node.state) {
-    case 0: // False
+    case 'forbidden':
       return 'dotted';
-    case 1: // True
+    case 'active':
       return 'solid';
-    case 2: // Undefined
+    case 'inactive':
       return 'dashed';
   }
 }

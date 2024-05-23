@@ -6,9 +6,6 @@ namespace coco
 {
     coco_server::coco_server() : coco_core(std::make_unique<mongo_db>()), network::server()
     {
-        LOG_DEBUG(j_open_api);
-        LOG_DEBUG(j_async_api);
-
         add_route(network::Get, "^/$", std::bind(&coco_server::index, this, std::placeholders::_1));
         add_route(network::Get, "^(/assets/.+)|/.+\\.ico|/.+\\.png", std::bind(&coco_server::assets, this, std::placeholders::_1));
         add_route(network::Get, "^/open_api$", std::bind(&coco_server::open_api, this, std::placeholders::_1));
