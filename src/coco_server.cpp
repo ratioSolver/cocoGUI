@@ -46,6 +46,7 @@ namespace coco
     void coco_server::on_ws_open(network::ws_session &ws)
     {
         clients.insert(&ws);
+        LOG_DEBUG("Connected clients: " + std::to_string(clients.size()));
 
         // we send the types
         json::json j_types{{"type", "types"}};
@@ -68,7 +69,7 @@ namespace coco
         json::json c_reactive_rules(json::json_type::array);
         for (const auto &r : get_reactive_rules())
             c_reactive_rules.push_back(to_json(r.get()));
-        j_reactive_rules["reactive_rules"] = std::move(c_reactive_rules);
+        j_reactive_rules["rules"] = std::move(c_reactive_rules);
         ws.send(j_reactive_rules.dump());
 
         // we send the deliberative rules
@@ -76,7 +77,7 @@ namespace coco
         json::json c_deliberative_rules(json::json_type::array);
         for (const auto &r : get_deliberative_rules())
             c_deliberative_rules.push_back(to_json(r.get()));
-        j_deliberative_rules["deliberative_rules"] = std::move(c_deliberative_rules);
+        j_deliberative_rules["rules"] = std::move(c_deliberative_rules);
         ws.send(j_deliberative_rules.dump());
 
         // we send the solvers
@@ -103,8 +104,16 @@ namespace coco
             return;
         }
     }
-    void coco_server::on_ws_close(network::ws_session &ws) { clients.erase(&ws); }
-    void coco_server::on_ws_error(network::ws_session &ws, const boost::system::error_code &) { clients.erase(&ws); }
+    void coco_server::on_ws_close(network::ws_session &ws)
+    {
+        clients.erase(&ws);
+        LOG_DEBUG("Connected clients: " + std::to_string(clients.size()));
+    }
+    void coco_server::on_ws_error(network::ws_session &ws, const boost::system::error_code &)
+    {
+        clients.erase(&ws);
+        LOG_DEBUG("Connected clients: " + std::to_string(clients.size()));
+    }
 
     void coco_server::new_solver(const coco_executor &exec)
     {
