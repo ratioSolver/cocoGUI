@@ -6,9 +6,6 @@ namespace coco
 {
     coco_server::coco_server() : coco_core(std::make_unique<mongo_db>()), network::server()
     {
-        LOG_DEBUG(j_open_api);
-        LOG_DEBUG(j_async_api);
-
         add_route(network::Get, "^/$", std::bind(&coco_server::index, this, std::placeholders::_1));
         add_route(network::Get, "^(/assets/.+)|/.+\\.ico|/.+\\.png", std::bind(&coco_server::assets, this, std::placeholders::_1));
         add_route(network::Get, "^/open_api$", std::bind(&coco_server::open_api, this, std::placeholders::_1));
@@ -46,8 +43,9 @@ namespace coco
     void coco_server::on_ws_open(network::ws_session &ws)
     {
         clients.insert(&ws);
+        LOG_DEBUG("Connected clients: " + std::to_string(clients.size()));
 
-        // we send the sensor types
+        // we send the types
         json::json j_types{{"type", "types"}};
         json::json c_types(json::json_type::array);
         for (const auto &st : get_types())
@@ -62,6 +60,22 @@ namespace coco
             c_items.push_back(to_json(s.get()));
         j_items["items"] = std::move(c_items);
         ws.send(j_items.dump());
+
+        // we send the reactive rules
+        json::json j_reactive_rules{{"type", "reactive_rules"}};
+        json::json c_reactive_rules(json::json_type::array);
+        for (const auto &r : get_reactive_rules())
+            c_reactive_rules.push_back(to_json(r.get()));
+        j_reactive_rules["rules"] = std::move(c_reactive_rules);
+        ws.send(j_reactive_rules.dump());
+
+        // we send the deliberative rules
+        json::json j_deliberative_rules{{"type", "deliberative_rules"}};
+        json::json c_deliberative_rules(json::json_type::array);
+        for (const auto &r : get_deliberative_rules())
+            c_deliberative_rules.push_back(to_json(r.get()));
+        j_deliberative_rules["rules"] = std::move(c_deliberative_rules);
+        ws.send(j_deliberative_rules.dump());
 
         // we send the solvers
         json::json j_solvers{{"type", "solvers"}};
@@ -87,8 +101,16 @@ namespace coco
             return;
         }
     }
-    void coco_server::on_ws_close(network::ws_session &ws) { clients.erase(&ws); }
-    void coco_server::on_ws_error(network::ws_session &ws, const boost::system::error_code &) { clients.erase(&ws); }
+    void coco_server::on_ws_close(network::ws_session &ws)
+    {
+        clients.erase(&ws);
+        LOG_DEBUG("Connected clients: " + std::to_string(clients.size()));
+    }
+    void coco_server::on_ws_error(network::ws_session &ws, const boost::system::error_code &)
+    {
+        clients.erase(&ws);
+        LOG_DEBUG("Connected clients: " + std::to_string(clients.size()));
+    }
 
     void coco_server::new_solver(const coco_executor &exec)
     {
@@ -99,6 +121,17 @@ namespace coco
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
         broadcast(ratio::executor::make_deleted_executor_message(id));
+    }
+
+    void coco_server::new_reactive_rule(const rule &r)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_reactive_rule_message(r));
+    }
+    void coco_server::new_deliberative_rule(const rule &r)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_deliberative_rule_message(r));
     }
 
     void coco_server::state_changed(const coco_executor &exec)

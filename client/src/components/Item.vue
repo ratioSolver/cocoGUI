@@ -1,7 +1,7 @@
 <template>
-  <v-window-item class="fill-height" :value="sensor.id" eager @group:selected="lazy_load">
-    <v-card :title="sensor.name + ' (' + sensor.type.name + ')'"
-      :subtitle="sensor.description + ' (' + sensor.type.description + ')'">
+  <v-window-item class="fill-height" :value="item.id" eager @group:selected="lazy_load">
+    <v-card :title="item.name + ' (' + item.type.name + ')'"
+      :subtitle="item.description + ' (' + item.type.description + ')'">
       <v-container>
         <v-row>
           <v-col cols="5">
@@ -28,19 +28,19 @@
           </v-col>
         </v-row>
       </v-container>
-      <SensorChart :sensor="sensor" />
-      <SensorPublisher :sensor="sensor" />
+      <ItemChart :item="item" />
+      <ItemPublisher :item="item" />
     </v-card>
   </v-window-item>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import { Sensor } from '@/sensor';
+import { Item } from '@/item';
 
 const props = defineProps({
-  sensor: {
-    type: Sensor,
+  item: {
+    type: Item,
     required: true
   }
 });
@@ -53,7 +53,7 @@ const to_menu = ref(false);
 const to_date = ref(new Date());
 
 function set_values(from, to = Date.now()) {
-  fetch('http://' + location.host + '/sensor/' + props.sensor.id + '?' + new URLSearchParams({ from: from, to: to }), {
+  fetch('http://' + location.host + '/item/' + props.item.id + '?' + new URLSearchParams({ from: from, to: to }), {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' }
   }).then(res => {
@@ -65,7 +65,7 @@ function set_values(from, to = Date.now()) {
           values.push(value.value);
           timestamps.push(value.timestamp);
         });
-        props.sensor.set_values(values, timestamps);
+        props.item.set_values(values, timestamps);
       });
     else
       res.json().then(data => alert(data.message));

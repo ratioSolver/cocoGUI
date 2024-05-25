@@ -135,7 +135,7 @@ export class Solver {
                 id: r.id,
                 rho: r.rho,
                 preconditions: r.preconditions,
-                effect: r.effect,
+                flaw: r.flaw,
                 state: r.state,
                 intrinsic_cost: r.intrinsic_cost.num / r.intrinsic_cost.den,
                 data: r.data,
@@ -148,7 +148,7 @@ export class Solver {
             this.node_listeners.set(resolver.id, new Set());
             this.new_node_listeners.forEach(l => l(resolver));
 
-            const eff_edge = { from: r.id, to: r.effect, state: resolver.state };
+            const eff_edge = { from: r.id, to: r.flaw, state: resolver.state };
             this.edges.add(eff_edge);
             this.edge_listeners.set(eff_edge, new Set());
             this.new_edge_listeners.forEach(l => l(eff_edge));
@@ -255,7 +255,7 @@ export class Solver {
             id: message.id,
             rho: message.rho,
             preconditions: message.preconditions,
-            effect: message.effect,
+            flaw: message.flaw,
             state: message.state,
             intrinsic_cost: message.intrinsic_cost.num / message.intrinsic_cost.den,
             data: message.data,
@@ -267,7 +267,7 @@ export class Solver {
         this.nodes.set(resolver.id, resolver);
         this.node_listeners.set(resolver.id, new Set());
         this.new_node_listeners.forEach(l => l(resolver));
-        const eff_edge = { from: message.id, to: message.effect, state: resolver.state };
+        const eff_edge = { from: message.id, to: message.flaw, state: resolver.state };
         resolver.edges.push(eff_edge);
         this.edges.add(eff_edge);
         this.edge_listeners.set(eff_edge, new Set());
@@ -613,4 +613,13 @@ export class Solver {
     remove_node_listener(node, listener) { this.node_listeners.get(node.id).delete(listener); }
     remove_new_edge_listener(listener) { this.new_edge_listeners.delete(listener); }
     remove_edge_listener(edge, listener) { this.edge_listeners.get(edge).delete(listener); }
+}
+
+export class Rule {
+
+    constructor(id, name, content) {
+        this.id = id;
+        this.name = name;
+        this.content = content;
+    }
 }

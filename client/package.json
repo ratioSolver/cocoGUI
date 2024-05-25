@@ -18,7 +18,8 @@
     "cytoscape-dagre": "^2.5.0",
     "cytoscape-popper": "^2.0.0",
     "cytoscape-edgehandles": "^4.0.1",
-    "tippy.js": "^6.3.7"
+    "tippy.js": "^6.3.7",
+    "highlight.js": "^11.9.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
