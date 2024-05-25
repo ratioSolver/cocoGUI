@@ -20,3 +20,4 @@ registerPlugins(app)
 
 app.mount('#app')
 useAppStore().connect()
+console.log('Server is running on ' + import.meta.env.VITE_HOST + ':' + import.meta.env.VITE_PORT)
