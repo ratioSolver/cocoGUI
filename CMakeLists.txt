@@ -7,11 +7,12 @@ enable_testing()
 
 set(CLIENT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client CACHE STRING "Client directory" FORCE)
 
-execute_process(COMMAND npm install WORKING_DIRECTORY ${CLIENT_DIRECTORY})
-execute_process(COMMAND npm run build WORKING_DIRECTORY ${CLIENT_DIRECTORY})
-
 add_subdirectory(extern/coco)
 add_subdirectory(extern/rationet)
+
+configure_file(.env.in ${CLIENT_DIRECTORY}/.env.local @ONLY)
+execute_process(COMMAND npm install WORKING_DIRECTORY ${CLIENT_DIRECTORY})
+execute_process(COMMAND npm run build WORKING_DIRECTORY ${CLIENT_DIRECTORY})
 
 add_executable(CoCoGUI src/coco_main.cpp src/coco_server.cpp)
 add_dependencies(CoCoGUI CoCo ratioNet)
