@@ -5,7 +5,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined")
 include(CTest)
 enable_testing()
 
-set(ENABLE_VISUALIZATION ON CACHE BOOL "Enable visualization" FORCE)
 set(CLIENT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client CACHE STRING "Client directory" FORCE)
 
 execute_process(COMMAND npm install WORKING_DIRECTORY ${CLIENT_DIRECTORY})
