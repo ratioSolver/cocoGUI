@@ -48,7 +48,10 @@ const new_node_listener = (node) => {
   n.on('mouseover', () => n.tippy.show());
   n.on('mouseout', () => n.tippy.hide());
   cy.layout(layout).run();
-  const node_listener = (node) => { cy.$id(node.id).data({ label: 'phi' in node ? props.solver.flaw_label(node) : props.solver.resolver_label(node), state: node.state, cost: node.cost, color: node.cost < Number.POSITIVE_INFINITY ? scale(node.cost).hex() : '#ccc', stroke: stroke_style(node) }); };
+  const node_listener = (node) => {
+    cy.$id(node.id).data({ label: 'phi' in node ? props.solver.flaw_label(node) : props.solver.resolver_label(node), state: node.state, cost: node.cost, color: node.cost < Number.POSITIVE_INFINITY ? scale(node.cost).hex() : '#ccc', stroke: stroke_style(node) });
+    n.tippy.setContent('phi' in node ? props.solver.flaw_tooltip(node) : props.solver.resolver_tooltip(node));
+  };
   props.solver.add_node_listener(node, node_listener);
   node_listeners.set(node, node_listener);
 };

@@ -81,28 +81,28 @@ export const useAppStore = defineStore('app', {
             this.solvers.get(data.solver_id).flaw_created(data);
             break;
           case 'flaw_state_changed':
-            this.solvers.get(data.id).flaw_state_changed(data);
+            this.solvers.get(data.solver_id).flaw_state_changed(data);
             break;
           case 'flaw_cost_changed':
-            this.solvers.get(data.id).flaw_cost_changed(data);
+            this.solvers.get(data.solver_id).flaw_cost_changed(data);
             break;
           case 'flaw_position_changed':
-            this.solvers.get(data.id).flaw_position_changed(data);
+            this.solvers.get(data.solver_id).flaw_position_changed(data);
             break;
           case 'current_flaw':
-            this.solvers.get(data.id).current_flaw_changed(data);
+            this.solvers.get(data.solver_id).current_flaw_changed(data);
             break;
           case 'resolver_created':
             this.solvers.get(data.solver_id).resolver_created(data);
             break;
           case 'resolver_state_changed':
-            this.solvers.get(data.id).resolver_state_changed(data);
+            this.solvers.get(data.solver_id).resolver_state_changed(data);
             break;
           case 'current_resolver':
-            this.solvers.get(data.id).current_resolver_changed(data);
+            this.solvers.get(data.solver_id).current_resolver_changed(data);
             break;
           case 'causal_link_added':
-            this.solvers.get(data.id).causal_link_added(data);
+            this.solvers.get(data.solver_id).causal_link_added(data);
             break;
           case 'executor_state_changed':
             this.solvers.get(data.id).state = data.state;
