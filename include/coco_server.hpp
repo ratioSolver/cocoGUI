@@ -158,11 +158,17 @@ namespace coco
              {{"200", {{"description", "Successful response with AsyncAPI Specification document"}}}}}}}}},
         types_path,
         type_path,
+        update_type_path,
         items_path,
         item_path,
+        update_item_path,
         data_path,
         reactive_rules_path,
-        deliberative_rules_path}},
+        reactive_rule_path,
+        update_reactive_rule_path,
+        deliberative_rules_path,
+        deliberative_rule_path,
+        update_deliberative_rule_path}},
       {"components", j_components}};
   const json::json j_async_api{
       {"asyncapi", "3.0.0"},
