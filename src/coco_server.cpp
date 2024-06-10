@@ -49,20 +49,10 @@ namespace coco
         LOG_DEBUG("Connected clients: " + std::to_string(clients.size()));
 
         // we send the types
-        json::json j_types{{"type", "types"}};
-        json::json c_types(json::json_type::array);
-        for (const auto &st : get_types())
-            c_types.push_back(to_json(st.get()));
-        j_types["types"] = std::move(c_types);
-        ws.send(j_types.dump());
+        ws.send(make_types_message(*this).dump());
 
         // we send the items
-        json::json j_items{{"type", "items"}};
-        json::json c_items(json::json_type::array);
-        for (const auto &s : get_items())
-            c_items.push_back(to_json(s.get()));
-        j_items["items"] = std::move(c_items);
-        ws.send(j_items.dump());
+        ws.send(make_items_message(*this).dump());
 
         // we send the reactive rules
         json::json j_reactive_rules{{"type", "reactive_rules"}};
