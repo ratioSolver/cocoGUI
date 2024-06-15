@@ -175,6 +175,21 @@ export class Type {
         this.static_parameters = static_parameters;
         this.dynamic_parameters = dynamic_parameters;
     }
+
+    /**
+     * Updates the type.
+     * 
+     * @param {string} name - The name of the type.
+     * @param {string} description - The description of the type.
+     * @param {Array} static_parameters - The static parameters of the type.
+     * @param {Array} dynamic_parameters - The dynamic parameters of the type.
+     */
+    update(name, description, static_parameters, dynamic_parameters) {
+        this.name = name;
+        this.description = description;
+        this.static_parameters = static_parameters;
+        this.dynamic_parameters = dynamic_parameters;
+    }
 }
 
 /**
@@ -203,6 +218,21 @@ export class Item {
         this.valueTimestamps = [];
         this.values_listeners = new Set();
         this.value_listeners = new Set();
+    }
+
+    /**
+     * Updates the item.
+     * 
+     * @param {string} name - The name of the item.
+     * @param {string} type - The type of the item.
+     * @param {string} description - The description of the item.
+     * @param {Object} parameters - The parameters of the item.
+     */
+    update(name, type, description, parameters) {
+        this.name = name;
+        this.type = type;
+        this.description = description;
+        this.parameters = parameters;
     }
 
     /**
@@ -244,31 +274,25 @@ export class Item {
     }
 
     /**
-     * Adds a listener for value changes.
-     * 
-     * @param {Function} callback - The callback function to be called when a value changes.
-     */
-    add_value_listener(callback) {
-        this.value_listeners.add(callback);
-    }
-
-    /**
      * Removes a listener for values changes.
      * 
      * @param {Function} callback - The callback function to be removed.
      */
-    remove_values_listener(callback) {
-        this.values_listeners.delete(callback);
-    }
+    remove_values_listener(callback) { this.values_listeners.delete(callback); }
+
+    /**
+     * Adds a listener for value changes.
+     * 
+     * @param {Function} callback - The callback function to be called when a value changes.
+     */
+    add_value_listener(callback) { this.value_listeners.add(callback); }
 
     /**
      * Removes a listener for value changes.
      * 
      * @param {Function} callback - The callback function to be removed.
      */
-    remove_value_listener(callback) {
-        this.value_listeners.delete(callback);
-    }
+    remove_value_listener(callback) { this.value_listeners.delete(callback); }
 }
 
 function get_parameter_type(par) {

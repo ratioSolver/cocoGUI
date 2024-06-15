@@ -29,12 +29,8 @@
         <v-window-item v-for="[id, solver] in solvers" :key="id" :value="solver.id" class="fill-height" eager>
           <Solver :solver="solver" />
         </v-window-item>
-        <v-window-item v-for="[id, item] in sorted_items(items)" :key="id" :value="item.id" class="fill-height"
-          @group:selected="itm.lazy_load">
-          <Item ref="itm" :item="item" />
-        </v-window-item>
         <v-window-item v-for="[id, type] in sorted_types(types)" :key="id" :value="type.id" class="fill-height">
-          <Type :type="type" />
+          <Type :item_type="type" />
         </v-window-item>
         <v-window-item v-for="[id, rule] in sorted_rules(reactive_rules)" :key="id" :value="rule" class="fill-height">
           <ReactiveRule :rule="rule" />
