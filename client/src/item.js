@@ -99,11 +99,13 @@ export class SymbolParameter extends Parameter {
      * 
      * @param {string} name - The name of the parameter.
      * @param {Array} symbols - The symbols for the parameter.
+     * @param {boolean} [multiple=false] - Whether the parameter can have multiple values.
      * @param {string} [default_value=symbols[0]] - The default value for the parameter.
      */
-    constructor(name, symbols, default_value = symbols ? symbols[0] : "") {
+    constructor(name, symbols, multiple = false, default_value = symbols ? symbols[0] : "") {
         super(name, default_value);
         this.symbols = symbols;
+        this.multiple = multiple;
     }
 }
 
@@ -132,6 +134,23 @@ export class ArrayParameter extends Parameter {
         super(name, default_value);
         this.array_type = array_type;
         this.shape = shape;
+    }
+}
+
+/**
+ * Represents a geometry parameter.
+ * @extends Parameter
+ */
+export class GeometryParameter extends Parameter {
+
+    /**
+     * Creates a new GeometryParameter instance.
+     * 
+     * @param {string} name - The name of the parameter.
+     * @param {string} [default_value=""] - The default value of the parameter.
+     */
+    constructor(name, default_value = undefined) {
+        super(name, default_value);
     }
 }
 
@@ -255,17 +274,19 @@ export class Item {
 function get_parameter_type(par) {
     switch (par.type) {
         case 'int':
-            return new IntegerParameter(par.name, par.min === undefined ? -Infinity : par.min, par.max === undefined ? Infinity : par.max);
+            return new IntegerParameter(par.name, par.min === undefined ? -Infinity : par.min, par.max === undefined ? Infinity : par.max, par.default_value);
         case 'real':
-            return new RealParameter(par.name, par.min === undefined ? -Infinity : par.min, par.max === undefined ? Infinity : par.max);
+            return new RealParameter(par.name, par.min === undefined ? -Infinity : par.min, par.max === undefined ? Infinity : par.max, par.default_value);
         case 'bool':
-            return new BooleanParameter(par.name);
+            return new BooleanParameter(par.name, par.default_value);
         case 'symbol':
-            return new SymbolParameter(par.name, par.symbols);
+            return new SymbolParameter(par.name, par.symbols, par.multiple, par.default_value);
         case 'string':
-            return new StringParameter(par.name);
+            return new StringParameter(par.name, par.default_value);
         case 'array':
-            return new ArrayParameter(par.name, get_parameter_type(par.array_type), par.shape);
+            return new ArrayParameter(par.name, get_parameter_type(par.array_type), par.shape, par.default_value);
+        case 'geometry':
+            return new GeometryParameter(par.name, par.default_value);
         default:
             throw 'Unknown parameter type: ' + par;
     }

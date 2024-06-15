@@ -28,7 +28,7 @@
 </template>
 
 <script setup>
-import { BooleanParameter, RealParameter, IntegerParameter, Item, StringParameter, SymbolParameter } from '@/item';
+import { BooleanParameter, RealParameter, IntegerParameter, StringParameter, SymbolParameter, ArrayParameter, GeometryParameter, Item } from '@/item';
 import { reactive } from 'vue';
 
 const props = defineProps({
@@ -64,7 +64,7 @@ function input_type(par) {
     return 'checkbox';
   else if (par instanceof IntegerParameter || par instanceof RealParameter)
     return 'number';
-  else if (par instanceof StringParameter)
+  else if (par instanceof StringParameter || par instanceof ArrayParameter || par instanceof GeometryParameter)
     return 'text';
   else if (par instanceof SymbolParameter)
     return 'symbol';
