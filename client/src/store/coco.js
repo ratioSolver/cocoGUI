@@ -2,43 +2,137 @@ import { Solver, Rule } from '@/solver';
 import { Type, BooleanParameter, IntegerParameter, RealParameter, StringParameter, SymbolParameter, ArrayParameter, GeometryParameter, Item } from '@/item';
 import { defineStore } from 'pinia'
 
-export const cocoStore = defineStore('coco', {
+export const useCoCoStore = defineStore('CoCo', {
   state: () => ({
     types: new Map(),
     items: new Map(),
-    solvers: new Map(),
     reactive_rules: new Map(),
-    deliberative_rules: new Map()
+    deliberative_rules: new Map(),
+    solvers: new Map()
   }),
   actions: {
-    set_knowledge(data) {
+    update(data) {
       switch (data.type) {
         case 'types':
           this.types.clear();
           for (const type of data.types)
             this.add_type(type);
-          break;
+          return true;
+        case 'new_type':
+          this.add_type(data);
+          return true;
+        case 'updated_type':
+          this.update_type(data);
+          return true;
+        case 'deleted_type':
+          this.remove_type(data.id);
+          return true;
         case 'items':
           this.items.clear();
           for (const item of data.items)
             this.add_item(item);
-          break;
-        case 'solvers':
-          this.solvers.clear();
-          for (const solver of data.solvers)
-            this.add_solver(solver);
-          break;
+          return true;
+        case 'new_item':
+          this.add_item(data);
+          return true;
+        case 'updated_item':
+          this.update_item(data);
+          return true;
+        case 'deleted_item':
+          this.remove_item(data.id);
+          return true;
         case 'reactive_rules':
           this.reactive_rules.clear();
           for (const rule of data.rules)
             this.add_reactive_rule(rule);
-          break;
+          return true;
+        case 'new_reactive_rule':
+          this.add_reactive_rule(data);
+          return true;
+        case 'updated_reactive_rule':
+          this.update_reactive_rule(data);
+          return true;
+        case 'deleted_reactive_rule':
+          this.remove_reactive_rule(data.id);
+          return true;
         case 'deliberative_rules':
           this.deliberative_rules.clear();
           for (const rule of data.rules)
             this.add_deliberative_rule(rule);
-          break;
-        default: throw new Error('Unknown knowledge update type: ' + data.type);
+          return true;
+        case 'new_deliberative_rule':
+          this.add_deliberative_rule(data);
+          return true;
+        case 'updated_deliberative_rule':
+          this.update_deliberative_rule(data);
+          return true;
+        case 'deleted_deliberative_rule':
+          this.remove_deliberative_rule(data.id);
+          return true;
+        case 'solvers':
+          this.solvers.clear();
+          for (const solver of data.solvers)
+            this.add_solver(solver);
+          return true;
+        case 'new_solver':
+          this.add_solver(data);
+          return true;
+        case 'deleted_solver':
+          this.remove_solver(data.id);
+          return true;
+        case 'solver_state':
+          this.set_solver_state(data);
+          return true;
+        case 'solver_graph':
+          this.set_solver_graph(data);
+          return true;
+        case 'flaw_created':
+          this.add_flaw(data);
+          return true;
+        case 'flaw_state_changed':
+          this.update_flaw_state(data);
+          return true;
+        case 'flaw_cost_changed':
+          this.update_flaw_cost(data);
+          return true;
+        case 'flaw_position_changed':
+          this.update_flaw_position(data);
+          return true;
+        case 'current_flaw':
+          this.update_current_flaw(data);
+          return true;
+        case 'resolver_created':
+          this.add_resolver(data);
+          return true;
+        case 'resolver_state_changed':
+          this.update_resolver_state(data);
+          return true;
+        case 'current_resolver':
+          this.update_current_resolver(data);
+          return true;
+        case 'causal_link_added':
+          this.add_causal_link(data);
+          return true;
+        case 'solver_execution_state_changed':
+          this.set_execution_state(data);
+          return true;
+        case 'tick':
+          this.tick(data);
+          return true;
+        case 'starting':
+          this.starting(data);
+          return true;
+        case 'ending':
+          this.ending(data);
+          return true;
+        case 'start':
+          this.start(data);
+          return true;
+        case 'end':
+          this.end(data);
+          return true;
+        default:
+          return false;
       }
     },
     add_type(type) {
@@ -71,6 +165,24 @@ export const cocoStore = defineStore('coco', {
     remove_item(id) {
       this.items.delete(id);
     },
+    add_reactive_rule(rule) {
+      this.reactive_rules.set(rule.id, new Rule(rule.id, rule.name, rule.content));
+    },
+    update_reactive_rule(rule) {
+      this.reactive_rules.get(rule.id).update(rule.name, rule.content);
+    },
+    remove_reactive_rule(id) {
+      this.reactive_rules.delete(id);
+    },
+    add_deliberative_rule(rule) {
+      this.deliberative_rules.set(rule.id, new Rule(rule.id, rule.name, rule.content));
+    },
+    update_deliberative_rule(rule) {
+      this.deliberative_rules.get(rule.id).update(rule.name, rule.content);
+    },
+    remove_deliberative_rule(id) {
+      this.deliberative_rules.delete(id);
+    },
     add_solver(solver) {
       this.solvers.set(solver.id, new Solver(solver.id, solver.name, solver.state));
     },
@@ -82,38 +194,6 @@ export const cocoStore = defineStore('coco', {
     },
     set_solver_graph(data) {
       this.solvers.get(data.id).graph(data);
-    },
-    update_solver_graph(data) {
-      switch (data.type) {
-        case 'flaw_created':
-          this.add_flaw(data);
-          break;
-        case 'flaw_state_changed':
-          this.update_flaw_state(data);
-          break;
-        case 'flaw_cost_changed':
-          this.update_flaw_cost(data);
-          break;
-        case 'flaw_position_changed':
-          this.update_flaw_position(data);
-          break;
-        case 'current_flaw':
-          this.update_current_flaw(data);
-          break;
-        case 'resolver_created':
-          this.add_resolver(data);
-          break;
-        case 'resolver_state_changed':
-          this.update_resolver_state(data);
-          break;
-        case 'current_resolver':
-          this.update_current_resolver(data);
-          break;
-        case 'causal_link_added':
-          this.add_causal_link(data);
-          break;
-        default: throw new Error('Unknown graph update type: ' + data.type);
-      }
     },
     add_flaw(data) {
       this.solvers.get(data.solver_id).flaw_created(data);
@@ -142,31 +222,8 @@ export const cocoStore = defineStore('coco', {
     add_causal_link(data) {
       this.solvers.get(data.solver_id).causal_link_added(data);
     },
-    update_executor_state(data) {
-      switch (data.type) {
-        case 'executor_state_changed':
-          this.set_executor_state(data);
-          break;
-        case 'tick':
-          this.tick(data);
-          break;
-        case 'starting':
-          this.starting(data);
-          break;
-        case 'ending':
-          this.ending(data);
-          break;
-        case 'start':
-          this.start(data);
-          break;
-        case 'end':
-          this.end(data);
-          break;
-        default: throw new Error('Unknown executor state update type: ' + data.type);
-      }
-    },
-    set_executor_state(data) {
-      this.solvers.get(data.id).state_changed(data);
+    set_execution_state(data) {
+      this.solvers.get(data.id).state = data.state;
     },
     tick(data) {
       this.solvers.get(data.id).tick(data);
@@ -182,18 +239,6 @@ export const cocoStore = defineStore('coco', {
     },
     end(data) {
       this.solvers.get(data.id).end(data);
-    },
-    add_reactive_rule(rule) {
-      this.reactive_rules.set(rule.id, new Rule(rule.id, rule.name, rule.content));
-    },
-    remove_reactive_rule(id) {
-      this.reactive_rules.delete(id);
-    },
-    add_deliberative_rule(rule) {
-      this.deliberative_rules.set(rule.id, new Rule(rule.id, rule.name, rule.content));
-    },
-    remove_deliberative_rule(id) {
-      this.deliberative_rules.delete(id);
     }
   }
 });

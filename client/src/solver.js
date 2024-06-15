@@ -615,10 +615,31 @@ export class Solver {
     remove_edge_listener(edge, listener) { this.edge_listeners.get(edge).delete(listener); }
 }
 
+/**
+ * Represents a deliberative or a reactive rule.
+ * @class
+ */
 export class Rule {
 
+    /**
+     * Creates a new instance of the Rule class.
+     * @constructor
+     * @param {number} id - The ID of the rule.
+     * @param {string} name - The name of the rule.
+     * @param {string} content - The content of the rule.
+     */
     constructor(id, name, content) {
         this.id = id;
+        this.name = name;
+        this.content = content;
+    }
+
+    /**
+     * Updates the name and content of the rule.
+     * @param {string} name - The new name of the rule.
+     * @param {string} content - The new content of the rule.
+     */
+    update(name, content) {
         this.name = name;
         this.content = content;
     }
