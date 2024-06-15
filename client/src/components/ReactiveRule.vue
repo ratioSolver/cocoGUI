@@ -1,15 +1,13 @@
 <template>
-  <v-window-item class="fill-height" :value="rule.id" eager>
-    <v-card :title="rule.name">
-      <v-container>
-        <v-row>
-          <v-col cols="12">
-            <div v-html="code"></div>
-          </v-col>
-        </v-row>
-      </v-container>
-    </v-card>
-  </v-window-item>
+  <v-card :title="rule.name">
+    <v-container>
+      <v-row>
+        <v-col cols="12">
+          <div v-html="code"></div>
+        </v-col>
+      </v-row>
+    </v-container>
+  </v-card>
 </template>
 
 <script setup>

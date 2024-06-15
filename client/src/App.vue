@@ -23,12 +23,25 @@
 
     <v-main>
       <v-window v-model="window_model" class="fill-height">
-        <Chat />
-        <Solver v-for="[id, solver] in solvers" :key="id" :solver="solver" />
-        <Item v-for="[id, item] in sorted_items(items)" :key="id" :item="item" />
-        <Type v-for="[id, type] in sorted_types(types)" :key="id" :type="type" />
-        <ReactiveRule v-for="[id, rule] in sorted_rules(reactive_rules)" :key="id" :rule="rule" />
-        <DeliberativeRule v-for="[id, rule] in sorted_rules(deliberative_rules)" :key="id" :rule="rule" />
+        <v-window-item value="chat" class="fill-height">
+          <Chat />
+        </v-window-item>
+        <v-window-item v-for="[id, solver] in solvers" :key="id" :value="solver.id" class="fill-height" eager>
+          <Solver :solver="solver" />
+        </v-window-item>
+        <v-window-item v-for="[id, item] in sorted_items(items)" :key="id" :value="item.id" class="fill-height"
+          @group:selected="itm.lazy_load">
+          <Item ref="itm" :item="item" />
+        </v-window-item>
+        <v-window-item v-for="[id, type] in sorted_types(types)" :key="id" :value="type.id" class="fill-height">
+          <Type :type="type" />
+        </v-window-item>
+        <v-window-item v-for="[id, rule] in sorted_rules(reactive_rules)" :key="id" :value="rule" class="fill-height">
+          <ReactiveRule :rule="rule" />
+        </v-window-item>
+        <v-window-item v-for="[id, rule] in sorted_rules(deliberative_rules)" :key="id" :value="id" class="fill-height">
+          <DeliberativeRule :rule="rule" />
+        </v-window-item>
       </v-window>
     </v-main>
   </v-app>

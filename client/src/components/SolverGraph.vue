@@ -1,5 +1,5 @@
 <template>
-  <v-window-item :id='get_graph_id(solver)' value='graph' :style='{ height: 800 + "px" }' eager />
+  <v-container :id='get_graph_id(solver)' :style='{ height: 800 + "px" }' eager />
 </template>
 
 <script setup>
