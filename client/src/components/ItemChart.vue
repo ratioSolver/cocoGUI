@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid :id="item.id" :style="{ height: item.type.parameters.size * 200 + 'px' }" />
+  <v-container fluid :id="get_data_id(item)" :style="{ height: item.type.dynamic_parameters.size * 200 + 'px' }" />
 </template>
 
 <script setup>
@@ -15,6 +15,8 @@ const props = defineProps({
   }
 });
 
+const get_data_id = (item) => 'itm-' + item.id + '-data';
+
 const vals_xs = [];
 const vals_ys = new Map();
 const y_axes = new Map();
@@ -24,12 +26,12 @@ const config = { responsive: true };
 const colors = new Map();
 
 const values_listener = (values, timestamps) => {
-  for (const [par_name, par] of props.item.type.parameters)
+  for (const [par_name, par] of props.item.type.dynamic_parameters)
     vals_ys.set(par_name, []);
 
   for (let i = 0; i < values.length; i++) {
     vals_xs.push(timestamps[i]);
-    for (const [par_name, par] of props.item.type.parameters)
+    for (const [par_name, par] of props.item.type.dynamic_parameters)
       if (values[i].hasOwnProperty(par_name))
         vals_ys.get(par_name).push(values[i][par_name]);
       else if (vals_ys.get(par_name).length > 0)
@@ -40,9 +42,9 @@ const values_listener = (values, timestamps) => {
 
   let i = 1;
   let start_domain = 0;
-  let domain_size = 1 / props.item.type.parameters.size;
+  let domain_size = 1 / props.item.type.dynamic_parameters.size;
   const domain_separator = 0.05 * domain_size;
-  for (const [par_name, par] of props.item.type.parameters) {
+  for (const [par_name, par] of props.item.type.dynamic_parameters) {
     if (par instanceof RealParameter || par instanceof IntegerParameter) {
       if (i == 1) {
         y_axes.set(par_name, 'y');
@@ -94,12 +96,12 @@ const values_listener = (values, timestamps) => {
     i++;
   }
 
-  Plotly.newPlot(props.item.id, Array.from(traces.values()).flat(), layout, config);
+  Plotly.newPlot(get_data_id(props.item), Array.from(traces.values()).flat(), layout, config);
 };
 
 const value_listener = (value, timestamp) => {
   vals_xs.push(timestamp);
-  for (const [par_name, par] of props.item.type.parameters) {
+  for (const [par_name, par] of props.item.type.dynamic_parameters) {
     let c_value;
     if (value.hasOwnProperty(par_name))
       c_value = value[par_name];
@@ -121,7 +123,7 @@ const value_listener = (value, timestamp) => {
     }
   }
   layout.datarevision = timestamp;
-  Plotly.react(props.item.id, Array.from(traces.values()).flat(), layout, config);
+  Plotly.react(get_data_id(props.item), Array.from(traces.values()).flat(), layout, config);
 };
 
 onMounted(() => {

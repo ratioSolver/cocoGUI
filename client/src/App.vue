@@ -29,6 +29,10 @@
         <v-window-item v-for="[id, solver] in solvers" :key="id" :value="solver.id" class="fill-height" eager>
           <Solver :solver="solver" />
         </v-window-item>
+        <v-window-item v-for="[id, item] in sorted_items(items)" :key="id" :value="item.id" class="fill-height" eager
+          @group:selected="lazy_load(item.id)">
+          <Item :item="item" @update="useAppStore().load_data" @publish="useAppStore().publish_data" />
+        </v-window-item>
         <v-window-item v-for="[id, type] in sorted_types(types)" :key="id" :value="type.id" class="fill-height">
           <Type :item_type="type" />
         </v-window-item>
@@ -45,13 +49,14 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useAppStore } from '@/store/app';
+import { useAppStore } from './store/app';
+import { useCoCoStore } from './store/coco';
 import { storeToRefs } from 'pinia';
 
 const drawer = ref(false)
 const window_model = ref(['chat']);
 
-const { items, types, solvers, reactive_rules, deliberative_rules } = storeToRefs(useAppStore());
+const { items, types, solvers, reactive_rules, deliberative_rules } = storeToRefs(useCoCoStore());
 </script>
 
 <script>
@@ -63,5 +68,9 @@ function sorted_items(items) {
 }
 function sorted_rules(rules) {
   return new Map([...rules].sort((s1, s2) => s1[1].name.localeCompare(s2[1].name)));
+}
+function lazy_load(item_id) {
+  if (useCoCoStore().items.get(item_id).values.length === 0)
+    useAppStore().load_data(item_id);
 }
 </script>

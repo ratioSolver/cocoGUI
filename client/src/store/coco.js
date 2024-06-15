@@ -165,6 +165,18 @@ export const useCoCoStore = defineStore('CoCo', {
     remove_item(id) {
       this.items.delete(id);
     },
+    set_item_data(item_id, data) {
+      const values = [];
+      const timestamps = [];
+      for (const value of data) {
+        values.push(value.value);
+        timestamps.push(value.timestamp);
+      }
+      this.items.get(item_id).set_values(values, timestamps);
+    },
+    add_item_datum(item_id, datum) {
+      this.items.get(item_id).add_value(datum.value, datum.timestamp);
+    },
     add_reactive_rule(rule) {
       this.reactive_rules.set(rule.id, new Rule(rule.id, rule.name, rule.content));
     },

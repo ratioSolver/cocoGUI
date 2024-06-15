@@ -23,12 +23,12 @@
           </v-menu>
         </v-col>
         <v-col cols="2">
-          <v-btn @click="set_values(from_date.getTime(), to_date.getTime())" color="primary" text>Update</v-btn>
+          <v-btn @click="$emit('update', item.id, from_date, to_date)" color="primary" text>Update</v-btn>
         </v-col>
       </v-row>
     </v-container>
     <ItemChart :item="item" />
-    <ItemPublisher :item="item" />
+    <ItemPublisher :item="item" @publish="publish" />
   </v-card>
 </template>
 
@@ -43,39 +43,14 @@ const props = defineProps({
   }
 });
 
-expose({ lazy_load });
-
-let loaded = false;
+const emit = defineEmits(['update', 'publish']);
 
 const from_menu = ref(false);
 const from_date = ref(new Date(Date.now() - 1000 * 60 * 60 * 24 * 7));
 const to_menu = ref(false);
 const to_date = ref(new Date());
 
-function set_values(from, to = Date.now()) {
-  fetch('http://' + location.host + '/item/' + props.item.id + '?' + new URLSearchParams({ from: from, to: to }), {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' }
-  }).then(res => {
-    if (res.ok)
-      res.json().then(data => {
-        const values = [];
-        const timestamps = [];
-        data.forEach((value) => {
-          values.push(value.value);
-          timestamps.push(value.timestamp);
-        });
-        props.item.set_values(values, timestamps);
-      });
-    else
-      res.json().then(data => alert(data.message));
-  });
-}
-
-function lazy_load() {
-  if (!loaded) {
-    set_values(Date.now() - 1000 * 60 * 60 * 24 * 14);
-    loaded = true;
-  }
+function publish(item_id, publish) {
+  emit('publish', item_id, publish);
 }
 </script>
