@@ -1,3 +1,27 @@
+export class SolverListener {
+
+    state(state) { }
+
+    graph(graph) { }
+    flaw_created(flaw) { }
+    flaw_state_changed(flaw) { }
+    flaw_cost_changed(flaw) { }
+    flaw_position_changed(flaw) { }
+    current_flaw_changed(flaw) { }
+    resolver_created(resolver) { }
+    resolver_state_changed(resolver) { }
+    resolver_cost_changed(resolver) { }
+    current_resolver_changed(resolver) { }
+    causal_link_added(link) { }
+
+    executor_state_changed(state) { }
+    tick(time) { }
+    starting(tasks) { }
+    ending(tasks) { }
+    start(tasks) { }
+    end(tasks) { }
+}
+
 export class Solver {
 
     constructor(id, name, state) {
@@ -12,24 +36,15 @@ export class Solver {
         this.origin = 0;
         this.horizon = 1;
 
-        this.nodes = new Map();
-        this.edges = new Set();
+        this.flaws = new Map();
+        this.resolvers = new Map();
         this.current_flaw;
         this.current_resolver;
 
         this.current_time = 0;
         this.executing_tasks = new Set();
 
-        this.state_listeners = new Set();
-        this.timelines_listeners = new Set();
-        this.time_listeners = new Set();
-        this.task_start_listeners = new Set();
-        this.task_end_listeners = new Set();
-
-        this.new_node_listeners = new Set();
-        this.node_listeners = new Map();
-        this.new_edge_listeners = new Set();
-        this.edge_listeners = new Map();
+        this.listeners = new Set();
     }
 
     /**
@@ -66,47 +81,11 @@ export class Solver {
 
         this.current_time = message.time.num / message.time.den;
 
-        this.state_listeners.forEach(l => l(this));
-        this.timelines_listeners.forEach(l => l(this.timelines));
-    }
-
-    solution_found() {
-        if (this.current_flaw) {
-            this.current_flaw.current = false;
-            this.node_listeners.get(this.current_flaw.id).forEach(l => l(this.current_flaw));
-        }
-        this.current_flaw = undefined;
-        if (this.current_resolver) {
-            this.current_resolver.current = false;
-            this.node_listeners.get(this.current_resolver.id).forEach(l => l(this.current_resolver));
-        }
-        this.current_resolver = undefined;
-    }
-
-    inconsistent_problem() {
-        if (this.current_flaw) {
-            this.current_flaw.current = false;
-            this.node_listeners.get(this.current_flaw.id).forEach(l => l(this.current_flaw));
-        }
-        this.current_flaw = undefined;
-        if (this.current_resolver) {
-            this.current_resolver.current = false;
-            this.node_listeners.get(this.current_resolver.id).forEach(l => l(this.current_resolver));
-        }
-        this.current_resolver = undefined;
-    }
-
-    executor_state_changed(message) {
-        this.state = message.state;
-    }
-
-    tick(message) {
-        this.current_time = message.time.num / message.time.den;
-        this.time_listeners.forEach(l => l(this.current_time));
+        this.listeners.forEach(l => l.state(this));
     }
 
     graph(message) {
-        this.nodes.clear();
+        this.flaws.clear();
         this.edges.clear();
         this.current_flaw = undefined;
         this.current_resolver = undefined;
@@ -124,9 +103,7 @@ export class Solver {
             };
             flaw.label = this.flaw_label(flaw);
             flaw.title = this.flaw_tooltip(flaw);
-            this.nodes.set(flaw.id, flaw);
-            this.node_listeners.set(flaw.id, new Set());
-            this.new_node_listeners.forEach(l => l(flaw));
+            this.flaws.set(flaw.id, flaw);
         }
 
         for (const r of message.resolvers) {
@@ -138,28 +115,12 @@ export class Solver {
                 flaw: r.flaw,
                 state: r.state,
                 intrinsic_cost: r.intrinsic_cost.num / r.intrinsic_cost.den,
-                data: r.data,
-                edges: []
+                data: r.data
             };
             resolver.cost = this.estimate_cost(resolver);
             resolver.label = this.resolver_label(resolver);
             resolver.title = this.resolver_tooltip(resolver);
-            this.nodes.set(resolver.id, resolver);
-            this.node_listeners.set(resolver.id, new Set());
-            this.new_node_listeners.forEach(l => l(resolver));
-
-            const eff_edge = { from: r.id, to: r.flaw, state: resolver.state };
-            this.edges.add(eff_edge);
-            this.edge_listeners.set(eff_edge, new Set());
-            this.new_edge_listeners.forEach(l => l(eff_edge));
-            resolver.edges.push(eff_edge);
-            for (const f of resolver.preconditions) {
-                const prec_edge = { from: f, to: resolver.id, state: resolver.state };
-                this.edges.add(prec_edge);
-                resolver.edges.push(prec_edge);
-                this.edge_listeners.set(prec_edge, new Set());
-                this.new_edge_listeners.forEach(l => l(prec_edge));
-            }
+            this.resolvers.set(resolver.id, resolver);
         }
 
         if (message.current_flaw) {
@@ -170,6 +131,8 @@ export class Solver {
                 this.current_resolver.current = true;
             }
         }
+
+        this.listeners.forEach(l => l.graph(this));
     }
 
     flaw_created(message) {
@@ -185,66 +148,60 @@ export class Solver {
         };
         flaw.label = this.flaw_label(flaw);
         flaw.title = this.flaw_tooltip(flaw);
-        this.nodes.set(flaw.id, flaw);
-        this.node_listeners.set(flaw.id, new Set());
-        this.new_node_listeners.forEach(l => l(flaw));
+        this.flaws.set(flaw.id, flaw);
         for (const c_id of flaw.causes) {
-            const cause = this.nodes.get(c_id);
+            const cause = this.resolvers.get(c_id);
             cause.preconditions.push(flaw.id);
             const c_res_cost = this.estimate_cost(cause);
             if (cause.cost != c_res_cost) {
                 cause.cost = c_res_cost;
                 cause.title = this.resolver_tooltip(cause);
+                this.listeners.forEach(l => l.resolver_cost_changed(cause));
             }
-            const cause_edge = { from: flaw.id, to: cause.id, state: cause.state };
-            cause.edges.push(cause_edge);
-            this.edges.add(cause_edge);
-            this.edge_listeners.set(cause_edge, new Set());
-            this.new_edge_listeners.forEach(l => l(cause_edge));
         }
     }
 
     flaw_state_changed(message) {
-        const flaw = this.nodes.get(message.id);
+        const flaw = this.flaws.get(message.id);
         flaw.state = message.state;
-        this.node_listeners.get(flaw.id).forEach(l => l(flaw));
+        this.listeners.forEach(l => l.flaw_state_changed(flaw));
     }
 
     flaw_cost_changed(message) {
-        const flaw = this.nodes.get(message.id);
+        const flaw = this.flaws.get(message.id);
         flaw.cost = message.cost.num / message.cost.den;
         flaw.title = this.flaw_tooltip(flaw);
-        this.node_listeners.get(flaw.id).forEach(l => l(flaw));
+        this.listeners.forEach(l => l.flaw_cost_changed(flaw));
 
         for (const c_id of flaw.causes) {
-            const cause = this.nodes.get(c_id);
+            const cause = this.resolvers.get(c_id);
             const c_res_cost = this.estimate_cost(cause);
             if (cause.cost != c_res_cost) {
                 cause.cost = c_res_cost;
                 cause.title = this.resolver_tooltip(cause);
-                this.node_listeners.get(cause.id).forEach(l => l(cause));
+                this.listeners.forEach(l => l.resolver_cost_changed(cause));
             }
         }
     }
 
     flaw_position_changed(message) {
-        const flaw = this.nodes.get(message.id);
+        const flaw = this.flaws.get(message.id);
         flaw.pos = message.pos;
         flaw.title = this.flaw_tooltip(flaw);
-        this.node_listeners.get(flaw.id).forEach(l => l(flaw));
+        this.listeners.forEach(l => l.flaw_position_changed(flaw));
     }
 
     current_flaw_changed(message) {
         if (this.current_flaw) {
             this.current_flaw.current = false;
-            this.node_listeners.get(this.current_flaw.id).forEach(l => l(this.current_flaw));
+            this.listeners.forEach(l => l.current_flaw_changed(this.current_flaw));
         }
-        this.current_flaw = this.nodes.get(message.id);
+        this.current_flaw = this.flaws.get(message.id);
         this.current_flaw.current = true;
-        this.node_listeners.get(this.current_flaw.id).forEach(l => l(this.current_flaw));
+        this.listeners.forEach(l => l.current_flaw_changed(this.current_flaw));
         if (this.current_resolver) {
             this.current_resolver.current = false;
-            this.node_listeners.get(this.current_resolver.id).forEach(l => l(this.current_resolver));
+            this.listeners.forEach(l => l.current_resolver_changed(this.current_resolver));
         }
         this.current_resolver = undefined;
     }
@@ -258,57 +215,42 @@ export class Solver {
             flaw: message.flaw,
             state: message.state,
             intrinsic_cost: message.intrinsic_cost.num / message.intrinsic_cost.den,
-            data: message.data,
-            edges: []
+            data: message.data
         };
         resolver.cost = this.estimate_cost(resolver);
         resolver.label = this.resolver_label(resolver);
         resolver.title = this.resolver_tooltip(resolver);
-        this.nodes.set(resolver.id, resolver);
-        this.node_listeners.set(resolver.id, new Set());
-        this.new_node_listeners.forEach(l => l(resolver));
-        const eff_edge = { from: message.id, to: message.flaw, state: resolver.state };
-        resolver.edges.push(eff_edge);
-        this.edges.add(eff_edge);
-        this.edge_listeners.set(eff_edge, new Set());
-        this.new_edge_listeners.forEach(l => l(eff_edge));
+        this.resolvers.set(resolver.id, resolver);
+        this.listeners.forEach(l => l.resolver_created(resolver));
     }
 
     resolver_state_changed(message) {
-        const resolver = this.nodes.get(message.id);
+        const resolver = this.resolvers.get(message.id);
         resolver.state = message.state;
         resolver.cost = this.estimate_cost(resolver);
         resolver.title = this.resolver_tooltip(resolver);
-        this.node_listeners.get(resolver.id).forEach(l => l(resolver));
-        for (const edge of resolver.edges) {
-            edge.state = resolver.state;
-            this.edge_listeners.get(edge).forEach(l => l(edge));
-        }
+        this.listeners.forEach(l => l.resolver_state_changed(resolver));
     }
 
     current_resolver_changed(message) {
         if (this.current_resolver) {
             this.current_resolver.current = false;
-            this.node_listeners.get(this.current_resolver.id).forEach(l => l(this.current_resolver));
+            this.listeners.forEach(l => l.current_resolver_changed(this.current_resolver));
         }
-        this.current_resolver = this.nodes.get(message.id);
+        this.current_resolver = this.resolvers.get(message.id);
         this.current_resolver.current = true;
-        this.node_listeners.get(this.current_resolver.id).forEach(l => l(this.current_resolver));
+        this.listeners.forEach(l => l.current_resolver_changed(this.current_resolver));
     }
 
     causal_link_added(message) {
-        const flaw = this.nodes.get(message.flaw_id);
-        const resolver = this.nodes.get(message.resolver_id);
+        const flaw = this.flaws.get(message.flaw_id);
+        const resolver = this.resolvers.get(message.resolver_id);
         resolver.preconditions.push(flaw.id);
         flaw.causes.push(resolver.id);
-        const cause_edge = { from: flaw.id, to: resolver.id, state: resolver.state };
-        this.edges.add(cause_edge);
-        resolver.edges.push(cause_edge);
-        this.edge_listeners.set(cause_edge, new Set());
-        this.new_edge_listeners.forEach(l => l(cause_edge));
+        this.listeners.forEach(l => l.causal_link_added({ from: flaw, to: resolver }));
         resolver.cost = this.estimate_cost(resolver);
         resolver.title = this.resolver_tooltip(resolver);
-        this.node_listeners.get(resolver.id).forEach(l => l(resolver));
+        this.listeners.forEach(l => l.resolver_cost_changed(resolver));
     }
 
     estimate_cost(res) {
@@ -316,28 +258,56 @@ export class Solver {
         return (res.preconditions.length ? Math.max.apply(this, res.preconditions.map(f_id => this.nodes.get(f_id).cost)) : 0) + res.intrinsic_cost;
     }
 
+    executor_state_changed(message) {
+        this.state = message.state;
+
+        switch (this.state) {
+            case 'idle':
+            case 'executing':
+            case 'finished':
+            case 'failed':
+                if (this.current_flaw) {
+                    this.current_flaw.current = false;
+                    this.listeners.forEach(l => l.current_flaw_changed(this.current_flaw));
+                    this.current_flaw = undefined;
+                }
+                if (this.current_resolver) {
+                    this.current_resolver.current = false;
+                    this.listeners.forEach(l => l.current_resolver_changed(this.current_resolver));
+                    this.current_resolver = undefined;
+                }
+        }
+    }
+
+    tick(message) {
+        this.current_time = message.time.num / message.time.den;
+        this.listeners.forEach(l => l.tick(this.current_time));
+    }
+
     starting(message) {
         console.log('starting');
         for (const atm of message.starting)
             console.log(this.atom_content(this.atoms.get(atm)));
+        this.listeners.forEach(l => l.starting(message.starting.map(atm => this.atoms.get(atm))));
     }
 
     start(message) {
         for (const atm of message.start)
             this.executing_tasks.add(this.atoms.get(atm));
-        this.task_start_listeners.forEach(l => l(message.start.map(atm => this.atoms.get(atm))));
+        this.listeners.forEach(l => l.start(message.start.map(atm => this.atoms.get(atm))));
     }
 
     ending(message) {
         console.log('ending');
         for (const atm of message.ending)
             console.log(this.atom_content(this.atoms.get(atm)));
+        this.listeners.forEach(l => l.ending(message.ending.map(atm => this.atoms.get(atm))));
     }
 
     end(message) {
         for (const atm of message.end)
             this.executing_tasks.delete(this.atoms.get(atm));
-        this.task_end_listeners.forEach(l => l(message.end.map(atm => this.atoms.get(atm))));
+        this.listeners.forEach(l => l.end(message.end.map(atm => this.atoms.get(atm))));
     }
 
     timeline_name(tl) { return tl.name; }
@@ -592,27 +562,19 @@ export class Solver {
         }
     }
 
-    add_state_listener(listener) { this.state_listeners.add(listener); }
-    add_timelines_listener(listener) { this.timelines_listeners.add(listener); }
-    add_time_listener(listener) { this.time_listeners.add(listener); }
-    add_task_start_listener(listener) { this.task_start_listeners.add(listener); }
-    add_task_end_listener(listener) { this.task_end_listeners.add(listener); }
+    /**
+     * Adds a listener to the solver.
+     * 
+     * @param {SolverListener} listener - The listener to add.
+     */
+    add_listener(listener) { this.listeners.add(listener); }
 
-    remove_state_listener(listener) { this.state_listeners.delete(listener); }
-    remove_timelines_listener(listener) { this.timelines_listeners.delete(listener); }
-    remove_time_listener(listener) { this.time_listeners.delete(listener); }
-    remove_task_start_listener(listener) { this.task_start_listeners.delete(listener); }
-    remove_task_end_listener(listener) { this.task_end_listeners.delete(listener); }
-
-    add_new_node_listener(listener) { this.new_node_listeners.add(listener); }
-    add_node_listener(node, listener) { this.node_listeners.get(node.id).add(listener); }
-    add_new_edge_listener(listener) { this.new_edge_listeners.add(listener); }
-    add_edge_listener(edge, listener) { this.edge_listeners.get(edge).add(listener); }
-
-    remove_new_node_listener(listener) { this.new_node_listeners.delete(listener); }
-    remove_node_listener(node, listener) { this.node_listeners.get(node.id).delete(listener); }
-    remove_new_edge_listener(listener) { this.new_edge_listeners.delete(listener); }
-    remove_edge_listener(edge, listener) { this.edge_listeners.get(edge).delete(listener); }
+    /**
+     * Removes a listener from the solver.
+     * 
+     * @param {SolverListener} listener - The listener to remove.
+     */
+    remove_listener(listener) { this.listeners.delete(listener); }
 }
 
 /**

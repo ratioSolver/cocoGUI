@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { Solver } from '@/solver';
+import { Solver, SolverListener } from '@/solver';
 import { onMounted, onUnmounted } from 'vue';
 import cytoscape from 'cytoscape';
 import dagre from 'cytoscape-dagre';
@@ -26,8 +26,9 @@ const get_graph_id = (solver) => 'slv-' + solver.id + '-graph';
 cytoscape.use(dagre);
 cytoscape.use(popper);
 
-let cy;
-let layout = {
+let listener;
+
+const layout = {
   name: 'dagre',
   rankDir: 'LR',
   fit: false,
@@ -41,83 +42,142 @@ tippy.setDefaultProps({
   placement: 'bottom'
 });
 
-const node_listeners = new Map();
-const new_node_listener = (node) => {
-  const n = cy.add({ group: 'nodes', data: { id: node.id, type: 'phi' in node ? 'flaw' : 'resolver', label: 'phi' in node ? props.solver.flaw_label(node) : props.solver.resolver_label(node), state: node.state, cost: node.cost, color: node.cost < Number.POSITIVE_INFINITY ? scale(node.cost).hex() : '#ccc', stroke: stroke_style(node) } });
-  n.tippy = tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: 'phi' in node ? props.solver.flaw_tooltip(node) : props.solver.resolver_tooltip(node), });
-  n.on('mouseover', () => n.tippy.show());
-  n.on('mouseout', () => n.tippy.hide());
-  cy.layout(layout).run();
-  const node_listener = (node) => {
-    cy.$id(node.id).data({ label: 'phi' in node ? props.solver.flaw_label(node) : props.solver.resolver_label(node), state: node.state, cost: node.cost, color: node.cost < Number.POSITIVE_INFINITY ? scale(node.cost).hex() : '#ccc', stroke: stroke_style(node) });
-    n.tippy.setContent('phi' in node ? props.solver.flaw_tooltip(node) : props.solver.resolver_tooltip(node));
-  };
-  props.solver.add_node_listener(node, node_listener);
-  node_listeners.set(node, node_listener);
-};
+class SolverListenerImpl extends SolverListener {
 
-const edge_listeners = new Map();
-const new_edge_listener = (edge) => {
-  cy.add({ group: 'edges', data: { id: edge.from + '-' + edge.to, source: edge.from, target: edge.to, state: edge.state, stroke: stroke_style(edge) } });
-  cy.layout(layout).run();
-  const edge_listener = (edge) => { cy.$id(edge.from + '-' + edge.to).data({ state: edge.state, stroke: stroke_style(edge) }); };
-  props.solver.add_edge_listener(edge, edge_listener);
-  edge_listeners.set(edge, edge_listener);
-};
+  constructor(solver) {
+    super();
+
+    this.cy = cytoscape({
+      container: document.getElementById(get_graph_id(solver)),
+      style: [
+        {
+          selector: 'node[type="flaw"]',
+          style: {
+            'shape': 'round-rectangle',
+            'background-color': 'data(color)',
+            'label': 'data(label)',
+            'border-width': '1px',
+            'border-style': 'data(stroke)',
+            'border-color': '#666'
+          }
+        },
+        {
+          selector: 'node[type="resolver"]',
+          style: {
+            'shape': 'ellipse',
+            'background-color': 'data(color)',
+            'label': 'data(label)',
+            'border-width': '1px',
+            'border-style': 'data(stroke)',
+            'border-color': '#666'
+          }
+        },
+        {
+          selector: 'edge',
+          style: {
+            'curve-style': 'bezier',
+            'line-color': '#666',
+            'target-arrow-color': '#666',
+            'target-arrow-shape': 'triangle',
+            'width': '1px',
+            'line-style': 'data(stroke)'
+          }
+        },
+        {
+          selector: '.current',
+          style: {
+            'border-width': '3px',
+            'border-color': '#000'
+          }
+        }
+      ]
+    });
+
+    solver.add_listener(this);
+
+    this.cy.layout(layout).run();
+  }
+
+  graph(graph) {
+    this.cy.elements().remove();
+    for (const flaw of graph.flaws) {
+      const n = this.cy.add({ group: 'nodes', data: { id: flaw.id, type: 'flaw', label: this.solver.flaw_label(flaw), state: flaw.state, cost: flaw.cost, color: flaw.cost < Number.POSITIVE_INFINITY ? scale(flaw.cost).hex() : '#ccc', stroke: stroke_style(flaw) } });
+      n.tippy = tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: this.solver.flaw_tooltip(flaw), });
+      n.on('mouseover', () => n.tippy.show());
+      n.on('mouseout', () => n.tippy.hide());
+    }
+    for (const resolver of graph.resolvers) {
+      const n = this.cy.add({ group: 'nodes', data: { id: resolver.id, type: 'resolver', label: this.solver.resolver_label(resolver), state: resolver.state, cost: resolver.cost, color: resolver.cost < Number.POSITIVE_INFINITY ? scale(resolver.cost).hex() : '#ccc', stroke: stroke_style(resolver) } });
+      n.tippy = tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: this.solver.resolver_tooltip(resolver), });
+      n.on('mouseover', () => n.tippy.show());
+      n.on('mouseout', () => n.tippy.hide());
+      this.cy.add({ group: 'edges', data: { id: resolver.id + '-' + resolver.flaw.id, source: resolver.id, target: resolver.flaw.id, state: resolver.state, stroke: stroke_style(resolver) } });
+      for (const precondition of resolver.preconditions)
+        this.cy.add({ group: 'edges', data: { id: precondition + '-' + resolver.id, source: precondition, target: resolver.id, state: resolver.state, stroke: stroke_style(resolver) } });
+    }
+    this.cy.layout(layout).run();
+  }
+  flaw_created(flaw) {
+    const n = this.cy.add({ group: 'nodes', data: { id: flaw.id, type: 'flaw', label: this.solver.flaw_label(flaw), state: flaw.state, cost: flaw.cost, color: flaw.cost < Number.POSITIVE_INFINITY ? scale(flaw.cost).hex() : '#ccc', stroke: stroke_style(flaw) } });
+    n.tippy = tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: this.solver.flaw_tooltip(flaw), });
+    n.on('mouseover', () => n.tippy.show());
+    n.on('mouseout', () => n.tippy.hide());
+    this.cy.layout(layout).run();
+  }
+  flaw_state_changed(flaw) {
+    this.cy.$id(flaw.id).data({ state: flaw.state, stroke: stroke_style(flaw) });
+  }
+  flaw_cost_changed(flaw) {
+    this.cy.$id(flaw.id).data({ cost: flaw.cost, color: flaw.cost < Number.POSITIVE_INFINITY ? scale(flaw.cost).hex() : '#ccc' });
+  }
+  flaw_position_changed(flaw) {
+    this.cy.$id(flaw.id).tippy.setContent(this.solver.flaw_tooltip(flaw));
+  }
+  current_flaw_changed(flaw) {
+    if (flaw.current)
+      this.cy.$id(flaw.id).addClass('current');
+    else
+      this.cy.$id(flaw.id).removeClass('current');
+  }
+  resolver_created(resolver) {
+    const n = this.cy.add({ group: 'nodes', data: { id: resolver.id, type: 'resolver', label: this.solver.resolver_label(resolver), state: resolver.state, cost: resolver.cost, color: resolver.cost < Number.POSITIVE_INFINITY ? scale(resolver.cost).hex() : '#ccc', stroke: stroke_style(resolver) } });
+    n.tippy = tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: this.solver.resolver_tooltip(resolver), });
+    n.on('mouseover', () => n.tippy.show());
+    n.on('mouseout', () => n.tippy.hide());
+    this.cy.add({ group: 'edges', data: { id: resolver.id + '-' + resolver.flaw.id, source: resolver.id, target: resolver.flaw.id, state: resolver.state, stroke: stroke_style(resolver) } });
+    for (const precondition of resolver.preconditions)
+      this.cy.add({ group: 'edges', data: { id: precondition + '-' + resolver.id, source: precondition, target: resolver.id, state: resolver.state, stroke: stroke_style(resolver) } });
+    this.cy.layout(layout).run();
+  }
+  resolver_state_changed(resolver) {
+    this.cy.$id(resolver.id).data({ state: resolver.state, stroke: stroke_style(resolver) });
+    this.cy.$id(resolver.id + '-' + resolver.flaw.id).data({ state: resolver.state, stroke: stroke_style(resolver) });
+    for (const precondition of resolver.preconditions)
+      this.cy.$id(precondition + '-' + resolver.id).data({ state: resolver.state, stroke: stroke_style(resolver) });
+  }
+  resolver_cost_changed(resolver) {
+    this.cy.$id(resolver.id).data({ cost: resolver.cost, color: resolver.cost < Number.POSITIVE_INFINITY ? scale(resolver.cost).hex() : '#ccc' });
+  }
+  current_resolver_changed(resolver) {
+    if (resolver.current)
+      this.cy.$id(resolver.id).addClass('current');
+    else
+      this.cy.$id(resolver.id).removeClass('current');
+  }
+  causal_link_added(link) {
+    this.cy.add({ group: 'edges', data: { id: link.from + '-' + link.to, source: link.from, target: link.to, state: link.state, stroke: stroke_style(link) } });
+    this.cy.layout(layout).run();
+  }
+}
 
 onMounted(() => {
-  cy = cytoscape({
-    container: document.getElementById(get_graph_id(props.solver)),
-    style: [
-      {
-        selector: 'node[type="flaw"]',
-        style: {
-          'shape': 'round-rectangle',
-          'background-color': 'data(color)',
-          'label': 'data(label)',
-          'border-width': '1px',
-          'border-style': 'data(stroke)',
-          'border-color': '#666'
-        }
-      },
-      {
-        selector: 'node[type="resolver"]',
-        style: {
-          'shape': 'ellipse',
-          'background-color': 'data(color)',
-          'label': 'data(label)',
-          'border-width': '1px',
-          'border-style': 'data(stroke)',
-          'border-color': '#666'
-        }
-      },
-      {
-        selector: 'edge',
-        style: {
-          'curve-style': 'bezier',
-          'line-color': '#666',
-          'target-arrow-color': '#666',
-          'target-arrow-shape': 'triangle',
-          'width': '1px',
-          'line-style': 'data(stroke)'
-        }
-      }
-    ]
-  });
-
-  props.solver.add_new_node_listener(new_node_listener);
-  props.solver.add_new_edge_listener(new_edge_listener);
-
-  cy.layout(layout).run();
+  listener = new SolverListenerImpl(props.solver);
 });
 
 onUnmounted(() => {
-  props.solver.remove_new_node_listener(new_node_listener);
-  props.solver.remove_new_edge_listener(new_edge_listener);
-  for (const [node, node_listener] of node_listeners)
-    props.solver.remove_node_listener(node, node_listener);
-  for (const [edge, edge_listener] of edge_listeners)
-    props.solver.remove_edge_listener(edge, edge_listener);
+  props.solver.remove_listener(listener);
+  listener.cy.destroy();
+  listener = null;
 });
 </script>
 

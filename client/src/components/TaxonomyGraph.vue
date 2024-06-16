@@ -1,64 +1,68 @@
 <template>
-  <v-container id="taxonomy-graph-container" class="fill-height" fluid />
+  <v-container id="taxonomy-graph" class="fill-height" fluid />
 </template>
 
 <script setup>
-import { useAppStore } from '@/store/app';
+import { useCoCoStore } from '@/store/coco';
 import { storeToRefs } from 'pinia';
+import { onMounted, onUnmounted, watch } from 'vue';
 import cytoscape from 'cytoscape';
 import dagre from 'cytoscape-dagre';
-
-const layout = {
-  name: 'dagre'
-};
+import { Type } from '@/item';
 
 cytoscape.use(dagre);
 
-const { types } = storeToRefs(useAppStore());
-
 let cy;
+let layout = {
+  name: 'dagre',
+  fit: false,
+  nodeDimensionsIncludeLabels: true
+};
+
+const { types } = storeToRefs(useCoCoStore());
 
 onMounted(() => {
   cy = cytoscape({
     container: document.getElementById('taxonomy-graph'),
-    elements: {
-      nodes: Object.values(types.value).map(type => ({ data: { id: type.id, label: type.name } })),
-      edges: []
-    },
+    layout: layout,
     style: [
       {
         selector: 'node',
         style: {
-          'label': 'data(label)',
-          'text-valign': 'center',
-          'text-halign': 'center',
-          'background-color': '#f8f9fa',
-          'border-color': '#007bff',
-          'border-width': 1,
-          'border-opacity': 0.5,
-          'shape': 'roundrectangle'
+          'shape': 'ellipse',
+          'label': 'data(name)',
+          'border-width': '1px',
+          'border-color': '#666'
         }
       },
       {
         selector: 'edge',
         style: {
           'curve-style': 'bezier',
+          'line-color': '#666',
+          'target-arrow-color': '#666',
           'target-arrow-shape': 'triangle',
-          'line-color': '#007bff',
-          'target-arrow-color': '#007bff',
-          'width': 1
+          'width': '1px'
         }
       }
-    ],
-    layout
+    ]
   });
+  for (const type of types.value.values())
+    cy.add({ group: 'nodes', data: { id: type.id, name: type.name } });
 });
 
 onUnmounted(() => {
   cy.destroy();
 });
 
-watch(types, () => {
-  cy.json({ elements: { nodes: Object.values(types.value).map(type => ({ data: { id: type.id, label: type.name } })) } });
-});
+watch(types, (new_types, old_types) => {
+  for (const type of new_types.values())
+    if (!old_types.has(type.id))
+      cy.add({ group: 'nodes', data: { id: type.id, name: type.name } });
+    else
+      cy.$id(type.id).data('name', type.name);
+  for (const type of old_types.values())
+    if (!new_types.has(type.id))
+      cy.$id(type.id).remove();
+}, { deep: true });
 </script>

@@ -13,6 +13,7 @@
         <RuleListItem v-for="[id, rule] in sorted_rules(reactive_rules)" :key="id" :rule="rule" />
         <v-list-subheader v-if="deliberative_rules.size > 0" inset>Deliberative Rules</v-list-subheader>
         <RuleListItem v-for="[id, rule] in sorted_rules(deliberative_rules)" :key="id" :rule="rule" />
+        <v-list-item value="taxonomy" title="Taxonomy" prepend-icon="mdi-chart-arc" />
       </v-list>
     </v-navigation-drawer>
 
@@ -41,6 +42,9 @@
         </v-window-item>
         <v-window-item v-for="[id, rule] in sorted_rules(deliberative_rules)" :key="id" :value="id" class="fill-height">
           <DeliberativeRule :rule="rule" />
+        </v-window-item>
+        <v-window-item value="taxonomy" class="fill-height">
+          <TaxonomyGraph />
         </v-window-item>
       </v-window>
     </v-main>
