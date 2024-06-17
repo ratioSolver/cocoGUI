@@ -40,7 +40,8 @@ class TypeListener extends KnowledgeListener {
             'shape': 'ellipse',
             'label': 'data(name)',
             'border-width': '1px',
-            'border-color': '#666'
+            'border-color': '#666',
+            'background-color': '#ccc',
           }
         },
         {
@@ -57,22 +58,23 @@ class TypeListener extends KnowledgeListener {
     });
 
     knowledge.add_listener(this);
-
-    this.cy.layout(layout).run();
   }
 
   types(types) {
     for (const type of types.values())
       this.cy.add({ group: 'nodes', data: { id: type.id, name: type.name } });
+    this.cy.layout(layout).run();
   }
   type_added(type) {
     this.cy.add({ group: 'nodes', data: { id: type.id, name: type.name } });
+    this.cy.layout(layout).run();
   }
   type_updated(type) {
     this.cy.$id(type.id).data('name', type.name);
   }
   type_removed(id) {
     this.cy.$id(id).remove();
+    this.cy.layout(layout).run();
   }
 }
 

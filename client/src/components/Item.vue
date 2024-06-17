@@ -34,7 +34,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { Item } from '@/item';
+import { Item } from '@/type';
 
 const props = defineProps({
   item: {

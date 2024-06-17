@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { Item } from '@/item';
+import { Item } from '@/type';
 
 defineProps({
   item: {

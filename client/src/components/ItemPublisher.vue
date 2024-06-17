@@ -28,7 +28,7 @@
 </template>
 
 <script setup>
-import { BooleanParameter, RealParameter, IntegerParameter, StringParameter, SymbolParameter, ArrayParameter, GeometryParameter, Item } from '@/item';
+import { BooleanParameter, RealParameter, IntegerParameter, StringParameter, SymbolParameter, ArrayParameter, GeometryParameter, Item } from '@/type';
 import { reactive } from 'vue';
 
 const props = defineProps({

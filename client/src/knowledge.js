@@ -115,31 +115,31 @@ export class Knowledge {
                 this.solvers.get(data.id).set_graph(data);
                 return true;
             case 'flaw_created':
-                this.solvers.get(data.solver_id).flaw_created(data);
+                this.solvers.get(data.solver_id).create_flaw(data);
                 return true;
             case 'flaw_state_changed':
-                this.solvers.get(data.solver_id).flaw_state_changed(data);
+                this.solvers.get(data.solver_id).set_flaw_state(data);
                 return true;
             case 'flaw_cost_changed':
-                this.solvers.get(data.solver_id).flaw_cost_changed(data);
+                this.solvers.get(data.solver_id).set_flaw_cost(data);
                 return true;
             case 'flaw_position_changed':
-                this.solvers.get(data.solver_id).flaw_position_changed(data);
+                this.solvers.get(data.solver_id).set_flaw_position(data);
                 return true;
             case 'current_flaw':
-                this.solvers.get(data.solver_id).current_flaw_changed(data);
+                this.solvers.get(data.solver_id).set_current_flaw(data);
                 return true;
             case 'resolver_created':
-                this.solvers.get(data.solver_id).resolver_created(data);
+                this.solvers.get(data.solver_id).create_resolver(data);
                 return true;
             case 'resolver_state_changed':
-                this.solvers.get(data.solver_id).resolver_state_changed(data);
+                this.solvers.get(data.solver_id).set_resolver_state(data);
                 return true;
             case 'current_resolver':
-                this.solvers.get(data.solver_id).current_resolver_changed(data);
+                this.solvers.get(data.solver_id).set_current_resolver(data);
                 return true;
             case 'causal_link_added':
-                this.solvers.get(data.solver_id).causal_link_added(data);
+                this.solvers.get(data.solver_id).add_causal_link(data);
                 return true;
             case 'solver_execution_state_changed':
                 this.solvers.get(data.id).set_execution_state(data);
@@ -436,6 +436,11 @@ export class Knowledge {
      */
     add_listener(listener) {
         this.listeners.add(listener);
+        listener.types(this.types);
+        listener.items(this.items);
+        listener.reactive_rules(this.reactive_rules);
+        listener.deliberative_rules(this.deliberative_rules);
+        listener.solvers(this.solvers);
     }
 
     /**

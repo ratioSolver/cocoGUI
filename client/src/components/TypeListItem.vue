@@ -4,7 +4,7 @@
 </template>
 
 <script setup>
-import { Type } from '@/item';
+import { Type } from '@/type';
 
 defineProps({
   type: {

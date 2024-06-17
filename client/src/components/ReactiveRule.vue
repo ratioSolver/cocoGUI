@@ -12,7 +12,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Rule } from '@/solver';
+import { Rule } from '@/knowledge';
 
 const props = defineProps({
   rule: {

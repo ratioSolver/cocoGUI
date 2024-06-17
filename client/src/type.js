@@ -188,19 +188,17 @@ export class ItemListener {
     /**
      * Sets the values for an item.
      *
-     * @param {string} item_id - The ID of the item.
      * @param {Array} values - The values to set.
      * @param {Array} timestamps - The timestamps for the values.
      */
-    values(item_id, values, timestamps) { }
+    values(values, timestamps) { }
     /**
      * Updates the value of an item.
      *
-     * @param {string} item_id - The ID of the item.
      * @param {any} value - The new value for the item.
      * @param {number} timestamp - The timestamp of the update.
      */
-    new_value(item_id, value, timestamp) { }
+    new_value(value, timestamp) { }
 }
 
 /**
@@ -241,7 +239,7 @@ export class Item {
         this.valueTimestamps = timestamps;
         this.lastValue = values[values.length - 1];
         this.lastUpdate = timestamps[timestamps.length - 1];
-        this.listeners.forEach(l => l.values(this.id, values, timestamps));
+        this.listeners.forEach(l => l.values(values, timestamps));
     }
 
     /**
@@ -255,7 +253,7 @@ export class Item {
         this.valueTimestamps.push(timestamp);
         this.lastValue = value;
         this.lastUpdate = timestamp;
-        this.listeners.forEach(l => l.new_value(this.id, value, timestamp));
+        this.listeners.forEach(l => l.new_value(value, timestamp));
     }
 
     /**
@@ -265,7 +263,7 @@ export class Item {
      */
     add_listener(listener) {
         this.listeners.add(listener);
-        listener.values(this.id, this.values, this.valueTimestamps);
+        listener.values(this.values, this.valueTimestamps);
     }
 
     /**
