@@ -109,55 +109,55 @@ export class Knowledge {
                 this.remove_solver(message.id);
                 return true;
             case 'solver_state':
-                this.solvers.get(data.id).set_state(data);
+                this.solvers.get(message.id).set_state(message);
                 return true;
             case 'solver_graph':
-                this.solvers.get(data.id).set_graph(data);
+                this.solvers.get(message.id).set_graph(message);
                 return true;
             case 'flaw_created':
-                this.solvers.get(data.solver_id).create_flaw(data);
+                this.solvers.get(message.solver_id).create_flaw(message);
                 return true;
             case 'flaw_state_changed':
-                this.solvers.get(data.solver_id).set_flaw_state(data);
+                this.solvers.get(message.solver_id).set_flaw_state(message);
                 return true;
             case 'flaw_cost_changed':
-                this.solvers.get(data.solver_id).set_flaw_cost(data);
+                this.solvers.get(message.solver_id).set_flaw_cost(message);
                 return true;
             case 'flaw_position_changed':
-                this.solvers.get(data.solver_id).set_flaw_position(data);
+                this.solvers.get(message.solver_id).set_flaw_position(message);
                 return true;
             case 'current_flaw':
-                this.solvers.get(data.solver_id).set_current_flaw(data);
+                this.solvers.get(message.solver_id).set_current_flaw(message);
                 return true;
             case 'resolver_created':
-                this.solvers.get(data.solver_id).create_resolver(data);
+                this.solvers.get(message.solver_id).create_resolver(message);
                 return true;
             case 'resolver_state_changed':
-                this.solvers.get(data.solver_id).set_resolver_state(data);
+                this.solvers.get(message.solver_id).set_resolver_state(message);
                 return true;
             case 'current_resolver':
-                this.solvers.get(data.solver_id).set_current_resolver(data);
+                this.solvers.get(message.solver_id).set_current_resolver(message);
                 return true;
             case 'causal_link_added':
-                this.solvers.get(data.solver_id).add_causal_link(data);
+                this.solvers.get(message.solver_id).add_causal_link(message);
                 return true;
             case 'solver_execution_state_changed':
-                this.solvers.get(data.id).set_execution_state(data);
+                this.solvers.get(message.id).set_execution_state(message);
                 return true;
             case 'tick':
-                this.solvers.get(data.id).tick(data);
+                this.solvers.get(message.id).tick(message);
                 return true;
             case 'starting':
-                this.solvers.get(data.id).starting(data);
+                this.solvers.get(message.id).starting(message);
                 return true;
             case 'ending':
-                this.solvers.get(data.id).ending(data);
+                this.solvers.get(message.id).ending(message);
                 return true;
             case 'start':
-                this.solvers.get(data.id).start(data);
+                this.solvers.get(message.id).start(message);
                 return true;
             case 'end':
-                this.solvers.get(data.id).end(data);
+                this.solvers.get(message.id).end(message);
                 return true;
             default:
                 return false;
@@ -232,7 +232,7 @@ export class Knowledge {
      */
     set_items(items_message) {
         this.items.clear();
-        items_message.forEach(item_message => this.items.set(item_message.id, new Item(item_message.id, item_message.name, this.types.get(item_message.type), item_message.description, json_to_par_types(item_message.parameters))));
+        items_message.forEach(item_message => this.items.set(item_message.id, new Item(item_message.id, item_message.name, this.types.get(item_message.type), item_message.description, item_message.parameters)));
 
         this.listeners.forEach(listener => listener.items(this.items));
     }
@@ -248,7 +248,7 @@ export class Knowledge {
      * @param {Array} created_item_message.parameters - The parameters of the created item.
      */
     add_item(created_item_message) {
-        const item = new Item(created_item_message.id, created_item_message.name, this.types.get(created_item_message.type), created_item_message.description, json_to_par_types(created_item_message.parameters));
+        const item = new Item(created_item_message.id, created_item_message.name, this.types.get(created_item_message.type), created_item_message.description, item_message.parameters);
         this.items.set(item.id, item);
         this.listeners.forEach(listener => listener.item_added(item));
     }
@@ -273,6 +273,16 @@ export class Knowledge {
         if (updated_item_message.parameters !== undefined)
             this.items.get(updated_item_message.id).parameters = json_to_par_types(updated_item_message.parameters);
         this.listeners.forEach(listener => listener.item_updated(this.items.get(updated_item_message.id)));
+    }
+
+    set_item_data(item_id, data) {
+        const values = [];
+        const timestamps = [];
+        data.forEach(d => {
+            values.push(d.value);
+            timestamps.push(d.timestamp);
+        });
+        this.items.get(item_id).set_values(values, timestamps);
     }
 
     /**

@@ -79,8 +79,8 @@ export class Solver {
 
         const origin_var = this.exprs.get('origin');
         const horizon_var = this.exprs.get('horizon');
-        this.origin = origin_var.num / origin_var.den;
-        this.horizon = horizon_var.num / horizon_var.den;
+        this.origin = origin_var.val.num / origin_var.val.den;
+        this.horizon = horizon_var.val.num / horizon_var.val.den;
 
         this.timelines.clear();
         if (state_message.timelines)

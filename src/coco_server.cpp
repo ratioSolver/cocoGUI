@@ -81,7 +81,7 @@ namespace coco
         // we send the executors
         for (const auto &cc_exec : get_solvers())
         {
-            ws.send(make_state_message(cc_exec.get()).dump());
+            ws.send(make_solver_state_message(cc_exec.get()).dump());
             ws.send(make_graph_message(cc_exec.get().get_solver().get_graph()).dump());
         }
     }
@@ -108,12 +108,12 @@ namespace coco
     void coco_server::new_solver(const coco_executor &exec)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        broadcast(make_executor_message(exec));
+        broadcast(make_new_solver_message(exec));
     }
     void coco_server::deleted_solver(const uintptr_t id)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        broadcast(ratio::executor::make_deleted_executor_message(id));
+        broadcast(ratio::executor::make_deleted_solver_message(id));
     }
 
     void coco_server::new_reactive_rule(const rule &r)
@@ -130,7 +130,7 @@ namespace coco
     void coco_server::state_changed(const coco_executor &exec)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        broadcast(make_state_message(exec));
+        broadcast(make_solver_state_message(exec));
     }
 
     void coco_server::flaw_created(const coco_executor &, const ratio::flaw &f)
@@ -184,7 +184,7 @@ namespace coco
     void coco_server::executor_state_changed(const coco_executor &exec, ratio::executor::executor_state)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        broadcast(make_state_changed_message(exec));
+        broadcast(make_solver_execution_state_changed_message(exec));
     }
 
     void coco_server::tick(const coco_executor &exec, const utils::rational &)

@@ -6,7 +6,8 @@
 
 // Plugins
 import { registerPlugins } from '@/plugins'
-import { useCoCoStore } from './store/coco';
+// import { useCoCoStore } from './store/coco';
+import { useAppStore } from './store/app';
 
 // Components
 import App from './App.vue'
@@ -24,6 +25,7 @@ registerPlugins(app)
 app.mount('#app')
 console.log('Server is running on ' + import.meta.env.VITE_HOST + ':' + import.meta.env.VITE_PORT)
 
-import { test_data } from './tests/data';
-for (const data of test_data)
-    useCoCoStore().update(data);
+// import { test_data } from './tests/data';
+// for (const data of test_data)
+//     useCoCoStore().update(data);
+useAppStore().connect();

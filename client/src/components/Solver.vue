@@ -3,11 +3,11 @@
     <v-tab value='timelines'><v-icon>mdi-chart-timeline</v-icon>Timelines</v-tab>
     <v-tab value='graph'><v-icon>mdi-graph-outline</v-icon>Graph</v-tab>
   </v-tabs>
-  <v-window :id="'slv-' + solver.id" v-model='tab' class='fill-height' show-arrows>
-    <v-window-item value='timelines'>
+  <v-window :id="'slv-' + solver.id" v-model='tab' class='fill-height' show-arrows eager>
+    <v-window-item value='timelines' eager>
       <SolverTimelines :solver='solver' />
     </v-window-item>
-    <v-window-item value='graph'>
+    <v-window-item value='graph' eager>
       <SolverGraph :solver='solver' />
     </v-window-item>
   </v-window>

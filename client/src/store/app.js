@@ -22,7 +22,7 @@ export const useAppStore = defineStore('app', {
       this.socket.onmessage = (msg) => {
         let data = JSON.parse(msg.data);
         console.log(data);
-        useCoCoStore.update(data);
+        useCoCoStore().update(data);
       };
     },
     send_message(message) {
@@ -37,7 +37,7 @@ export const useAppStore = defineStore('app', {
         if (res.ok)
           res.json().then(data => {
             console.log(data);
-            useCoCoStore.set_item_data(item_id, data);
+            useCoCoStore().knowledge.set_item_data(item_id, data);
           });
         else
           res.json().then(data => alert(data.message));

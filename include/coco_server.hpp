@@ -108,11 +108,11 @@ namespace coco
       error_schema,
   };
   const json::json j_messages{
-      ratio::executor::new_executor_message,
-      ratio::executor::executor_state_message,
+      ratio::executor::new_solver_message,
+      ratio::executor::solver_execution_state_changed_message,
       ratio::executor::tick_message,
-      ratio::executor::state_message,
-      ratio::graph_message,
+      ratio::executor::solver_state_message,
+      ratio::solver_graph_message,
       ratio::flaw_created_message,
       ratio::flaw_state_changed_message,
       ratio::flaw_cost_changed_message,
