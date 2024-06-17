@@ -1,26 +1,34 @@
+import { Type, IntegerParameter, RealParameter, BooleanParameter, SymbolParameter, StringParameter, ArrayParameter, GeometryParameter } from '@/type';
+import { Solver } from '@/solver';
+
 export class KnowledgeListener {
 
     constructor() {
     }
 
-    knowledge(knowledge) { }
-
+    types(types) { }
     type_added(type) { }
     type_updated(type) { }
     type_removed(id) { }
 
+    items(items) { }
     item_added(item) { }
     item_updated(item) { }
     item_removed(id) { }
-    item_data(item_id, data) { }
 
+    reactive_rules(rules) { }
     reactive_rule_added(rule) { }
     reactive_rule_updated(rule) { }
     reactive_rule_removed(id) { }
 
+    deliberative_rules(rules) { }
     deliberative_rule_added(rule) { }
     deliberative_rule_updated(rule) { }
     deliberative_rule_removed(id) { }
+
+    solvers(solvers) { }
+    solver_added(solver) { }
+    solver_removed(id) { }
 }
 
 export class Knowledge {
@@ -33,14 +41,131 @@ export class Knowledge {
         this.reactive_rules = new Map();
         this.deliberative_rules = new Map();
 
+        this.solvers = new Map();
+
         this.listeners = new Set();
+    }
+
+    update(message) {
+        switch (message.type) {
+            case 'types':
+                this.set_types(message.types);
+                return true;
+            case 'new_type':
+                this.add_type(message);
+                return true;
+            case 'updated_type':
+                this.update_type(message);
+                return true;
+            case 'deleted_type':
+                this.remove_type(message.id);
+                return true;
+            case 'items':
+                this.set_items(message.items);
+                return true;
+            case 'new_item':
+                this.add_item(message);
+                return true;
+            case 'updated_item':
+                this.update_item(message);
+                return true;
+            case 'deleted_item':
+                this.remove_item(message.id);
+                return true;
+            case 'reactive_rules':
+                this.set_reactive_rules(message.rules);
+                return true;
+            case 'new_reactive_rule':
+                this.add_reactive_rule(message);
+                return true;
+            case 'updated_reactive_rule':
+                this.update_reactive_rule(message);
+                return true;
+            case 'deleted_reactive_rule':
+                this.remove_reactive_rule(message.id);
+                return true;
+            case 'deliberative_rules':
+                this.set_deliberative_rules(message.rules);
+                return true;
+            case 'new_deliberative_rule':
+                this.add_deliberative_rule(message);
+                return true;
+            case 'updated_deliberative_rule':
+                this.update_deliberative_rule(message);
+                return true;
+            case 'deleted_deliberative_rule':
+                this.remove_deliberative_rule(message.id);
+                return true;
+            case 'solvers':
+                this.set_solvers(message.solvers);
+                return true;
+            case 'new_solver':
+                this.add_solver(message);
+                return true;
+            case 'deleted_solver':
+                this.remove_solver(message.id);
+                return true;
+            case 'solver_state':
+                this.solvers.get(data.id).set_state(data);
+                return true;
+            case 'solver_graph':
+                this.solvers.get(data.id).set_graph(data);
+                return true;
+            case 'flaw_created':
+                this.solvers.get(data.solver_id).flaw_created(data);
+                return true;
+            case 'flaw_state_changed':
+                this.solvers.get(data.solver_id).flaw_state_changed(data);
+                return true;
+            case 'flaw_cost_changed':
+                this.solvers.get(data.solver_id).flaw_cost_changed(data);
+                return true;
+            case 'flaw_position_changed':
+                this.solvers.get(data.solver_id).flaw_position_changed(data);
+                return true;
+            case 'current_flaw':
+                this.solvers.get(data.solver_id).current_flaw_changed(data);
+                return true;
+            case 'resolver_created':
+                this.solvers.get(data.solver_id).resolver_created(data);
+                return true;
+            case 'resolver_state_changed':
+                this.solvers.get(data.solver_id).resolver_state_changed(data);
+                return true;
+            case 'current_resolver':
+                this.solvers.get(data.solver_id).current_resolver_changed(data);
+                return true;
+            case 'causal_link_added':
+                this.solvers.get(data.solver_id).causal_link_added(data);
+                return true;
+            case 'solver_execution_state_changed':
+                this.solvers.get(data.id).set_execution_state(data);
+                return true;
+            case 'tick':
+                this.solvers.get(data.id).tick(data);
+                return true;
+            case 'starting':
+                this.solvers.get(data.id).starting(data);
+                return true;
+            case 'ending':
+                this.solvers.get(data.id).ending(data);
+                return true;
+            case 'start':
+                this.solvers.get(data.id).start(data);
+                return true;
+            case 'end':
+                this.solvers.get(data.id).end(data);
+                return true;
+            default:
+                return false;
+        }
     }
 
     set_types(types_message) {
         this.types.clear();
         types_message.forEach(type_message => this.types.set(type_message.id, new Type(type_message.id, type_message.name, type_message.description, json_to_par_types(type_message.static_parameters), json_to_par_types(type_message.dynamic_parameters))));
 
-        this.listeners.forEach(listener => listener.knowledge(this));
+        this.listeners.forEach(listener => listener.types(this.types));
     }
 
     add_type(created_type_message) {
@@ -70,7 +195,7 @@ export class Knowledge {
         this.items.clear();
         items_message.forEach(item_message => this.items.set(item_message.id, new Item(item_message.id, item_message.name, this.types.get(item_message.type), item_message.description, json_to_par_types(item_message.parameters))));
 
-        this.listeners.forEach(listener => listener.knowledge(this));
+        this.listeners.forEach(listener => listener.items(this.items));
     }
 
     add_item(created_item_message) {
@@ -100,7 +225,7 @@ export class Knowledge {
         this.reactive_rules.clear();
         reactive_rules_message.forEach(rule_message => this.reactive_rules.set(rule_message.id, new Rule(rule_message.id, rule_message.name, rule_message.content)));
 
-        this.listeners.forEach(listener => listener.knowledge(this));
+        this.listeners.forEach(listener => listener.reactive_rules(this.reactive_rules));
     }
 
     add_reactive_rule(created_reactive_rule_message) {
@@ -126,7 +251,7 @@ export class Knowledge {
         this.deliberative_rules.clear();
         deliberative_rules_message.forEach(rule_message => this.deliberative_rules.set(rule_message.id, new Rule(rule_message.id, rule_message.name, rule_message.content)));
 
-        this.listeners.forEach(listener => listener.knowledge(this));
+        this.listeners.forEach(listener => listener.deliberative_rules(this.deliberative_rules));
     }
 
     add_deliberative_rule(created_deliberative_rule_message) {
@@ -147,268 +272,23 @@ export class Knowledge {
         this.deliberative_rules.delete(removed_deliberative_rule_message.id);
         this.listeners.forEach(listener => listener.deliberative_rule_removed(removed_deliberative_rule_message.id));
     }
-}
 
-/**
- * Represents a parameter.
- */
-export class Parameter {
-    /**
-     * Creates a new Parameter instance.
-     * 
-     * @param {string} name - The name of the parameter.
-     * @param {*} [default_value] - The default value of the parameter (optional).
-     */
-    constructor(name, default_value = undefined) {
-        this.name = name;
-        this.default_value = default_value;
-    }
-}
+    set_solvers(solvers_message) {
+        this.solvers.clear();
+        solvers_message.forEach(solver_message => this.solvers.set(solver_message.id, new Solver(solver_message.id, solver_message.name, solver_message.state)));
 
-/**
- * Represents a boolean parameter.
- * @extends Parameter
- */
-export class BooleanParameter extends Parameter {
-    /**
-     * Creates a new BooleanParameter instance.
-     * 
-     * @param {string} name - The name of the parameter.
-     * @param {boolean} [default_value=false] - The default value of the parameter.
-     */
-    constructor(name, default_value = false) {
-        super(name, default_value);
-    }
-}
-
-/**
- * Represents an integer parameter.
- * @extends Parameter
- */
-export class IntegerParameter extends Parameter {
-
-    /**
-     * Creates a new IntegerParameter instance.
-     * 
-     * @param {string} name - The name of the parameter.
-     * @param {number} min - The minimum value of the parameter.
-     * @param {number} max - The maximum value of the parameter.
-     * @param {number} [default_value=min] - The default value of the parameter.
-     */
-    constructor(name, min, max, default_value = min) {
-        super(name, default_value);
-        this.min = min;
-        this.max = max;
-    }
-}
-
-/**
- * Represents a real parameter.
- * @extends Parameter
- */
-export class RealParameter extends Parameter {
-
-    /**
-     * Creates a new instance of the RealParameter class.
-     * 
-     * @param {string} name - The name of the parameter.
-     * @param {number} min - The minimum value of the parameter.
-     * @param {number} max - The maximum value of the parameter.
-     * @param {number} [default_value=min] - The default value of the parameter.
-     */
-    constructor(name, min, max, default_value = min) {
-        super(name, default_value);
-        this.min = min;
-        this.max = max;
-    }
-}
-
-/**
- * Represents a string parameter.
- * @extends Parameter
- */
-export class StringParameter extends Parameter {
-    /**
-     * Creates a new instance of the StringParameter class.
-     * 
-     * @param {string} name - The name of the parameter.
-     * @param {string} [default_value=""] - The default value of the parameter.
-     */
-    constructor(name, default_value = "") {
-        super(name, default_value);
-    }
-}
-
-/**
- * Represents a symbol parameter.
- * @extends Parameter
- */
-export class SymbolParameter extends Parameter {
-
-    /**
-     * Creates a new SymbolParameter instance.
-     * 
-     * @param {string} name - The name of the parameter.
-     * @param {Array} symbols - The symbols for the parameter.
-     * @param {boolean} [multiple=false] - Whether the parameter can have multiple values.
-     * @param {string} [default_value=symbols[0]] - The default value for the parameter.
-     */
-    constructor(name, symbols, multiple = false, default_value = symbols ? symbols[0] : "") {
-        super(name, default_value);
-        this.symbols = symbols;
-        this.multiple = multiple;
-    }
-}
-
-function create_default_array(shape, array_type) {
-    if (shape.length === 0) return array_type.default_value;
-    let array = new Array(shape[0]);
-    for (let i = 0; i < shape[0]; i++) array[i] = create_default_array(shape.slice(1), array_type);
-    return array;
-}
-
-/**
- * Represents an array parameter.
- * @extends Parameter
- */
-export class ArrayParameter extends Parameter {
-
-    /**
-     * Creates a new ArrayParameter instance.
-     * 
-     * @param {string} name - The name of the parameter.
-     * @param {string} array_type - The type of the elements in the array.
-     * @param {Array<number>} shape - The shape of the array.
-     * @param {Array<any>} [default_value=create_default_array(shape, array_type)] - The default value of the parameter.
-     */
-    constructor(name, array_type, shape, default_value = create_default_array(shape, array_type)) {
-        super(name, default_value);
-        this.array_type = array_type;
-        this.shape = shape;
-    }
-}
-
-/**
- * Represents a geometry parameter.
- * @extends Parameter
- */
-export class GeometryParameter extends Parameter {
-
-    /**
-     * Creates a new GeometryParameter instance.
-     * 
-     * @param {string} name - The name of the parameter.
-     * @param {string} [default_value=""] - The default value of the parameter.
-     */
-    constructor(name, default_value = undefined) {
-        super(name, default_value);
-    }
-}
-
-/**
- * Represents a type of item.
- */
-export class Type {
-
-    /**
-     * Creates a new instance of the Type class.
-     * 
-     * @param {number} id - The ID of the type.
-     * @param {string} name - The name of the type.
-     * @param {string} description - The description of the type.
-     * @param {Array} static_parameters - The static parameters of the type.
-     * @param {Array} dynamic_parameters - The dynamic parameters of the type.
-     */
-    constructor(id, name, description, static_parameters, dynamic_parameters) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.static_parameters = static_parameters;
-        this.dynamic_parameters = dynamic_parameters;
-    }
-}
-
-export class ItemListener {
-
-    constructor() {
+        this.listeners.forEach(listener => listener.solvers(this.solvers));
     }
 
-    values(item_id, values, timestamps) { }
-    new_value(item_id, value, timestamp) { }
-}
-
-/**
- * Represents an item.
- */
-export class Item {
-
-    /**
-     * Creates a new instance of the Item class.
-     * 
-     * @param {string} id - The ID of the item.
-     * @param {string} name - The name of the item.
-     * @param {string} type - The type of the item.
-     * @param {string} [description=""] - The description of the item (optional).
-     * @param {Object} [parameters={}] - The parameters of the item (optional).
-     */
-    constructor(id, name, type, description = "", parameters = {}) {
-        this.id = id;
-        this.name = name;
-        this.type = type;
-        this.description = description;
-        this.parameters = parameters;
-        this.lastValue = undefined;
-        this.lastUpdate = undefined;
-        this.values = [];
-        this.valueTimestamps = [];
-        this.listeners = new Set();
+    add_solver(created_solver_message) {
+        const solver = new Solver(created_solver_message.id, created_solver_message.name, created_solver_message.state);
+        this.solvers.set(solver.id, solver);
+        this.listeners.forEach(listener => listener.solver_added(solver));
     }
 
-    /**
-     * Sets the values and timestamps of the item.
-     * 
-     * @param {Array} values - The values of the item.
-     * @param {Array} timestamps - The timestamps of the values.
-     */
-    set_values(values, timestamps) {
-        this.values = values;
-        this.valueTimestamps = timestamps;
-        this.lastValue = values[values.length - 1];
-        this.lastUpdate = timestamps[timestamps.length - 1];
-        this.listeners.forEach(l => l.values(this.id, values, timestamps));
-    }
-
-    /**
-     * Adds a value and timestamp to the item.
-     * 
-     * @param {*} value - The value to add.
-     * @param {number} timestamp - The timestamp of the value.
-     */
-    add_value(value, timestamp) {
-        this.values.push(value);
-        this.valueTimestamps.push(timestamp);
-        this.lastValue = value;
-        this.lastUpdate = timestamp;
-        this.listeners.forEach(l => l.new_value(this.id, value, timestamp));
-    }
-
-    /**
-     * Adds a listener to the item.
-     * 
-     * @param {ItemListener} listener - The listener to add.
-     */
-    add_listener(listener) {
-        this.listeners.add(listener);
-        listener.values(this.id, this.values, this.valueTimestamps);
-    }
-
-    /**
-     * Removes a listener from the item.
-     * 
-     * @param {ItemListener} listener - The listener to remove.
-     */
-    remove_listener(listener) {
-        this.listeners.delete(listener);
+    remove_solver(removed_solver_message) {
+        this.solvers.delete(removed_solver_message.id);
+        this.listeners.forEach(listener => listener.solver_removed(removed_solver_message.id));
     }
 }
 
@@ -427,16 +307,6 @@ export class Rule {
      */
     constructor(id, name, content) {
         this.id = id;
-        this.name = name;
-        this.content = content;
-    }
-
-    /**
-     * Updates the name and content of the rule.
-     * @param {string} name - The new name of the rule.
-     * @param {string} content - The new content of the rule.
-     */
-    update(name, content) {
         this.name = name;
         this.content = content;
     }
