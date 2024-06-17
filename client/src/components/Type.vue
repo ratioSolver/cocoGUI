@@ -30,7 +30,7 @@
 </template>
 
 <script setup>
-import { Type } from '@/item';
+import { Type } from '@/type';
 
 const props = defineProps({
   item_type: {

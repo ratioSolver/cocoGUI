@@ -1,7 +1,20 @@
+/**
+ * Represents a listener for solver events.
+ */
 export class SolverListener {
 
+    /**
+     * Sets the state of the solver.
+     *
+     * @param {any} state - The state to set.
+     */
     state(state) { }
 
+    /**
+     * Sets the graph data for the solver.
+     *
+     * @param {Graph} graph - The graph object.
+     */
     graph(graph) { }
     flaw_created(flaw) { }
     flaw_state_changed(flaw) { }

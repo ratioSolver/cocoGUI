@@ -177,12 +177,29 @@ export class Type {
     }
 }
 
+/**
+ * Represents an item listener.
+ */
 export class ItemListener {
 
     constructor() {
     }
 
+    /**
+     * Sets the values for an item.
+     *
+     * @param {string} item_id - The ID of the item.
+     * @param {Array} values - The values to set.
+     * @param {Array} timestamps - The timestamps for the values.
+     */
     values(item_id, values, timestamps) { }
+    /**
+     * Updates the value of an item.
+     *
+     * @param {string} item_id - The ID of the item.
+     * @param {any} value - The new value for the item.
+     * @param {number} timestamp - The timestamp of the update.
+     */
     new_value(item_id, value, timestamp) { }
 }
 
