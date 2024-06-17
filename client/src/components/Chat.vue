@@ -15,6 +15,8 @@
 </template>
 
 <script setup>
+import { ref, nextTick } from 'vue';
+
 const props = defineProps({
   messages: {
     type: Array,
@@ -27,7 +29,7 @@ const emit = defineEmits(['send']);
 const message = ref('');
 
 const send_message = () => {
-  emit('send', message);
+  emit('send', message.value);
   message.value = '';
   nextTick(() => {
     const chat_list = document.getElementById('chat-list');

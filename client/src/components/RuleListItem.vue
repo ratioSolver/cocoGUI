@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { Rule } from '@/solver';
+import { Rule } from '@/knowledge';
 
 defineProps({
   rule: {
