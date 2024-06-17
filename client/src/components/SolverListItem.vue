@@ -14,7 +14,7 @@ const props = defineProps({
 });
 
 const icon = computed(() => {
-  switch (props.solver.state) {
+  switch (props.solver.executor_state) {
     case 'reasoning':
     case 'adapting': return 'mdi-brain';
     case 'idle': return 'mdi-pause-circle';

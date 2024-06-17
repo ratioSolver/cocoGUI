@@ -24,10 +24,10 @@ export class SolverListener {
 
 export class Solver {
 
-    constructor(id, name, state) {
+    constructor(id, name, executor_state) {
         this.id = id;
         this.name = name;
-        this.state = state;
+        this.executor_state = executor_state;
 
         this.items = new Map();
         this.atoms = new Map();
@@ -48,15 +48,15 @@ export class Solver {
     }
 
     /**
-     * Handles the state change message.
+     * Sets the state of the solver based on the given state message.
      * 
-     * @param {Object} message - The state change message.
+     * @param {Object} state_message - The state message containing the updated state information.
      */
-    state_changed(message) {
-        this.items.clear(); if (message.items) for (const itm of message.items) this.items.set(parseInt(itm.id), itm);
-        this.atoms.clear(); if (message.atoms) for (const atm of message.atoms) this.atoms.set(parseInt(atm.id), atm);
+    set_state(state_message) {
+        this.items.clear(); if (state_message.items) for (const itm of state_message.items) this.items.set(parseInt(itm.id), itm);
+        this.atoms.clear(); if (state_message.atoms) for (const atm of state_message.atoms) this.atoms.set(parseInt(atm.id), atm);
 
-        this.exprs = this.exprs_to_map(message.exprs);
+        this.exprs = this.exprs_to_map(state_message.exprs);
         for (const itm of this.items.values())
             if (itm.exprs)
                 itm.exprs = this.exprs_to_map(itm.exprs);
@@ -70,27 +70,32 @@ export class Solver {
         this.horizon = horizon_var.num / horizon_var.den;
 
         this.timelines.clear();
-        if (message.timelines)
-            for (const tl of message.timelines)
+        if (state_message.timelines)
+            for (const tl of state_message.timelines)
                 this.timelines.set(tl.id, tl);
 
         this.executing_tasks.clear();
-        if (message.executing)
-            for (const atm of message.executing)
+        if (state_message.executing)
+            for (const atm of state_message.executing)
                 this.executing_tasks.add(this.atoms.get(atm));
 
-        this.current_time = message.time.num / message.time.den;
+        this.current_time = state_message.time.num / state_message.time.den;
 
         this.listeners.forEach(l => l.state(this));
     }
 
-    graph(message) {
+    /**
+     * Sets the graph data for the solver.
+     * 
+     * @param {Object} graph_message - The graph message containing the flaws and resolvers.
+     */
+    set_graph(graph_message) {
         this.flaws.clear();
         this.edges.clear();
         this.current_flaw = undefined;
         this.current_resolver = undefined;
 
-        for (const f of message.flaws) {
+        for (const f of graph_message.flaws) {
             const flaw = {
                 reasoner: this,
                 id: f.id,
@@ -106,7 +111,7 @@ export class Solver {
             this.flaws.set(flaw.id, flaw);
         }
 
-        for (const r of message.resolvers) {
+        for (const r of graph_message.resolvers) {
             const resolver = {
                 reasoner: this,
                 id: r.id,
@@ -123,11 +128,11 @@ export class Solver {
             this.resolvers.set(resolver.id, resolver);
         }
 
-        if (message.current_flaw) {
-            this.current_flaw = this.nodes.get(message.current_flaw);
+        if (graph_message.current_flaw) {
+            this.current_flaw = this.nodes.get(graph_message.current_flaw);
             this.current_flaw.current = true;
-            if (message.current_resolver) {
-                this.current_resolver = this.nodes.get(message.current_resolver);
+            if (graph_message.current_resolver) {
+                this.current_resolver = this.nodes.get(graph_message.current_resolver);
                 this.current_resolver.current = true;
             }
         }
@@ -135,16 +140,16 @@ export class Solver {
         this.listeners.forEach(l => l.graph(this));
     }
 
-    flaw_created(message) {
+    flaw_created(flaw_created_message) {
         const flaw = {
             reasoner: this,
-            id: message.id,
-            phi: message.phi,
-            causes: message.causes,
-            state: message.state,
-            cost: message.cost.num / message.cost.den,
+            id: flaw_created_message.id,
+            phi: flaw_created_message.phi,
+            causes: flaw_created_message.causes,
+            state: flaw_created_message.state,
+            cost: flaw_created_message.cost.num / flaw_created_message.cost.den,
             pos: { lb: 0 },
-            data: message.data
+            data: flaw_created_message.data
         };
         flaw.label = this.flaw_label(flaw);
         flaw.title = this.flaw_tooltip(flaw);
@@ -161,15 +166,15 @@ export class Solver {
         }
     }
 
-    flaw_state_changed(message) {
-        const flaw = this.flaws.get(message.id);
-        flaw.state = message.state;
+    flaw_state_changed(flaw_state_changed_message) {
+        const flaw = this.flaws.get(flaw_state_changed_message.id);
+        flaw.state = flaw_state_changed_message.state;
         this.listeners.forEach(l => l.flaw_state_changed(flaw));
     }
 
-    flaw_cost_changed(message) {
-        const flaw = this.flaws.get(message.id);
-        flaw.cost = message.cost.num / message.cost.den;
+    flaw_cost_changed(flaw_cost_changed_message) {
+        const flaw = this.flaws.get(flaw_cost_changed_message.id);
+        flaw.cost = flaw_cost_changed_message.cost.num / flaw_cost_changed_message.cost.den;
         flaw.title = this.flaw_tooltip(flaw);
         this.listeners.forEach(l => l.flaw_cost_changed(flaw));
 
@@ -184,19 +189,19 @@ export class Solver {
         }
     }
 
-    flaw_position_changed(message) {
-        const flaw = this.flaws.get(message.id);
-        flaw.pos = message.pos;
+    flaw_position_changed(flaw_position_changed_message) {
+        const flaw = this.flaws.get(flaw_position_changed_message.id);
+        flaw.pos = flaw_position_changed_message.pos;
         flaw.title = this.flaw_tooltip(flaw);
         this.listeners.forEach(l => l.flaw_position_changed(flaw));
     }
 
-    current_flaw_changed(message) {
+    current_flaw_changed(current_flaw_message) {
         if (this.current_flaw) {
             this.current_flaw.current = false;
             this.listeners.forEach(l => l.current_flaw_changed(this.current_flaw));
         }
-        this.current_flaw = this.flaws.get(message.id);
+        this.current_flaw = this.flaws.get(current_flaw_message.id);
         this.current_flaw.current = true;
         this.listeners.forEach(l => l.current_flaw_changed(this.current_flaw));
         if (this.current_resolver) {
@@ -206,16 +211,16 @@ export class Solver {
         this.current_resolver = undefined;
     }
 
-    resolver_created(message) {
+    resolver_created(resolver_created_message) {
         const resolver = {
             reasoner: this,
-            id: message.id,
-            rho: message.rho,
-            preconditions: message.preconditions,
-            flaw: message.flaw,
-            state: message.state,
-            intrinsic_cost: message.intrinsic_cost.num / message.intrinsic_cost.den,
-            data: message.data
+            id: resolver_created_message.id,
+            rho: resolver_created_message.rho,
+            preconditions: resolver_created_message.preconditions,
+            flaw: resolver_created_message.flaw,
+            state: resolver_created_message.state,
+            intrinsic_cost: resolver_created_message.intrinsic_cost.num / resolver_created_message.intrinsic_cost.den,
+            data: resolver_created_message.data
         };
         resolver.cost = this.estimate_cost(resolver);
         resolver.label = this.resolver_label(resolver);
@@ -224,27 +229,27 @@ export class Solver {
         this.listeners.forEach(l => l.resolver_created(resolver));
     }
 
-    resolver_state_changed(message) {
-        const resolver = this.resolvers.get(message.id);
-        resolver.state = message.state;
+    resolver_state_changed(resolver_state_changed_message) {
+        const resolver = this.resolvers.get(resolver_state_changed_message.id);
+        resolver.state = resolver_state_changed_message.state;
         resolver.cost = this.estimate_cost(resolver);
         resolver.title = this.resolver_tooltip(resolver);
         this.listeners.forEach(l => l.resolver_state_changed(resolver));
     }
 
-    current_resolver_changed(message) {
+    current_resolver_changed(current_resolver_changed_message) {
         if (this.current_resolver) {
             this.current_resolver.current = false;
             this.listeners.forEach(l => l.current_resolver_changed(this.current_resolver));
         }
-        this.current_resolver = this.resolvers.get(message.id);
+        this.current_resolver = this.resolvers.get(current_resolver_changed_message.id);
         this.current_resolver.current = true;
         this.listeners.forEach(l => l.current_resolver_changed(this.current_resolver));
     }
 
-    causal_link_added(message) {
-        const flaw = this.flaws.get(message.flaw_id);
-        const resolver = this.resolvers.get(message.resolver_id);
+    causal_link_added(causal_link_added_message) {
+        const flaw = this.flaws.get(causal_link_added_message.flaw_id);
+        const resolver = this.resolvers.get(causal_link_added_message.resolver_id);
         resolver.preconditions.push(flaw.id);
         flaw.causes.push(resolver.id);
         this.listeners.forEach(l => l.causal_link_added({ from: flaw, to: resolver }));
@@ -258,10 +263,10 @@ export class Solver {
         return (res.preconditions.length ? Math.max.apply(this, res.preconditions.map(f_id => this.nodes.get(f_id).cost)) : 0) + res.intrinsic_cost;
     }
 
-    executor_state_changed(message) {
-        this.state = message.state;
+    set_execution_state(message) {
+        this.executor_state = message.state;
 
-        switch (this.state) {
+        switch (this.executor_state) {
             case 'idle':
             case 'executing':
             case 'finished':
@@ -279,35 +284,35 @@ export class Solver {
         }
     }
 
-    tick(message) {
-        this.current_time = message.time.num / message.time.den;
+    tick(tick_message) {
+        this.current_time = tick_message.time.num / tick_message.time.den;
         this.listeners.forEach(l => l.tick(this.current_time));
     }
 
-    starting(message) {
+    starting(starting_message) {
         console.log('starting');
-        for (const atm of message.starting)
+        for (const atm of starting_message.starting)
             console.log(this.atom_content(this.atoms.get(atm)));
-        this.listeners.forEach(l => l.starting(message.starting.map(atm => this.atoms.get(atm))));
+        this.listeners.forEach(l => l.starting(starting_message.starting.map(atm => this.atoms.get(atm))));
     }
 
-    start(message) {
-        for (const atm of message.start)
+    start(start_message) {
+        for (const atm of start_message.start)
             this.executing_tasks.add(this.atoms.get(atm));
-        this.listeners.forEach(l => l.start(message.start.map(atm => this.atoms.get(atm))));
+        this.listeners.forEach(l => l.start(start_message.start.map(atm => this.atoms.get(atm))));
     }
 
-    ending(message) {
+    ending(ending_message) {
         console.log('ending');
-        for (const atm of message.ending)
+        for (const atm of ending_message.ending)
             console.log(this.atom_content(this.atoms.get(atm)));
-        this.listeners.forEach(l => l.ending(message.ending.map(atm => this.atoms.get(atm))));
+        this.listeners.forEach(l => l.ending(ending_message.ending.map(atm => this.atoms.get(atm))));
     }
 
-    end(message) {
-        for (const atm of message.end)
+    end(end_message) {
+        for (const atm of end_message.end)
             this.executing_tasks.delete(this.atoms.get(atm));
-        this.listeners.forEach(l => l.end(message.end.map(atm => this.atoms.get(atm))));
+        this.listeners.forEach(l => l.end(end_message.end.map(atm => this.atoms.get(atm))));
     }
 
     timeline_name(tl) { return tl.name; }
@@ -575,34 +580,4 @@ export class Solver {
      * @param {SolverListener} listener - The listener to remove.
      */
     remove_listener(listener) { this.listeners.delete(listener); }
-}
-
-/**
- * Represents a deliberative or a reactive rule.
- * @class
- */
-export class Rule {
-
-    /**
-     * Creates a new instance of the Rule class.
-     * @constructor
-     * @param {number} id - The ID of the rule.
-     * @param {string} name - The name of the rule.
-     * @param {string} content - The content of the rule.
-     */
-    constructor(id, name, content) {
-        this.id = id;
-        this.name = name;
-        this.content = content;
-    }
-
-    /**
-     * Updates the name and content of the rule.
-     * @param {string} name - The new name of the rule.
-     * @param {string} content - The new content of the rule.
-     */
-    update(name, content) {
-        this.name = name;
-        this.content = content;
-    }
 }
