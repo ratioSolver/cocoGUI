@@ -1,5 +1,5 @@
 <template>
-  <v-container :id='get_timelines_id(solver)' :style='{ height: solver.timelines.size * 200 + "px" }' eager />
+  <v-container :id='get_timelines_id(solver)' />
 </template>
 
 <script setup>

@@ -18,5 +18,15 @@ export const test_data = [
         type: 'reactive_rules', rules: [
             { id: "7", name: 'item_type', content: `(deftemplate item_type (slot id (type SYMBOL)) (slot name (type STRING)) (slot description (type STRING)) (multislot static_parameters) (multislot dynamic_parameters))` },
             { id: "8", name: 'item', content: `(deftemplate item (slot id (type SYMBOL)) (slot name (type STRING)) (slot description (type STRING)) (multislot parameters))` }]
+    },
+    {
+        "type": "new_solver",
+        "id": 93825042619632,
+        "name": "oRatio",
+        "state": "reasoning",
+        "time": {
+            "den": 1,
+            "num": 0
+        }
     }
 ];

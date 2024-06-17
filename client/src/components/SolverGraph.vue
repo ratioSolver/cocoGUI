@@ -1,10 +1,10 @@
 <template>
-  <v-container :id='get_graph_id(solver)' :style='{ height: 800 + "px" }' eager />
+  <v-container v-resize='on_resize' class="h-75" :id='get_graph_id(solver)' fluid />
 </template>
 
 <script setup>
 import { Solver, SolverListener } from '@/solver';
-import { onMounted, onUnmounted } from 'vue';
+import { nextTick, onUnmounted } from 'vue';
 import cytoscape from 'cytoscape';
 import dagre from 'cytoscape-dagre';
 import popper from 'cytoscape-popper';
@@ -94,8 +94,6 @@ class SolverListenerImpl extends SolverListener {
     });
 
     solver.add_listener(this);
-
-    this.cy.layout(this.layout).run();
   }
 
   graph(graph) {
@@ -170,15 +168,20 @@ class SolverListenerImpl extends SolverListener {
   }
 }
 
-onMounted(() => {
-  listener = new SolverListenerImpl(props.solver);
-});
-
 onUnmounted(() => {
   props.solver.remove_listener(listener);
   listener.cy.destroy();
   listener = null;
 });
+
+function on_resize() {
+  nextTick(() => {
+    if (listener)
+      listener.cy.resize();
+    else if (document.getElementById(get_graph_id(props.solver)).offsetWidth && document.getElementById(get_graph_id(props.solver)).offsetHeight)
+      listener = new SolverListenerImpl(props.solver);
+  });
+}
 </script>
 
 <script>
