@@ -38,11 +38,11 @@
           class="fill-height">
           <Type :item_type="type" />
         </v-window-item>
-        <v-window-item v-for="[id, rule] in knowledge.reactive_rules" :key="id" :value="rule"
+        <v-window-item v-for="[id, rule] in knowledge.reactive_rules" :key="id" :value="rule.id"
           class="fill-height">
           <ReactiveRule :rule="rule" />
         </v-window-item>
-        <v-window-item v-for="[id, rule] in knowledge.deliberative_rules" :key="id" :value="id"
+        <v-window-item v-for="[id, rule] in knowledge.deliberative_rules" :key="id" :value="rule.id"
           class="fill-height">
           <DeliberativeRule :rule="rule" />
         </v-window-item>
