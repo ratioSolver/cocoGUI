@@ -229,14 +229,14 @@ export class ItemListener {
      *
      * @param values - The values of the item.
      */
-    values(values: JSON[]): void { }
+    values(values: Record<string, any>[]): void { }
 
     /**
      * Adds a new value for an item.
      *
      * @param value - The value of the item.
      */
-    new_value(value: JSON): void { }
+    new_value(value: Record<string, any>): void { }
 }
 
 /**
@@ -248,8 +248,8 @@ export class Item {
     type: Type;
     name: string;
     description: string;
-    parameters: JSON[];
-    values: JSON[];
+    parameters: Record<string, any>;
+    values: Record<string, any>[];
     listeners: Set<ItemListener>;
 
     /**
@@ -261,7 +261,7 @@ export class Item {
      * @param description The description of the item.
      * @param parameters The parameters of the item.
      */
-    constructor(id: string, type: Type, name: string, description: string, parameters: JSON[]) {
+    constructor(id: string, type: Type, name: string, description: string, parameters: Record<string, any>) {
         this.id = id;
         this.type = type;
         this.name = name;
@@ -276,7 +276,7 @@ export class Item {
      * 
      * @param values The values of the item.
      */
-    set_values(values: JSON[]) {
+    set_values(values: Record<string, any>[]) {
         this.values = values;
         this.listeners.forEach(listener => listener.values(values));
     }
@@ -286,7 +286,7 @@ export class Item {
      * 
      * @param value The value of the item.
      */
-    add_value(value: JSON) {
+    add_value(value: Record<string, any>) {
         this.values.push(value);
         this.listeners.forEach(listener => listener.new_value(value));
     }

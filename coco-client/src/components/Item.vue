@@ -23,7 +23,7 @@
           </v-menu>
         </v-col>
         <v-col cols="2">
-          <v-btn @click="$emit('update', item.id, from_date, to_date)" color="primary" text>Update</v-btn>
+          <v-btn @click="$emit('update', item.id, from_date, to_date)" color="primary">Update</v-btn>
         </v-col>
       </v-row>
     </v-container>
@@ -40,7 +40,7 @@ defineProps<{ item: Item; }>();
 
 const emit = defineEmits<{
   (event: 'update', item_id: string, from_date: Date, to_date: Date): void;
-  (event: 'publish', item_id: string, publish: boolean): void;
+  (event: 'publish', item_id: string, data: JSON): void;
 }>();
 
 const from_menu = ref(false);
@@ -48,7 +48,7 @@ const from_date = ref(new Date(Date.now() - 1000 * 60 * 60 * 24 * 7));
 const to_menu = ref(false);
 const to_date = ref(new Date());
 
-function publish(item_id, publish) {
-  emit('publish', item_id, publish);
+function publish(item_id: string, data: JSON) {
+  emit('publish', item_id, data);
 }
 </script>
