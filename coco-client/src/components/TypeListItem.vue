@@ -4,7 +4,7 @@
 </template>
 
 <script setup lang="ts">
-import { Type } from '@/type';
+import { coco } from '@/type';
 
-defineProps<{ type: Type; }>();
+defineProps<{ type: coco.Type; }>();
 </script>

@@ -1,5 +1,5 @@
 import { Flaw, Resolver, State } from "./graph";
-import { Atom, Item, Value, Rational, AtomState, get_value, value_to_string } from "./value";
+import { ratio } from "./value";
 import { Timeline, TimelineValue, get_timeline } from "./timelines";
 
 /**
@@ -14,7 +14,7 @@ export class SolverListener {
      * 
      * @param state The new solver state.
      */
-    state(state: { items: Map<string, Item>, atoms: Map<string, Atom>, exprs: Map<string, Value>, timelines: Map<string, Timeline<TimelineValue>>, executing_tasks: Set<Atom>, time: Rational }): void { }
+    state(state: { items: Map<string, ratio.Item>, atoms: Map<string, ratio.Atom>, exprs: Map<string, ratio.Value>, timelines: Map<string, Timeline<TimelineValue>>, executing_tasks: Set<ratio.Atom>, time: ratio.Rational }): void { }
 
     /**
      * Notifies the listener that the solver graph has changed.
@@ -98,31 +98,31 @@ export class SolverListener {
      * 
      * @param time The new solver time.
      */
-    tick(time: Rational): void { }
+    tick(time: ratio.Rational): void { }
     /**
      * Notifies the listener that some tasks are starting.
      * 
      * @param tasks The tasks that are starting.
      */
-    starting(tasks: Set<Atom>): void { }
+    starting(tasks: Set<ratio.Atom>): void { }
     /**
      * Notifies the listener that some tasks are ending.
      * 
      * @param tasks The tasks that are ending.
      */
-    ending(tasks: Set<Atom>): void { }
+    ending(tasks: Set<ratio.Atom>): void { }
     /**
      * Notifies the listener that some tasks are executing.
      * 
      * @param tasks The tasks that are executing.
      */
-    start(tasks: Set<Atom>): void { }
+    start(tasks: Set<ratio.Atom>): void { }
     /**
      * Notifies the listener that some tasks are finishing.
      * 
      * @param tasks The tasks that are finishing.
      */
-    end(tasks: Set<Atom>): void { }
+    end(tasks: Set<ratio.Atom>): void { }
 }
 
 export enum SolverState {
@@ -140,12 +140,12 @@ export class Solver {
     name: string;
     state: SolverState;
 
-    items: Map<string, Item>;
-    atoms: Map<string, Atom>;
-    exprs: Map<string, Value>;
+    items: Map<string, ratio.Item>;
+    atoms: Map<string, ratio.Atom>;
+    exprs: Map<string, ratio.Value>;
     timelines: Map<string, Timeline<TimelineValue>>;
-    executing_tasks: Set<Atom>;
-    current_time: Rational = new Rational(0, 1);
+    executing_tasks: Set<ratio.Atom>;
+    current_time: ratio.Rational = new ratio.Rational(0, 1);
 
     flaws: Map<string, Flaw>;
     resolvers: Map<string, Resolver>;
@@ -178,17 +178,17 @@ export class Solver {
                 this.items.set(item.id, { id: item.id, type: item.type, name: item.name, exprs: new Map() });
             for (const item of state_message.items)
                 for (const expr of item.exprs)
-                    this.items.get(item.id)!.exprs.set(expr.id, get_value(expr, this.items));
+                    this.items.get(item.id)!.exprs.set(expr.id, ratio.get_value(expr, this.items));
         }
         if (state_message.atoms) {
             for (const atom of state_message.atoms)
-                this.atoms.set(atom.id, { id: atom.id, type: atom.type, name: atom.name, exprs: new Map(), is_fact: atom.is_fact, sigma: atom.sigma, state: AtomState[atom.state as keyof typeof AtomState] });
+                this.atoms.set(atom.id, { id: atom.id, type: atom.type, name: atom.name, exprs: new Map(), is_fact: atom.is_fact, sigma: atom.sigma, state: ratio.AtomState[atom.state as keyof typeof ratio.AtomState] });
             for (const atom of state_message.atoms)
                 for (const expr of atom.exprs)
-                    this.atoms.get(atom.id)!.exprs.set(expr.id, get_value(expr, this.items));
+                    this.atoms.get(atom.id)!.exprs.set(expr.id, ratio.get_value(expr, this.items));
         }
         for (const xpr of state_message.exprs)
-            this.exprs.set(xpr.id, get_value(xpr, this.items));
+            this.exprs.set(xpr.id, ratio.get_value(xpr, this.items));
 
         this.timelines.clear();
         if (state_message.timelines)
@@ -200,7 +200,7 @@ export class Solver {
             for (const task of state_message.executing_tasks)
                 this.executing_tasks.add(this.atoms.get(task)!);
 
-        this.current_time = new Rational(state_message.time.num, state_message.time.den);
+        this.current_time = new ratio.Rational(state_message.time.num, state_message.time.den);
 
         for (const listener of this.listeners)
             listener.state({ items: this.items, atoms: this.atoms, exprs: this.exprs, timelines: this.timelines, executing_tasks: this.executing_tasks, time: state_message.time });
@@ -315,27 +315,27 @@ export class Solver {
     }
 
     tick(tick_message: any): void {
-        this.current_time = new Rational(tick_message.time.num, tick_message.time.den);
+        this.current_time = new ratio.Rational(tick_message.time.num, tick_message.time.den);
         this.listeners.forEach(listener => listener.tick(tick_message.time));
     }
 
     starting(starting_message: any): void {
-        const tasks: Set<Atom> = new Set(starting_message.tasks.map((task: string) => this.atoms.get(task)!));
+        const tasks: Set<ratio.Atom> = new Set(starting_message.tasks.map((task: string) => this.atoms.get(task)!));
         this.listeners.forEach(listener => listener.starting(tasks));
     }
 
     ending(ending_message: any): void {
-        const tasks: Set<Atom> = new Set(ending_message.tasks.map((task: string) => this.atoms.get(task)!));
+        const tasks: Set<ratio.Atom> = new Set(ending_message.tasks.map((task: string) => this.atoms.get(task)!));
         this.listeners.forEach(listener => listener.ending(tasks));
     }
 
     start(start_message: any): void {
-        const tasks: Set<Atom> = new Set(start_message.tasks.map((task: string) => this.atoms.get(task)!));
+        const tasks: Set<ratio.Atom> = new Set(start_message.tasks.map((task: string) => this.atoms.get(task)!));
         this.listeners.forEach(listener => listener.start(tasks));
     }
 
     end(end_message: any): void {
-        const tasks: Set<Atom> = new Set(end_message.tasks.map((task: string) => this.atoms.get(task)!));
+        const tasks: Set<ratio.Atom> = new Set(end_message.tasks.map((task: string) => this.atoms.get(task)!));
         this.listeners.forEach(listener => listener.end(tasks));
     }
 
@@ -343,25 +343,25 @@ export class Solver {
         return tl.name;
     }
 
-    static item_title(itm: Item): string {
+    static item_title(itm: ratio.Item): string {
         return itm.type.split(":").pop() + '(' + Array.from(itm.exprs.keys()).join(', ') + ')';;
     }
 
-    static item_content(itm: Item): string {
+    static item_content(itm: ratio.Item): string {
         const pars = [];
         for (const [name, val] of itm.exprs)
-            pars.push('<br>' + name + ': ' + value_to_string(val));
+            pars.push('<br>' + name + ': ' + ratio.value_to_string(val));
         return itm.type + '(' + pars.join(',') + '<br>)';
     }
 
-    static atom_title(atm: Atom): string {
-        return atm.type.split(":").pop() + '(' + Array.from(atm.exprs.keys()).filter(par => par != 'start' && par != 'end' && par != 'duration' && par != 'tau' && par != 'this').map(par => value_to_string(atm.exprs.get(par)!)).join(', ') + ')';
+    static atom_title(atm: ratio.Atom): string {
+        return atm.type.split(":").pop() + '(' + Array.from(atm.exprs.keys()).filter(par => par != 'start' && par != 'end' && par != 'duration' && par != 'tau' && par != 'this').map(par => ratio.value_to_string(atm.exprs.get(par)!)).join(', ') + ')';
     }
 
-    static atom_content(atm: Atom): string {
+    static atom_content(atm: ratio.Atom): string {
         const pars = [];
         for (const [name, val] of atm.exprs)
-            pars.push('<br>' + name + ': ' + value_to_string(val));
+            pars.push('<br>' + name + ': ' + ratio.value_to_string(val));
         return '\u03C3' + atm.sigma + ' ' + atm.type + '(' + pars.join(',') + '<br>)';
     }
 

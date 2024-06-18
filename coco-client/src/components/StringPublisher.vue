@@ -3,10 +3,10 @@
 </template>
 
 <script setup lang="ts">
-import { StringParameter } from '@/type';
+import { coco } from '@/type';
 import { ref } from 'vue';
 
-const props = defineProps<{ name: string; par: StringParameter; value: boolean; }>();
+const props = defineProps<{ name: string; par: coco.StringParameter; value: boolean; }>();
 
 const value = ref(props.par.default_value);
 </script>

@@ -1,173 +1,176 @@
-export class Item {
+export namespace ratio {
 
-    id: string;
-    type: string;
-    name: string;
-    exprs: Map<string, Bool | Int | Real | Time | String | Enum | Item>;
+    export class Item {
 
-    constructor(id: string, type: string, name: string, exprs: Map<string, Bool | Int | Real | Time | String | Enum | Item>) {
-        this.id = id;
-        this.type = type;
-        this.name = name;
-        this.exprs = exprs;
+        id: string;
+        type: string;
+        name: string;
+        exprs: Map<string, Bool | Int | Real | Time | String | Enum | Item>;
+
+        constructor(id: string, type: string, name: string, exprs: Map<string, Bool | Int | Real | Time | String | Enum | Item>) {
+            this.id = id;
+            this.type = type;
+            this.name = name;
+            this.exprs = exprs;
+        }
     }
-}
 
-export enum AtomState {
-    Active,
-    Inactive,
-    Unified
-}
-
-export class Atom extends Item {
-
-    is_fact: boolean;
-    sigma: string;
-    state: AtomState;
-
-    constructor(id: string, type: string, name: string, exprs: Map<string, Bool | Int | Real | Time | String | Enum | Item>, is_fact: boolean, sigma: string, state: AtomState) {
-        super(id, type, name, exprs);
-        this.is_fact = is_fact;
-        this.sigma = sigma;
-        this.state = state;
+    export enum AtomState {
+        Active,
+        Inactive,
+        Unified
     }
-}
 
-export class Rational {
+    export class Atom extends Item {
 
-    num: number;
-    den: number;
+        is_fact: boolean;
+        sigma: string;
+        state: AtomState;
 
-    constructor(num: number, den: number) {
-        this.num = num;
-        this.den = den;
+        constructor(id: string, type: string, name: string, exprs: Map<string, Bool | Int | Real | Time | String | Enum | Item>, is_fact: boolean, sigma: string, state: AtomState) {
+            super(id, type, name, exprs);
+            this.is_fact = is_fact;
+            this.sigma = sigma;
+            this.state = state;
+        }
     }
-}
 
-export class InfRational extends Rational {
+    export class Rational {
 
-    inf: Rational;
+        num: number;
+        den: number;
 
-    constructor(num: number, den: number, inf: Rational) {
-        super(num, den);
-        this.inf = inf;
+        constructor(num: number, den: number) {
+            this.num = num;
+            this.den = den;
+        }
     }
-}
 
-export enum Lit {
+    export class InfRational extends Rational {
 
-    True,
-    False,
-    Undefined
-}
+        inf: Rational;
 
-export class Bool {
-
-    lit: string;
-    val: Lit;
-
-    constructor(lit: string, val: Lit) {
-        this.lit = lit;
-        this.val = val;
+        constructor(num: number, den: number, inf: Rational) {
+            super(num, den);
+            this.inf = inf;
+        }
     }
-}
 
-export class Int {
+    export enum Lit {
 
-    lin: string;
-    val: Rational;
-    lb?: Rational;
-    ub?: Rational;
-
-    constructor(lin: string, val: Rational, lb?: Rational, ub?: Rational) {
-        this.lin = lin;
-        this.val = val;
-        this.lb = lb;
-        this.ub = ub;
+        True,
+        False,
+        Undefined
     }
-}
 
-export class Real {
+    export class Bool {
 
-    lin: string;
-    val: Rational;
-    lb?: Rational;
-    ub?: Rational;
+        lit: string;
+        val: Lit;
 
-    constructor(lin: string, val: Rational, lb?: Rational, ub?: Rational) {
-        this.lin = lin;
-        this.val = val;
-        this.lb = lb;
-        this.ub = ub;
+        constructor(lit: string, val: Lit) {
+            this.lit = lit;
+            this.val = val;
+        }
     }
-}
 
-export class Time {
+    export class Int {
 
-    lin: string;
-    val: Rational;
-    lb?: Rational;
-    ub?: Rational;
+        lin: string;
+        val: Rational;
+        lb?: Rational;
+        ub?: Rational;
 
-    constructor(lin: string, val: Rational, lb?: Rational, ub?: Rational) {
-        this.lin = lin;
-        this.val = val;
-        this.lb = lb;
-        this.ub = ub;
+        constructor(lin: string, val: Rational, lb?: Rational, ub?: Rational) {
+            this.lin = lin;
+            this.val = val;
+            this.lb = lb;
+            this.ub = ub;
+        }
     }
-}
 
-export class String {
+    export class Real {
 
-    val: string;
+        lin: string;
+        val: Rational;
+        lb?: Rational;
+        ub?: Rational;
 
-    constructor(val: string) {
-        this.val = val;
+        constructor(lin: string, val: Rational, lb?: Rational, ub?: Rational) {
+            this.lin = lin;
+            this.val = val;
+            this.lb = lb;
+            this.ub = ub;
+        }
     }
-}
 
-export class Enum {
+    export class Time {
 
-    v: string;
-    vals: Item[];
+        lin: string;
+        val: Rational;
+        lb?: Rational;
+        ub?: Rational;
 
-    constructor(v: string, vals: Item[]) {
-        this.v = v;
-        this.vals = vals;
+        constructor(lin: string, val: Rational, lb?: Rational, ub?: Rational) {
+            this.lin = lin;
+            this.val = val;
+            this.lb = lb;
+            this.ub = ub;
+        }
     }
-}
 
-export type Value = Bool | Int | Real | Time | String | Enum | Item;
+    export class String {
 
-export function get_value(value: any, items: Map<string, Item>): Value {
-    switch (value.type) {
-        case "bool":
-            return { lit: value.lit, val: Lit[value.val as keyof typeof Lit] };
-        case "int":
-        case "real":
-        case "time":
-            return { lin: value.lin, val: { num: value.val.num, den: value.val.den }, lb: value.lb ? { num: value.lb.num, den: value.lb.den } : undefined, ub: value.ub ? { num: value.ub.num, den: value.ub.den } : undefined };
-        case "string":
-            return { val: value.val };
-        case "enum":
-            return { v: value.v, vals: value.vals.map((item: any) => items.get(item)) };
-        case "item":
-            return items.get(value.id)!;
-        default:
-            throw new Error(`Unknown evalueession type: ${value.type}`);
+        val: string;
+
+        constructor(val: string) {
+            this.val = val;
+        }
     }
-}
 
-export function value_to_string(value: Value): string {
-    if (value instanceof Bool) {
-        return value.val === Lit.True ? "true" : value.val === Lit.False ? "false" : "undefined";
-    } else if (value instanceof Int || value instanceof Real || value instanceof Time) {
-        return `${value.lin} = ${value.val.num}/${value.val.den}${value.lb ? ` [${value.lb.num}/${value.lb.den}, ${value.ub!.num}/${value.ub!.den}]` : ""}`;
-    } else if (value instanceof String) {
-        return `"${value.val}"`;
-    } else if (value instanceof Enum) {
-        return `${value.v} = ${value.vals.map((item: Item) => item.name).join(", ")}`;
-    } else {
-        return value.name;
+    export class Enum {
+
+        v: string;
+        vals: Item[];
+
+        constructor(v: string, vals: Item[]) {
+            this.v = v;
+            this.vals = vals;
+        }
+    }
+
+    export type Value = Bool | Int | Real | Time | String | Enum | Item;
+
+    export function get_value(value: any, items: Map<string, Item>): Value {
+        switch (value.type) {
+            case "bool":
+                return { lit: value.lit, val: Lit[value.val as keyof typeof Lit] };
+            case "int":
+            case "real":
+            case "time":
+                return { lin: value.lin, val: { num: value.val.num, den: value.val.den }, lb: value.lb ? { num: value.lb.num, den: value.lb.den } : undefined, ub: value.ub ? { num: value.ub.num, den: value.ub.den } : undefined };
+            case "string":
+                return { val: value.val };
+            case "enum":
+                return { v: value.v, vals: value.vals.map((item: any) => items.get(item)) };
+            case "item":
+                return items.get(value.id)!;
+            default:
+                throw new Error(`Unknown evalueession type: ${value.type}`);
+        }
+    }
+
+    export function value_to_string(value: Value): string {
+        if (value instanceof Bool) {
+            return value.val === Lit.True ? "true" : value.val === Lit.False ? "false" : "undefined";
+        } else if (value instanceof Int || value instanceof Real || value instanceof Time) {
+            return `${value.lin} = ${value.val.num}/${value.val.den}${value.lb ? ` [${value.lb.num}/${value.lb.den}, ${value.ub!.num}/${value.ub!.den}]` : ""}`;
+        } else if (value instanceof String) {
+            return `"${value.val}"`;
+        } else if (value instanceof Enum) {
+            return `${value.v} = ${value.vals.map((item: Item) => item.name).join(", ")}`;
+        } else {
+            return value.name;
+        }
     }
 }

@@ -7,10 +7,10 @@
 </template>
 
 <script setup lang="ts">
-import { RealParameter } from '@/type';
+import { coco } from '@/type';
 import { ref } from 'vue';
 
-const props = defineProps<{ name: string; par: RealParameter; value: number; }>();
+const props = defineProps<{ name: string; par: coco.RealParameter; value: number; }>();
 
 const value = ref(props.par.default_value);
 </script>

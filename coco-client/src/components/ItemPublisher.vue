@@ -11,15 +11,15 @@
         <tr v-for="[name, par] in item.type.dynamic_parameters" :key="name">
           <td>{{ name }}</td>
           <td>
-            <IntPublisher v-if="(par instanceof IntegerParameter)" :name="name" :par="par" :value="value[name]" />
-            <RealPublisher v-else-if="(par instanceof RealParameter)" :name="name" :par="par" :value="value[name]" />
-            <StringPublisher v-else-if="(par instanceof StringParameter)" :name="name" :par="par"
+            <IntPublisher v-if="(par instanceof coco.IntegerParameter)" :name="name" :par="par" :value="value[name]" />
+            <RealPublisher v-else-if="(par instanceof coco.RealParameter)" :name="name" :par="par" :value="value[name]" />
+            <StringPublisher v-else-if="(par instanceof coco.StringParameter)" :name="name" :par="par"
               :value="value[name]" />
-            <SingleSymbolPublisher v-else-if="(par instanceof SymbolParameter && !par.multiple)" :name="name" :par="par"
+            <SingleSymbolPublisher v-else-if="(par instanceof coco.SymbolParameter && !par.multiple)" :name="name" :par="par"
               :value="value[name]" />
-            <MultipleSymbolPublisher v-else-if="(par instanceof SymbolParameter && par.multiple)" :name="name"
+            <MultipleSymbolPublisher v-else-if="(par instanceof coco.SymbolParameter && par.multiple)" :name="name"
               :par="par" :value="value[name]" />
-            <BooleanPublisher v-else-if="(par instanceof BooleanParameter)" :name="name" :par="par"
+            <BooleanPublisher v-else-if="(par instanceof coco.BooleanParameter)" :name="name" :par="par"
               :value="value[name]" />
           </td>
         </tr>
@@ -30,10 +30,10 @@
 </template>
 
 <script setup lang="ts">
-import { BooleanParameter, RealParameter, IntegerParameter, StringParameter, SymbolParameter, Item } from '@/type';
+import { coco } from '@/type';
 import { reactive } from 'vue';
 
-const props = defineProps<{ item: Item; }>();
+const props = defineProps<{ item: coco.Item; }>();
 
 defineEmits<{ (event: 'publish', item_id: string, value: Record<string, any>): void; }>();
 

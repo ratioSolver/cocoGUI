@@ -8,10 +8,10 @@
 </template>
 
 <script setup lang="ts">
-import { IntegerParameter } from '@/type';
+import { coco } from '@/type';
 import { ref } from 'vue';
 
-const props = defineProps<{ name: string; par: IntegerParameter; value: number; }>();
+const props = defineProps<{ name: string; par: coco.IntegerParameter; value: number; }>();
 
 const value = ref(props.par.default_value);
 </script>

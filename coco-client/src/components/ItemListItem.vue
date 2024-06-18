@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { Item } from '@/type';
+import { coco } from '@/type';
 
-defineProps<{ item: Item; }>();
+defineProps<{ item: coco.Item; }>();
 </script>

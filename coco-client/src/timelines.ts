@@ -1,4 +1,4 @@
-import { Atom, Rational } from './value';
+import { ratio } from "./value";
 
 type Impulse = { at: Date };
 type Interval = { from: Date, to: Date };
@@ -17,7 +17,7 @@ export class Timeline<V extends TimelineValue> {
     }
 }
 
-type SolverTimelineValue = Atom & (Impulse | Interval);
+type SolverTimelineValue = ratio.Atom & (Impulse | Interval);
 
 export class SolverTimeline extends Timeline<SolverTimelineValue> {
 
@@ -26,7 +26,7 @@ export class SolverTimeline extends Timeline<SolverTimelineValue> {
     }
 }
 
-type AgentTimelineValue = Atom & (Impulse | Interval);
+type AgentTimelineValue = ratio.Atom & (Impulse | Interval);
 
 export class AgentTimeline extends Timeline<AgentTimelineValue> {
 
@@ -35,7 +35,7 @@ export class AgentTimeline extends Timeline<AgentTimelineValue> {
     }
 }
 
-type StateVariableTimelineValue = { atoms: Atom[] } & Interval;
+type StateVariableTimelineValue = { atoms: ratio.Atom[] } & Interval;
 
 export class StateVariableTimeline extends Timeline<StateVariableTimelineValue> {
 
@@ -44,33 +44,33 @@ export class StateVariableTimeline extends Timeline<StateVariableTimelineValue> 
     }
 }
 
-type ReusableResourceTimelineValue = { atoms: Atom[], amount: Rational } & Interval;
+type ReusableResourceTimelineValue = { atoms: ratio.Atom[], amount: ratio.Rational } & Interval;
 
 export class ReusableResourceTimeline extends Timeline<ReusableResourceTimelineValue> {
 
-    capacity: Rational;
+    capacity: ratio.Rational;
 
-    constructor(id: string, name: string, capacity: Rational, values: ReusableResourceTimelineValue[]) {
+    constructor(id: string, name: string, capacity: ratio.Rational, values: ReusableResourceTimelineValue[]) {
         super(id, name, values);
         this.capacity = capacity;
     }
 }
 
-type ConsumableResourceTimelineValue = { atoms: Atom[], start: Rational, end: Rational } & Interval;
+type ConsumableResourceTimelineValue = { atoms: ratio.Atom[], start: ratio.Rational, end: ratio.Rational } & Interval;
 
 export class ConsumableResourceTimeline extends Timeline<ConsumableResourceTimelineValue> {
 
-    capacity: Rational;
-    initial_amount: Rational;
+    capacity: ratio.Rational;
+    initial_amount: ratio.Rational;
 
-    constructor(id: string, name: string, capacity: Rational, initial_amount: Rational, values: ConsumableResourceTimelineValue[]) {
+    constructor(id: string, name: string, capacity: ratio.Rational, initial_amount: ratio.Rational, values: ConsumableResourceTimelineValue[]) {
         super(id, name, values);
         this.capacity = capacity;
         this.initial_amount = initial_amount;
     }
 }
 
-export function get_timeline(timeline: any, atoms: Map<string, Atom>): Timeline<TimelineValue> {
+export function get_timeline(timeline: any, atoms: Map<string, ratio.Atom>): Timeline<TimelineValue> {
     switch (timeline.type) {
         case "solver":
             return new SolverTimeline(timeline.id, timeline.name, timeline.values.map((value: any) => { if (value.at) return { at: new Date(value.at), ...atoms.get(value.atom) }; else return { from: new Date(value.from), to: new Date(value.to), ...atoms.get(value.atom) }; }));

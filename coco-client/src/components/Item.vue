@@ -34,9 +34,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Item } from '@/type';
+import { coco } from '@/type';
 
-defineProps<{ item: Item; }>();
+defineProps<{ item: coco.Item; }>();
 
 const emit = defineEmits<{
   (event: 'update', item_id: string, from_date: Date, to_date: Date): void;

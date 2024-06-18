@@ -33,7 +33,7 @@
 import { ref } from 'vue'
 import { useCoCoStore } from './store/coco';
 import { storeToRefs } from 'pinia';
-import { Item, Type } from './type';
+import { coco } from './type';
 
 const drawer = ref(false)
 const window_model = ref(['chat']);
@@ -46,10 +46,10 @@ function send_message(message: string) {
 </script>
 
 <script lang="ts">
-function sorted_types(types: Map<string, Type>) {
+function sorted_types(types: Map<string, coco.Type>) {
   return Array.from(types.entries()).sort((a, b) => a[1].name.localeCompare(b[1].name));
 }
-function sorted_items(items: Map<string, Item>) {
+function sorted_items(items: Map<string, coco.Item>) {
   return Array.from(items.entries()).sort((a, b) => a[1].name.localeCompare(b[1].name));
 }
 function lazy_load(item_id: string) {
