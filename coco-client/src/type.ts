@@ -166,6 +166,27 @@ export class GeometryParameter extends Parameter {
     }
 }
 
+export function get_parameter(parameter: any): Parameter {
+    switch (parameter.type) {
+        case "boolean":
+            return new BooleanParameter(parameter.name, parameter.default_value);
+        case "integer":
+            return new IntegerParameter(parameter.name, parameter.min, parameter.max, parameter.default_value);
+        case "real":
+            return new RealParameter(parameter.name, parameter.min, parameter.max, parameter.default_value);
+        case "string":
+            return new StringParameter(parameter.name, parameter.default_value);
+        case "symbol":
+            return new SymbolParameter(parameter.name, parameter.symbols, parameter.multiple, parameter.default_value);
+        case "array":
+            return new ArrayParameter(parameter.name, get_parameter(parameter.element_type), parameter.shape, parameter.default_value);
+        case "geometry":
+            return new GeometryParameter(parameter.name, parameter.default_value);
+        default:
+            throw new Error(`Unknown parameter type: ${parameter.type}`);
+    }
+}
+
 /**
  * Represents a type of item.
  */
@@ -174,8 +195,8 @@ export class Type {
     id: string;
     name: string;
     description: string;
-    static_parameters: Parameter[];
-    dynamic_parameters: Parameter[];
+    static_parameters: Map<string, Parameter>;
+    dynamic_parameters: Map<string, Parameter>;
 
     /**
      * Creates a new Type instance.
@@ -186,7 +207,7 @@ export class Type {
      * @param static_parameters The static parameters of the type.
      * @param dynamic_parameters The dynamic parameters of the type.
      */
-    constructor(id: string, name: string, description: string, static_parameters: Parameter[], dynamic_parameters: Parameter[]) {
+    constructor(id: string, name: string, description: string, static_parameters: Map<string, Parameter>, dynamic_parameters: Map<string, Parameter>) {
         this.id = id;
         this.name = name;
         this.description = description;

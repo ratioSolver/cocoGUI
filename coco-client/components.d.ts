@@ -8,5 +8,10 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Chat: typeof import('./src/components/Chat.vue')['default']
+    Item: typeof import('./src/components/Item.vue')['default']
+    ItemListItem: typeof import('./src/components/ItemListItem.vue')['default']
+    ItemPublisher: typeof import('./src/components/ItemPublisher.vue')['default']
+    Type: typeof import('./src/components/Type.vue')['default']
+    TypeListItem: typeof import('./src/components/TypeListItem.vue')['default']
   }
 }
