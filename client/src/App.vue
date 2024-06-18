@@ -30,16 +30,14 @@
         <v-window-item v-for="[id, solver] in knowledge.solvers" :key="id" :value="solver.id" class="fill-height" eager>
           <Solver :solver="solver" />
         </v-window-item>
-        <v-window-item v-for="[id, item] in knowledge.items" :key="id" :value="item.id"
-          class="fill-height" eager @group:selected="lazy_load(item.id)">
+        <v-window-item v-for="[id, item] in knowledge.items" :key="id" :value="item.id" class="fill-height" eager
+          @group:selected="lazy_load(item.id)">
           <Item :item="item" @update="useAppStore().load_data" @publish="useAppStore().publish_data" />
         </v-window-item>
-        <v-window-item v-for="[id, type] in knowledge.types" :key="id" :value="type.id"
-          class="fill-height">
+        <v-window-item v-for="[id, type] in knowledge.types" :key="id" :value="type.id" class="fill-height">
           <Type :item_type="type" />
         </v-window-item>
-        <v-window-item v-for="[id, rule] in knowledge.reactive_rules" :key="id" :value="rule.id"
-          class="fill-height">
+        <v-window-item v-for="[id, rule] in knowledge.reactive_rules" :key="id" :value="rule.id" class="fill-height">
           <ReactiveRule :rule="rule" />
         </v-window-item>
         <v-window-item v-for="[id, rule] in knowledge.deliberative_rules" :key="id" :value="rule.id"
