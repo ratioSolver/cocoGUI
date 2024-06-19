@@ -21,6 +21,7 @@ declare module 'vue' {
     RuleListItem: typeof import('./src/components/RuleListItem.vue')['default']
     SingleSymbolPublisher: typeof import('./src/components/SingleSymbolPublisher.vue')['default']
     Solver: typeof import('./src/components/Solver.vue')['default']
+    SolverGraph: typeof import('./src/components/SolverGraph.vue')['default']
     SolverListItem: typeof import('./src/components/SolverListItem.vue')['default']
     SolverTimelines: typeof import('./src/components/SolverTimelines.vue')['default']
     StringPublisher: typeof import('./src/components/StringPublisher.vue')['default']
