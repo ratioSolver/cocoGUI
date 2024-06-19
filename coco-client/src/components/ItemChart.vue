@@ -1,0 +1,148 @@
+<template>
+  <v-container fluid :id="get_data_id(item)" :style="{ height: item.type.dynamic_parameters.size * 200 + 'px' }" />
+</template>
+
+<script setup lang="ts">
+import { coco } from '@/type';
+import Plotly from 'plotly.js-dist-min';
+import chroma from 'chroma-js'
+import { onMounted, onUnmounted } from 'vue';
+
+const props = defineProps<{ item: coco.Item; }>();
+
+const get_data_id = (item: coco.Item) => 'itm-' + item.id + '-data';
+
+class ItemChart extends coco.ItemListener {
+
+  vals_xs: Date[];
+  vals_ys: Map<string, Record<string, any>[]>;
+  y_axes: Map<string, string>;
+  traces: Map<string, any[]>;
+  private layout: any;
+  private config: any;
+  colors: Map<string, Map<string, string>>;
+
+  constructor(item: coco.Item) {
+    super();
+
+    this.vals_xs = [];
+    this.vals_ys = new Map();
+    this.y_axes = new Map();
+    this.traces = new Map();
+    this.layout = { autosize: true, xaxis: { title: 'Time', type: 'date' }, showlegend: false };
+    this.config = { responsive: true };
+    this.colors = new Map();
+  }
+
+  values(values: Record<string, any>[]): void {
+    for (const par_name of props.item.type.dynamic_parameters.keys())
+      this.vals_ys.set(par_name, []);
+
+    for (const val of values) {
+      this.vals_xs.push(new Date(val.timestamp));
+      for (const [par_name, par] of props.item.type.dynamic_parameters)
+        if (val.hasOwnProperty(par_name))
+          this.vals_ys.get(par_name)!.push(val[par_name]);
+        else if (this.vals_ys.get(par_name)!.length > 0)
+          this.vals_ys.get(par_name)!.push(this.vals_ys.get(par_name)![this.vals_ys.get(par_name)!.length - 1]);
+        else
+          this.vals_ys.get(par_name)!.push(par.default_value);
+    }
+
+    let i = 1;
+    let start_domain = 0;
+    const domain_size = 1 / props.item.type.dynamic_parameters.size;
+    const domain_separator = 0.05 * domain_size;
+    for (const [par_name, par] of props.item.type.dynamic_parameters) {
+      if (par instanceof coco.RealParameter || par instanceof coco.IntegerParameter) {
+        if (i == 1) {
+          this.y_axes.set(par_name, 'y');
+          this.traces.set(par_name, [{ x: this.vals_xs, y: this.vals_ys.get(par_name), name: par_name, type: 'scatter', yaxis: this.y_axes.get(par_name) }]);
+          this.layout['yaxis'] = { title: par_name, domain: [start_domain + domain_separator, start_domain + domain_size - domain_separator], zeroline: false, range: [par.min, par.max] };
+        }
+        else {
+          this.y_axes.set(par_name, 'y' + i);
+          this.traces.set(par_name, [{ x: this.vals_xs, y: this.vals_ys.get(par_name), name: par_name, type: 'scatter', yaxis: this.y_axes.get(par_name) }]);
+          this.layout['yaxis' + i] = { title: par_name, domain: [start_domain + domain_separator, start_domain + domain_size - domain_separator], zeroline: false, range: [par.min, par.max] };
+        }
+      }
+      else if (par instanceof coco.BooleanParameter || par instanceof coco.StringParameter || par instanceof coco.SymbolParameter) {
+        this.traces.set(par_name, []);
+        let c_colors: Map<string, string> = new Map();
+        if (par instanceof coco.BooleanParameter) {
+          c_colors.set('true', '#00ff00');
+          c_colors.set('false', '#ff0000');
+          this.colors.set(par_name, c_colors);
+        } else if (par instanceof coco.SymbolParameter && par.symbols) {
+          const color_scale = chroma.scale(['#ff0000', '#00ff00']).mode('lch').colors(par.symbols.length);
+          for (let j = 0; j < par.symbols.length; j++)
+            c_colors.set(par.symbols[j], color_scale[j]);
+          this.colors.set(par_name, c_colors);
+        }
+
+        if (i == 1) {
+          this.y_axes.set(par_name, 'y');
+          this.layout['yaxis'] = { title: par_name, domain: [start_domain + domain_separator, start_domain + domain_size - domain_separator], zeroline: false, showticklabels: false, showgrid: false };
+        }
+        else {
+          this.y_axes.set(par_name, 'y' + i);
+          this.layout['yaxis' + i] = { title: par_name, domain: [start_domain + domain_separator, start_domain + domain_size - domain_separator], zeroline: false, showticklabels: false, showgrid: false };
+        }
+
+        for (let j = 0; j < this.vals_ys.get(par_name)!.length; j++) {
+          if (j > 0)
+            this.traces.get(par_name)![this.traces.get(par_name)!.length - 1].x[1] = this.vals_xs[j];
+          if (j == 0 || String(this.vals_ys.get(par_name)![j]) != this.traces.get(par_name)![this.traces.get(par_name)!.length - 1].name) {
+            let trace = { x: [this.vals_xs[j], this.vals_xs[j]], y: [1, 1], name: String(this.vals_ys.get(par_name)![j]), type: 'scatter', opacity: 0.7, mode: 'lines', line: { width: 30, color: undefined as string | undefined }, yaxis: this.y_axes.get(par_name) };
+            if ((par instanceof coco.BooleanParameter || par instanceof coco.SymbolParameter) && c_colors.has(String(this.vals_ys.get(par_name)![j])))
+              trace.line.color = c_colors.get(String(this.vals_ys.get(par_name)![j]));
+            this.traces.get(par_name)!.push(trace);
+          }
+        }
+      }
+
+      start_domain += domain_size;
+      i++;
+    }
+  }
+
+  new_value(value: Record<string, any>): void {
+    this.vals_xs.push(new Date(value.timestamp));
+    for (const [par_name, par] of props.item.type.dynamic_parameters) {
+      let c_value;
+      if (value.hasOwnProperty(par_name))
+        c_value = value[par_name];
+      else if (this.vals_ys.get(par_name)!.length > 0)
+        c_value = this.vals_ys.get(par_name)![this.vals_ys.get(par_name)!.length - 1];
+      else
+        c_value = par.default_value;
+      if (par instanceof coco.RealParameter || par instanceof coco.IntegerParameter)
+        this.traces.get(par_name)![0].y.push(c_value);
+      else if (par instanceof coco.BooleanParameter || par instanceof coco.StringParameter || par instanceof coco.SymbolParameter) {
+        if (this.traces.get(par_name)!.length > 0)
+          this.traces.get(par_name)![this.traces.get(par_name)!.length - 1].x[1] = value.timestamp;
+        if (this.traces.get(par_name)!.length == 0 || String(c_value) != this.traces.get(par_name)![this.traces.get(par_name)!.length - 1].name) {
+          let trace = { x: [value.timestamp, value.timestamp], y: [1, 1], name: String(c_value), type: 'scatter', opacity: 0.7, mode: 'lines', line: { width: 30, color: undefined as string | undefined }, yaxis: this.y_axes.get(par_name) };
+          if (par instanceof coco.BooleanParameter || (par instanceof coco.SymbolParameter && this.colors.has(par_name)))
+            trace.line.color = this.colors.get(par_name)!.get(String(c_value));
+          this.traces.get(par_name)!.push(trace);
+        }
+      }
+    }
+    this.layout.datarevision = value.timestamp;
+    Plotly.react(get_data_id(props.item), Array.from(this.traces.values()).flat(), this.layout, this.config);
+  }
+}
+
+let item_chart: ItemChart | null = null
+
+onMounted(() => {
+  item_chart = new ItemChart(props.item);
+});
+
+onUnmounted(() => {
+  props.item.remove_listener(item_chart!);
+  Plotly.purge(get_data_id(props.item));
+  item_chart = null;
+});
+</script>

@@ -11,6 +11,7 @@ declare module 'vue' {
     Chat: typeof import('./src/components/Chat.vue')['default']
     IntPublisher: typeof import('./src/components/IntPublisher.vue')['default']
     Item: typeof import('./src/components/Item.vue')['default']
+    ItemChart: typeof import('./src/components/ItemChart.vue')['default']
     ItemListItem: typeof import('./src/components/ItemListItem.vue')['default']
     ItemPublisher: typeof import('./src/components/ItemPublisher.vue')['default']
     MultipleSymbolPublisher: typeof import('./src/components/MultipleSymbolPublisher.vue')['default']
