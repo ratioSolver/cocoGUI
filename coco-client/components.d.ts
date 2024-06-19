@@ -18,6 +18,7 @@ declare module 'vue' {
     RealPublisher: typeof import('./src/components/RealPublisher.vue')['default']
     SingleSymbolPublisher: typeof import('./src/components/SingleSymbolPublisher.vue')['default']
     StringPublisher: typeof import('./src/components/StringPublisher.vue')['default']
+    TaxonomyGraph: typeof import('./src/components/TaxonomyGraph.vue')['default']
     Type: typeof import('./src/components/Type.vue')['default']
     TypeListItem: typeof import('./src/components/TypeListItem.vue')['default']
   }

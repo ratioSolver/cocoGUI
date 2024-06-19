@@ -3,6 +3,7 @@
     <v-navigation-drawer v-model="drawer">
       <v-list dense v-model:selected="window_model">
         <v-list-item value="chat" title="Chat" prepend-icon="mdi-message-text-outline" />
+        <v-list-item v-if="knowledge.types.size > 0" value="taxonomy" title="Taxonomy" prepend-icon="mdi-chart-arc" />
         <v-list-subheader v-if="knowledge.types.size > 0" inset>Types</v-list-subheader>
         <TypeListItem v-for="[id, type] in sorted_types(knowledge.types)" :key="id" :type="type" />
         <v-list-subheader v-if="knowledge.items.size > 0" inset>Items</v-list-subheader>
@@ -18,6 +19,9 @@
       <v-window v-model="window_model" class="fill-height">
         <v-window-item value="chat" class="fill-height">
           <Chat :messages="messages" @send="send_message" />
+        </v-window-item>
+        <v-window-item value="taxonomy" class="fill-height">
+          <TaxonomyGraph :knowledge="knowledge" />
         </v-window-item>
         <v-window-item v-for="[id, type] in knowledge.types" :key="id" :value="type.id" class="fill-height">
           <Type :type="type" />
