@@ -1,11 +1,13 @@
 <template>
   <v-app>
     <v-navigation-drawer v-model="drawer">
-      <v-list-item value="chat" title="Chat" prepend-icon="mdi-message-text-outline" />
-      <v-list-subheader v-if="knowledge.types.size > 0" inset>Types</v-list-subheader>
-      <TypeListItem v-for="[id, type] in sorted_types(knowledge.types)" :key="id" :type="type" />
-      <v-list-subheader v-if="knowledge.items.size > 0" inset>Items</v-list-subheader>
-      <ItemListItem v-for="[id, item] in sorted_items(knowledge.items)" :key="id" :item="item" />
+      <v-list dense v-model:selected="window_model">
+        <v-list-item value="chat" title="Chat" prepend-icon="mdi-message-text-outline" />
+        <v-list-subheader v-if="knowledge.types.size > 0" inset>Types</v-list-subheader>
+        <TypeListItem v-for="[id, type] in sorted_types(knowledge.types)" :key="id" :type="type" />
+        <v-list-subheader v-if="knowledge.items.size > 0" inset>Items</v-list-subheader>
+        <ItemListItem v-for="[id, item] in sorted_items(knowledge.items)" :key="id" :item="item" />
+      </v-list>
     </v-navigation-drawer>
     <v-app-bar>
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
@@ -18,7 +20,7 @@
           <Chat :messages="messages" @send="send_message" />
         </v-window-item>
         <v-window-item v-for="[id, type] in knowledge.types" :key="id" :value="type.id" class="fill-height">
-          <Type :item_type="type" />
+          <Type :type="type" />
         </v-window-item>
         <v-window-item v-for="[id, item] in knowledge.items" :key="id" :value="item.id" class="fill-height" eager
           @group:selected="lazy_load(item.id)">
