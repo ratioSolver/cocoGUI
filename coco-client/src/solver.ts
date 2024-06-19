@@ -126,12 +126,12 @@ export class SolverListener {
 }
 
 export enum SolverState {
-    Reasoning,
-    Idle,
-    Adapting,
-    Executing,
-    Finished,
-    Failed
+    reasoning,
+    idle,
+    adapting,
+    executing,
+    finished,
+    failed
 }
 
 export class Solver {
@@ -297,10 +297,10 @@ export class Solver {
         this.state = SolverState[message.state as keyof typeof SolverState];
         this.listeners.forEach(listener => listener.executor_state_changed(this.state));
         switch (this.state) {
-            case SolverState.Idle:
-            case SolverState.Executing:
-            case SolverState.Finished:
-            case SolverState.Failed:
+            case SolverState.idle:
+            case SolverState.executing:
+            case SolverState.finished:
+            case SolverState.failed:
                 if (this.current_resolver) {
                     const old_resolver = this.current_resolver;
                     this.current_resolver = undefined;
@@ -337,32 +337,6 @@ export class Solver {
     end(end_message: any): void {
         const tasks: Set<ratio.Atom> = new Set(end_message.tasks.map((task: string) => this.atoms.get(task)!));
         this.listeners.forEach(listener => listener.end(tasks));
-    }
-
-    static timeline_name(tl: Timeline<any>): string {
-        return tl.name;
-    }
-
-    static item_title(itm: ratio.Item): string {
-        return itm.type.split(":").pop() + '(' + Array.from(itm.exprs.keys()).join(', ') + ')';;
-    }
-
-    static item_content(itm: ratio.Item): string {
-        const pars = [];
-        for (const [name, val] of itm.exprs)
-            pars.push('<br>' + name + ': ' + ratio.value_to_string(val));
-        return itm.type + '(' + pars.join(',') + '<br>)';
-    }
-
-    static atom_title(atm: ratio.Atom): string {
-        return atm.type.split(":").pop() + '(' + Array.from(atm.exprs.keys()).filter(par => par != 'start' && par != 'end' && par != 'duration' && par != 'tau' && par != 'this').map(par => ratio.value_to_string(atm.exprs.get(par)!)).join(', ') + ')';
-    }
-
-    static atom_content(atm: ratio.Atom): string {
-        const pars = [];
-        for (const [name, val] of atm.exprs)
-            pars.push('<br>' + name + ': ' + ratio.value_to_string(val));
-        return '\u03C3' + atm.sigma + ' ' + atm.type + '(' + pars.join(',') + '<br>)';
     }
 
     add_listener(listener: SolverListener): void {

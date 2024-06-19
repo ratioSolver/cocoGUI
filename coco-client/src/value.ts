@@ -1,5 +1,38 @@
 export namespace ratio {
 
+    export class Rational {
+
+        num: number;
+        den: number;
+
+        constructor(num: number, den: number) {
+            this.num = num;
+            this.den = den;
+        }
+
+        to_number(): number {
+            return this.num / this.den;
+        }
+    }
+
+    export class InfRational extends Rational {
+
+        inf: Rational;
+
+        constructor(num: number, den: number, inf: Rational = new Rational(0, 1)) {
+            super(num, den);
+            this.inf = inf;
+        }
+    }
+
+    export function get_rational(val: any): Rational {
+        return new Rational(val.num, val.den);
+    }
+
+    export function get_inf_rational(val: any): InfRational {
+        return new InfRational(val.num, val.den, val.inf ? get_rational(val.inf) : new Rational(0, 1));
+    }
+
     export class Item {
 
         id: string;
@@ -12,6 +45,17 @@ export namespace ratio {
             this.type = type;
             this.name = name;
             this.exprs = exprs;
+        }
+
+        static item_title(itm: Item): string {
+            return itm.type.split(":").pop() + '(' + Array.from(itm.exprs.keys()).join(', ') + ')';;
+        }
+
+        static item_content(itm: Item): string {
+            const pars = [];
+            for (const [name, val] of itm.exprs)
+                pars.push('<br>' + name + ': ' + value_to_string(val));
+            return itm.type + '(' + pars.join(',') + '<br>)';
         }
     }
 
@@ -33,26 +77,16 @@ export namespace ratio {
             this.sigma = sigma;
             this.state = state;
         }
-    }
 
-    export class Rational {
-
-        num: number;
-        den: number;
-
-        constructor(num: number, den: number) {
-            this.num = num;
-            this.den = den;
+        static atom_title(atm: Atom): string {
+            return atm.type.split(":").pop() + '(' + Array.from(atm.exprs.keys()).filter(par => par != 'start' && par != 'end' && par != 'duration' && par != 'tau' && par != 'this').map(par => value_to_string(atm.exprs.get(par)!)).join(', ') + ')';
         }
-    }
 
-    export class InfRational extends Rational {
-
-        inf: Rational;
-
-        constructor(num: number, den: number, inf: Rational) {
-            super(num, den);
-            this.inf = inf;
+        static atom_content(atm: Atom): string {
+            const pars = [];
+            for (const [name, val] of atm.exprs)
+                pars.push('<br>' + name + ': ' + value_to_string(val));
+            return '\u03C3' + atm.sigma + ' ' + atm.type + '(' + pars.join(',') + '<br>)';
         }
     }
 
@@ -77,11 +111,11 @@ export namespace ratio {
     export class Int {
 
         lin: string;
-        val: Rational;
-        lb?: Rational;
-        ub?: Rational;
+        val: InfRational;
+        lb?: InfRational;
+        ub?: InfRational;
 
-        constructor(lin: string, val: Rational, lb?: Rational, ub?: Rational) {
+        constructor(lin: string, val: InfRational, lb?: InfRational, ub?: InfRational) {
             this.lin = lin;
             this.val = val;
             this.lb = lb;
@@ -92,11 +126,11 @@ export namespace ratio {
     export class Real {
 
         lin: string;
-        val: Rational;
-        lb?: Rational;
-        ub?: Rational;
+        val: InfRational;
+        lb?: InfRational;
+        ub?: InfRational;
 
-        constructor(lin: string, val: Rational, lb?: Rational, ub?: Rational) {
+        constructor(lin: string, val: InfRational, lb?: InfRational, ub?: InfRational) {
             this.lin = lin;
             this.val = val;
             this.lb = lb;
@@ -107,11 +141,11 @@ export namespace ratio {
     export class Time {
 
         lin: string;
-        val: Rational;
-        lb?: Rational;
-        ub?: Rational;
+        val: InfRational;
+        lb?: InfRational;
+        ub?: InfRational;
 
-        constructor(lin: string, val: Rational, lb?: Rational, ub?: Rational) {
+        constructor(lin: string, val: InfRational, lb?: InfRational, ub?: InfRational) {
             this.lin = lin;
             this.val = val;
             this.lb = lb;
@@ -148,7 +182,7 @@ export namespace ratio {
             case "int":
             case "real":
             case "time":
-                return { lin: value.lin, val: { num: value.val.num, den: value.val.den }, lb: value.lb ? { num: value.lb.num, den: value.lb.den } : undefined, ub: value.ub ? { num: value.ub.num, den: value.ub.den } : undefined };
+                return { lin: value.lin, val: get_inf_rational(value.val), lb: value.lb ? get_inf_rational(value.lb) : new InfRational(-1, 0), ub: value.ub ? get_inf_rational(value.ub) : new InfRational(1, 0) };
             case "string":
                 return { val: value.val };
             case "enum":

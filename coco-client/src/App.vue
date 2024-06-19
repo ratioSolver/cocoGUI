@@ -4,6 +4,8 @@
       <v-list dense v-model:selected="window_model">
         <v-list-item value="chat" title="Chat" prepend-icon="mdi-message-text-outline" />
         <v-list-item v-if="knowledge.types.size > 0" value="taxonomy" title="Taxonomy" prepend-icon="mdi-chart-arc" />
+        <v-list-subheader v-if="knowledge.solvers.size > 0" inset>Solvers</v-list-subheader>
+        <SolverListItem v-for="[id, solver] in knowledge.solvers" :key="id" :solver="solver" />
         <v-list-subheader v-if="knowledge.types.size > 0" inset>Types</v-list-subheader>
         <TypeListItem v-for="[id, type] in sorted_types(knowledge.types)" :key="id" :type="type" />
         <v-list-subheader v-if="knowledge.reactive_rules.size > 0" inset>Reactive Rules</v-list-subheader>
@@ -29,6 +31,9 @@
         </v-window-item>
         <v-window-item v-for="[id, type] in knowledge.types" :key="id" :value="type.id" class="fill-height">
           <Type :type="type" />
+        </v-window-item>
+        <v-window-item v-for="[id, solver] in knowledge.solvers" :key="id" :value="solver.id" class="fill-height" eager>
+          <Solver :solver="solver" />
         </v-window-item>
         <v-window-item v-for="[id, item] in knowledge.items" :key="id" :value="item.id" class="fill-height" eager
           @group:selected="lazy_load(item.id)">

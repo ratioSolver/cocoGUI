@@ -16,22 +16,22 @@ cytoscape.use(dagre);
 
 let listener: TypeListener | null = null;
 
-const layout = {
-  name: 'dagre',
-  fit: false,
-  nodeDimensionsIncludeLabels: true
-};
-
 class TypeListener extends KnowledgeListener {
 
   cy: cytoscape.Core;
+  layout = {
+    name: 'dagre',
+    fit: false,
+    nodeDimensionsIncludeLabels: true
+  };
+
 
   constructor(knowledge: Knowledge) {
     super();
 
     this.cy = cytoscape({
       container: document.getElementById('taxonomy-graph'),
-      layout: layout,
+      layout: this.layout,
       style: [
         {
           selector: 'node',
@@ -62,18 +62,18 @@ class TypeListener extends KnowledgeListener {
   types(types: coco.Type[]) {
     for (const type of types.values())
       this.cy.add({ group: 'nodes', data: { id: type.id, name: type.name } });
-    this.cy.layout(layout).run();
+    this.cy.layout(this.layout).run();
   }
   type_added(type: coco.Type) {
     this.cy.add({ group: 'nodes', data: { id: type.id, name: type.name } });
-    this.cy.layout(layout).run();
+    this.cy.layout(this.layout).run();
   }
   type_updated(type: coco.Type) {
     this.cy.$id(type.id).data('name', type.name);
   }
   type_removed(id: string) {
     this.cy.$id(id).remove();
-    this.cy.layout(layout).run();
+    this.cy.layout(this.layout).run();
   }
 }
 
