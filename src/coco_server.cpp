@@ -49,7 +49,7 @@ namespace coco
         LOG_DEBUG("Connected clients: " + std::to_string(clients.size()));
 
         // we send the types
-        ws.send(make_types_message(*this).dump());
+        ws.send(make_taxonomy_message(*this).dump());
 
         // we send the items
         ws.send(make_items_message(*this).dump());

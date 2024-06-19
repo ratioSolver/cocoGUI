@@ -89,7 +89,7 @@ namespace coco
       ratio::time_value_schema,
       ratio::string_value_schema,
       ratio::enum_value_schema,
-      ratio::object_value_schema,
+      ratio::item_value_schema,
       ratio::item_schema,
       ratio::atom_schema,
       ratio::solver_state_schema,
