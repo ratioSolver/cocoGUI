@@ -84,8 +84,8 @@ export class Knowledge {
 
     update_knowledge(message: any): boolean {
         switch (message.type) {
-            case 'types':
-                this.set_types(message.types);
+            case 'taxonomy':
+                this.set_taxonomy(message);
                 return true;
             case 'new_type':
                 this.add_type(message);
@@ -197,9 +197,9 @@ export class Knowledge {
         }
     }
 
-    set_types(types_message: any): void {
+    set_taxonomy(taxonomy_message: any): void {
         this.types.clear();
-        for (let type_message of types_message) {
+        for (let type_message of taxonomy_message.types) {
             const static_parameters = type_message.static_parameters.map((parameter_message: any) => coco.get_parameter(parameter_message));
             const dynamic_parameters = type_message.dynamic_parameters.map((parameter_message: any) => coco.get_parameter(parameter_message));
             const type = new coco.Type(type_message.id, type_message.name, type_message.description, static_parameters, dynamic_parameters);

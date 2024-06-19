@@ -15,42 +15,37 @@ const get_timelines_id = (solver: Solver) => 'slv-' + solver.id + '-timelines';
 
 class TimelinesListener extends SolverListener {
 
+  solver: Solver;
   y_axes: Map<string, string>;
   traces: Map<string, any[]>;
-  private layout: any;
-  private config: any;
-  origin: number;
-  horizon: number;
+  private layout = {
+    autosize: true,
+    xaxis: { title: 'Time' },
+    showlegend: false,
+    shapes: [
+      {
+        type: 'line',
+        x0: 0,
+        y0: 0,
+        x1: 0,
+        y1: 1,
+        xref: 'x',
+        yref: 'paper',
+        line: {
+          color: 'darkgrey',
+          width: 2
+        }
+      }
+    ]
+  } as any;
+  private config = { responsive: true };
 
   constructor(solver: Solver) {
     super();
-    this.origin = (solver.exprs.get('origin') as ratio.Real).val.to_number();
-    this.horizon = (solver.exprs.get('horizon') as ratio.Real).val.to_number();
 
+    this.solver = solver;
     this.y_axes = new Map();
     this.traces = new Map();
-
-    this.layout = {
-      autosize: true,
-      xaxis: { title: 'Time' },
-      showlegend: false,
-      shapes: [
-        {
-          type: 'line',
-          x0: this.origin,
-          y0: 0,
-          x1: this.origin,
-          y1: 1,
-          xref: 'x',
-          yref: 'paper',
-          line: {
-            color: 'darkgrey',
-            width: 2
-          }
-        }
-      ]
-    };
-    this.config = { responsive: true };
 
     solver.add_listener(this);
   }
@@ -61,8 +56,8 @@ class TimelinesListener extends SolverListener {
   }
 
   tick(time: ratio.Rational): void {
-    this.layout.shapes[0].x0 = time;
-    this.layout.shapes[0].x1 = time;
+    this.layout.shapes[0].x0 = time.to_number();
+    this.layout.shapes[0].x1 = time.to_number();
     this.layout.datarevision = Date.now();
     Plotly.relayout(get_timelines_id(props.solver), this.layout);
   }
@@ -74,6 +69,9 @@ class TimelinesListener extends SolverListener {
     this.traces.clear();
     if (timelines.size == 0)
       return;
+
+    const origin = (this.solver.exprs.get('origin') as ratio.Real).val.to_number();
+    const horizon = (this.solver.exprs.get('horizon') as ratio.Real).val.to_number();
 
     let domain_size = 1 / timelines.size;
     const domain_separator = 0.05 * domain_size;
@@ -126,7 +124,7 @@ class TimelinesListener extends SolverListener {
       }
 
       if (tl instanceof ReusableResourceTimeline) {
-        const vals_xs = [this.origin];
+        const vals_xs = [origin];
         const vals_ys = [0];
         for (const val of tl.values) {
           vals_xs.push(val.from.to_number());
@@ -134,10 +132,10 @@ class TimelinesListener extends SolverListener {
           vals_xs.push(val.to.to_number());
           vals_ys.push(val.usage.to_number());
         }
-        vals_xs.push(this.horizon);
+        vals_xs.push(horizon);
         vals_ys.push(0);
         this.traces.get(id)!.push({ x: vals_xs, y: vals_ys, name: Timeline.timeline_name(tl), type: 'scatter', opacity: 0.7, mode: 'lines', fill: 'tozeroy', yaxis: this.y_axes.get(id) });
-        this.traces.get(id)!.push({ x: [this.origin, this.horizon], y: [tl.capacity, tl.capacity], name: 'Capacity', type: 'scatter', opacity: 0.7, mode: 'lines', yaxis: this.y_axes.get(id) });
+        this.traces.get(id)!.push({ x: [origin, horizon], y: [tl.capacity, tl.capacity], name: 'Capacity', type: 'scatter', opacity: 0.7, mode: 'lines', yaxis: this.y_axes.get(id) });
         if (i == 1)
           this.layout['yaxis'] = { title: Timeline.timeline_name(tl), domain: [start_domain + domain_separator, start_domain + domain_size - domain_separator], zeroline: false, range: [0, tl.capacity] };
         else
@@ -145,7 +143,7 @@ class TimelinesListener extends SolverListener {
       }
 
       if (tl instanceof ConsumableResourceTimeline) {
-        const vals_xs = [this.origin];
+        const vals_xs = [origin];
         const vals_ys = [tl.initial_amount.to_number()];
         for (const val of tl.values) {
           vals_xs.push(val.from.to_number());
@@ -153,13 +151,13 @@ class TimelinesListener extends SolverListener {
           vals_xs.push(val.to.to_number());
           vals_ys.push(val.end.to_number());
         }
-        vals_xs.push(this.horizon);
+        vals_xs.push(horizon);
         if (tl.values.length > 0)
           vals_ys.push(tl.values[tl.values.length - 1].end.to_number());
         else
           vals_ys.push(tl.initial_amount.to_number());
         this.traces.get(id)!.push({ x: vals_xs, y: vals_ys, name: Timeline.timeline_name(tl), type: 'scatter', opacity: 0.7, mode: 'lines', fill: 'tozeroy', yaxis: this.y_axes.get(id) });
-        this.traces.get(id)!.push({ x: [this.origin, this.horizon], y: [tl.capacity, tl.capacity], name: 'Capacity', type: 'scatter', opacity: 0.7, mode: 'lines', yaxis: this.y_axes.get(id) });
+        this.traces.get(id)!.push({ x: [origin, horizon], y: [tl.capacity, tl.capacity], name: 'Capacity', type: 'scatter', opacity: 0.7, mode: 'lines', yaxis: this.y_axes.get(id) });
         if (i == 1)
           this.layout['yaxis'] = { title: Timeline.timeline_name(tl), domain: [start_domain + domain_separator, start_domain + domain_size - domain_separator], zeroline: false, range: [0, tl.capacity] };
         else

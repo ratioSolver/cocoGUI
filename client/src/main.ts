@@ -20,6 +20,5 @@ registerPlugins(app)
 
 app.mount('#app')
 
-import { test_data } from './tests/data';
-for (const data of test_data)
-    useCoCoStore().update_knowledge(data);
+console.log('Connecting to ' + import.meta.env.VITE_NAME + '..');
+useCoCoStore().connect();

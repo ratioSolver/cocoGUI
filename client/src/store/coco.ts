@@ -4,9 +4,29 @@ import { defineStore } from 'pinia'
 export const useCoCoStore = defineStore('CoCo', {
     state: () => ({
         knowledge: new Knowledge(import.meta.env.VITE_COCO_NAME),
-        messages: [] as Array<{ me: boolean, timestamp: Date, text: string }>
+        messages: [] as Array<{ me: boolean, timestamp: Date, text: string }>,
+        socket: null as WebSocket | null
     }),
     actions: {
+        connect(url = 'ws://' + window.location.host + '/coco', timeout = 10000) {
+            this.socket = new WebSocket(url);
+            this.socket.onopen = () => {
+                console.log('WebSocket connected');
+                this.socket!.send(JSON.stringify({ 'type': 'login' }));
+            };
+            this.socket.onclose = () => {
+                console.log('WebSocket disconnected');
+                setTimeout(() => { this.connect(url, timeout); }, timeout);
+            };
+            this.socket.onerror = (error) => {
+                console.log('WebSocket Error: ' + error);
+            };
+            this.socket.onmessage = (msg) => {
+                let data = JSON.parse(msg.data);
+                console.log(data);
+                this.update_knowledge(data);
+            };
+        },
         update_knowledge(data: any): void {
             this.knowledge.update_knowledge(data);
         },

@@ -21,7 +21,7 @@
         <tbody>
           <tr v-for="[name, tp] in type.static_parameters" :key="name">
             <td>{{ name }}</td>
-            <td>{{ tp }}</td>
+            <td>{{ tp.name }}</td>
           </tr>
         </tbody>
       </v-table>
@@ -36,7 +36,7 @@
         <tbody>
           <tr v-for="[name, tp] in type.dynamic_parameters" :key="name">
             <td>{{ name }}</td>
-            <td>{{ tp }}</td>
+            <td>{{ tp.name }}</td>
           </tr>
         </tbody>
       </v-table>

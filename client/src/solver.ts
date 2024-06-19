@@ -172,23 +172,26 @@ export class Solver {
     set_state(state_message: any): void {
         this.items.clear();
         this.atoms.clear();
+        this.exprs.clear();
 
         if (state_message.items) {
             for (const item of state_message.items)
                 this.items.set(item.id, { id: item.id, type: item.type, name: item.name, exprs: new Map() });
             for (const item of state_message.items)
-                for (const expr of item.exprs)
-                    this.items.get(item.id)!.exprs.set(expr.id, ratio.get_value(expr, this.items));
+                if (item.exprs)
+                    for (const [id, xpr] of Object.entries(item.exprs))
+                        this.items.get(item.id)!.exprs.set(id, ratio.get_value(xpr, this.items));
         }
         if (state_message.atoms) {
             for (const atom of state_message.atoms)
                 this.atoms.set(atom.id, { id: atom.id, type: atom.type, name: atom.name, exprs: new Map(), is_fact: atom.is_fact, sigma: atom.sigma, state: ratio.AtomState[atom.state as keyof typeof ratio.AtomState] });
             for (const atom of state_message.atoms)
-                for (const expr of atom.exprs)
-                    this.atoms.get(atom.id)!.exprs.set(expr.id, ratio.get_value(expr, this.items));
+                if (atom.exprs)
+                    for (const [id, xpr] of Object.entries(atom.exprs))
+                        this.atoms.get(atom.id)!.exprs.set(id, ratio.get_value(xpr, this.items));
         }
-        for (const xpr of state_message.exprs)
-            this.exprs.set(xpr.id, ratio.get_value(xpr, this.items));
+        for (const [id, xpr] of Object.entries(state_message.exprs))
+            this.exprs.set(id, ratio.get_value(xpr, this.items));
 
         this.timelines.clear();
         if (state_message.timelines)
