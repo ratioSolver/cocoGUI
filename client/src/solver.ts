@@ -51,9 +51,8 @@ export class SolverListener {
      * Notifies the listener that the current flaw has been set.
      * 
      * @param flaw The current flaw.
-     * @param old_flaw The old current flaw.
      */
-    current_flaw_changed(flaw: Flaw, old_flaw: Flaw): void { }
+    current_flaw_changed(flaw: Flaw): void { }
     /**
      * Notifies the listener that the current resolver has been set.
      * 
@@ -78,7 +77,7 @@ export class SolverListener {
      * @param resolver The current resolver.
      * @param old_resolver The old current resolver.
      */
-    current_resolver_changed(resolver: Resolver, old_resolver: Resolver): void { }
+    current_resolver_changed(resolver: Resolver): void { }
     /**
      * Notifies the listener that a causal link has been added.
      * 
@@ -254,9 +253,13 @@ export class Solver {
     }
 
     set_current_flaw(current_flaw_changed_message: any): void {
-        const old_flaw = this.current_flaw;
-        this.current_flaw = this.flaws.get(current_flaw_changed_message.current_flaw)!;
-        this.listeners.forEach(listener => listener.current_flaw_changed(this.current_flaw!, old_flaw!));
+        if (this.current_resolver) {
+            this.current_resolver.current = false;
+            this.listeners.forEach(listener => listener.current_resolver_changed(this.current_resolver!));
+            this.current_resolver = undefined;
+        }
+        this.current_flaw = this.flaws.get(current_flaw_changed_message.id)!;
+        this.listeners.forEach(listener => listener.current_flaw_changed(this.current_flaw!));
     }
 
     create_resolver(resolver_created_message: any): void {
@@ -280,9 +283,8 @@ export class Solver {
     }
 
     set_current_resolver(current_resolver_changed_message: any): void {
-        const old_resolver = this.current_resolver;
-        this.current_resolver = this.resolvers.get(current_resolver_changed_message.current_resolver)!;
-        this.listeners.forEach(listener => listener.current_resolver_changed(this.current_resolver!, old_resolver!));
+        this.current_resolver = this.resolvers.get(current_resolver_changed_message.id)!;
+        this.listeners.forEach(listener => listener.current_resolver_changed(this.current_resolver!));
     }
 
     add_causal_link(causal_link_added_message: any): void {
@@ -305,14 +307,12 @@ export class Solver {
             case SolverState.finished:
             case SolverState.failed:
                 if (this.current_resolver) {
-                    const old_resolver = this.current_resolver;
+                    this.current_resolver.current = false;
+                    this.listeners.forEach(listener => listener.current_resolver_changed(this.current_resolver!));
                     this.current_resolver = undefined;
-                    this.listeners.forEach(listener => listener.current_resolver_changed(this.current_resolver!, old_resolver));
-                }
-                if (this.current_flaw) {
-                    const old_flaw = this.current_flaw;
+                    this.current_flaw!.current = false;
+                    this.listeners.forEach(listener => listener.current_flaw_changed(this.current_flaw!));
                     this.current_flaw = undefined;
-                    this.listeners.forEach(listener => listener.current_flaw_changed(this.current_flaw!, old_flaw));
                 }
         }
     }

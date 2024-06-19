@@ -1,8 +1,8 @@
 
 export enum State {
-    Active,
-    Inactive,
-    Forbidden
+    active,
+    inactive,
+    forbidden
 }
 
 interface FlawData {
@@ -26,6 +26,7 @@ export class Flaw {
     data: FlawData;
     label: string;
     tooltip: string;
+    current: boolean = false;
 
     constructor(id: string, phi: string, causes: Resolver[], state: State, cost: number, pos: number, data: FlawData) {
         this.id = id;
@@ -104,6 +105,7 @@ export class Resolver {
     data: ResolverData;
     label: string;
     tooltip: string;
+    current: boolean = false;
 
     constructor(id: string, rho: string, preconditions: Flaw[], flaw: Flaw, state: State, intrinsic_cost: number, data: ResolverData) {
         this.id = id;
@@ -184,7 +186,7 @@ export class Resolver {
     }
 
     static estimate_cost(resolver: Resolver): number {
-        if (resolver.state == State.Forbidden)
+        if (resolver.state == State.forbidden)
             return Infinity;
         return (resolver.preconditions.length ? Math.max.apply(null, resolver.preconditions.map(flaw => flaw.cost)) : 0) + resolver.intrinsic_cost;
     }

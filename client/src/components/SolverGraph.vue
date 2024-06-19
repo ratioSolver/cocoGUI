@@ -120,6 +120,8 @@ class SolverListenerImpl extends SolverListener {
     this.tippys.set(n, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Flaw.flaw_tooltip(flaw), }));
     n.on('mouseover', () => this.tippys.get(n)!.show());
     n.on('mouseout', () => this.tippys.get(n)!.hide());
+    for (const cause of flaw.causes)
+      this.cy.add({ group: 'edges', data: { id: flaw.id + '-' + cause.id, source: cause, target: flaw.id, state: flaw.state, stroke: stroke_style(flaw) } });
     this.cy.layout(this.layout).run();
   }
   flaw_state_changed(flaw: Flaw): void {
@@ -131,11 +133,11 @@ class SolverListenerImpl extends SolverListener {
   flaw_position_changed(flaw: Flaw): void {
     this.tippys.get(this.cy.$id(flaw.id))!.setContent(Flaw.flaw_tooltip(flaw));
   }
-  current_flaw_changed(flaw: Flaw, old_flaw: Flaw): void {
-    if (old_flaw)
-      this.cy.$id(old_flaw.id).removeClass('current');
-    if (flaw)
+  current_flaw_changed(flaw: Flaw): void {
+    if (flaw.current)
       this.cy.$id(flaw.id).addClass('current');
+    else
+      this.cy.$id(flaw.id).removeClass('current');
   }
   resolver_created(resolver: Resolver): void {
     const n = this.cy.add({ group: 'nodes', data: { id: resolver.id, type: 'resolver', label: Resolver.resolver_label(resolver), state: resolver.state, cost: resolver.cost, color: resolver.cost < Number.POSITIVE_INFINITY ? scale(resolver.cost).hex() : '#ccc', stroke: stroke_style(resolver) } });
@@ -143,8 +145,6 @@ class SolverListenerImpl extends SolverListener {
     n.on('mouseover', () => this.tippys.get(n)!.show());
     n.on('mouseout', () => this.tippys.get(n)!.hide());
     this.cy.add({ group: 'edges', data: { id: resolver.id + '-' + resolver.flaw.id, source: resolver.id, target: resolver.flaw.id, state: resolver.state, stroke: stroke_style(resolver) } });
-    for (const precondition of resolver.preconditions)
-      this.cy.add({ group: 'edges', data: { id: precondition + '-' + resolver.id, source: precondition, target: resolver.id, state: resolver.state, stroke: stroke_style(resolver) } });
     this.cy.layout(this.layout).run();
   }
   resolver_state_changed(resolver: Resolver): void {
@@ -156,11 +156,11 @@ class SolverListenerImpl extends SolverListener {
   resolver_cost_changed(resolver: Resolver): void {
     this.cy.$id(resolver.id).data({ cost: resolver.cost, color: resolver.cost < Number.POSITIVE_INFINITY ? scale(resolver.cost).hex() : '#ccc' });
   }
-  current_resolver_changed(resolver: Resolver, old_resolver: Resolver): void {
-    if (old_resolver)
-      this.cy.$id(old_resolver.id).removeClass('current');
-    if (resolver)
+  current_resolver_changed(resolver: Resolver): void {
+    if (resolver.current)
       this.cy.$id(resolver.id).addClass('current');
+    else
+      this.cy.$id(resolver.id).removeClass('current');
   }
   causal_link_added(flaw: Flaw, resolver: Resolver): void {
     this.cy.add({ group: 'edges', data: { id: flaw.id + '-' + resolver.id, source: flaw.id, target: resolver.id, state: resolver.state, stroke: stroke_style(resolver) } });
@@ -187,11 +187,11 @@ function on_resize() {
 <script lang="ts">
 function stroke_style(node: Flaw | Resolver): string {
   switch (node.state) {
-    case State.Active:
-      return 'dotted';
-    case State.Forbidden:
+    case State.active:
       return 'solid';
-    case State.Inactive:
+    case State.forbidden:
+      return 'dotted';
+    case State.inactive:
       return 'dashed';
   }
 }
