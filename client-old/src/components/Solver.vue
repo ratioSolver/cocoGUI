@@ -13,11 +13,21 @@
   </v-window>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref } from 'vue';
 import { Solver } from '@/solver';
 
-defineProps<{ solver: Solver; show_tabs?: boolean; }>();
+const props = defineProps({
+  solver: {
+    type: Solver,
+    required: true
+  },
+  show_tabs: {
+    type: Boolean,
+    required: false,
+    default: true,
+  }
+});
 
 const tab = ref('timelines');
 </script>

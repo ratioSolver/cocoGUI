@@ -10,11 +10,16 @@
   </v-card>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, onMounted } from 'vue'
 import { Rule } from '@/knowledge';
 
-const props = defineProps<{ rule: Rule; }>();
+const props = defineProps({
+  rule: {
+    type: Rule,
+    required: true
+  }
+});
 
 const code = ref('');
 
@@ -23,12 +28,11 @@ onMounted(() => {
 });
 </script>
 
-<script lang="ts">
+<script>
 import 'highlight.js/styles/default.min.css'
 import hljs from 'highlight.js/lib/core'
-import { HLJSApi } from 'highlight.js';
 
-hljs.registerLanguage('riddle', function (hljs: HLJSApi) {
+hljs.registerLanguage('riddle', function (hljs) {
   return {
     case_insensitive: false,
     keywords: {

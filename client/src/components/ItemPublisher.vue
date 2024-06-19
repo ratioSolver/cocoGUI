@@ -11,14 +11,16 @@
         <tr v-for="[name, par] in item.type.dynamic_parameters" :key="name">
           <td>{{ name }}</td>
           <td>
-            <v-text-field v-if="input_type(par) == 'number'" v-model.number="value[name]" :type="input_type(par)"
-              :rules="[v => v !== null || 'Value is required', v => par.min <= v || 'Value must be greater than or equal to ' + par.min, v => par.max >= v || 'Value must be less than or equal to ' + par.max]"
-              :label="name" required />
-            <v-checkbox v-else-if="input_type(par) == 'checkbox'" v-model="value[name]" :label="name" required />
-            <v-combobox v-else-if="input_type(par) == 'symbol' && par.symbols && par.symbols.length > 0"
-              v-model="value[name]" :label="name" :items="par.symbols" required />
-            <v-text-field v-else v-model="value[name]" :type="input_type(par)"
-              :rules="[v => !!v || 'Value is required']" :label="name" required />
+            <IntPublisher v-if="(par instanceof coco.IntegerParameter)" :name="name" :par="par" :value="value[name]" />
+            <RealPublisher v-else-if="(par instanceof coco.RealParameter)" :name="name" :par="par" :value="value[name]" />
+            <StringPublisher v-else-if="(par instanceof coco.StringParameter)" :name="name" :par="par"
+              :value="value[name]" />
+            <SingleSymbolPublisher v-else-if="(par instanceof coco.SymbolParameter && !par.multiple)" :name="name" :par="par"
+              :value="value[name]" />
+            <MultipleSymbolPublisher v-else-if="(par instanceof coco.SymbolParameter && par.multiple)" :name="name"
+              :par="par" :value="value[name]" />
+            <BooleanPublisher v-else-if="(par instanceof coco.BooleanParameter)" :name="name" :par="par"
+              :value="value[name]" />
           </td>
         </tr>
       </tbody>
@@ -27,39 +29,19 @@
   </v-container>
 </template>
 
-<script setup>
-import { BooleanParameter, RealParameter, IntegerParameter, StringParameter, SymbolParameter, ArrayParameter, GeometryParameter, Item } from '@/type';
+<script setup lang="ts">
+import { coco } from '@/type';
 import { reactive } from 'vue';
 
-const props = defineProps({
-  item: {
-    type: Item,
-    required: true
-  }
-});
+const props = defineProps<{ item: coco.Item; }>();
 
-defineEmits(['publish']);
+defineEmits<{ (event: 'publish', item_id: string, value: Record<string, any>): void; }>();
 
-const value = reactive({});
+const value = reactive<Record<string, any>>({});
 props.item.type.dynamic_parameters.forEach((parameter) => {
-  if (props.item.lastValue && props.item.lastValue[parameter.name])
-    value[parameter.name] = props.item.lastValue[parameter.name];
+  if (props.item.values.length && props.item.values[props.item.values.length - 1][parameter.name])
+    value[parameter.name] = props.item.values[props.item.values.length - 1][parameter.name];
   else
     value[parameter.name] = parameter.default_value;
 });
-</script>
-
-<script>
-function input_type(par) {
-  if (par instanceof BooleanParameter)
-    return 'checkbox';
-  else if (par instanceof IntegerParameter || par instanceof RealParameter)
-    return 'number';
-  else if (par instanceof StringParameter || par instanceof ArrayParameter || par instanceof GeometryParameter)
-    return 'text';
-  else if (par instanceof SymbolParameter)
-    return 'symbol';
-  else
-    throw new Error(`Unknown parameter type: ${par}`);
-}
 </script>

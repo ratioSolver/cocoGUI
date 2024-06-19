@@ -2,36 +2,37 @@
   <v-container id="taxonomy-graph" class="fill-height" fluid />
 </template>
 
-
-<script setup lang="ts">
-import { coco } from '@/type';
+<script setup>
 import { Knowledge, KnowledgeListener } from '@/knowledge';
 import { onMounted, onUnmounted } from 'vue';
 import cytoscape from 'cytoscape';
 import dagre from 'cytoscape-dagre';
 
-const props = defineProps<{ knowledge: Knowledge; }>();
+const props = defineProps({
+  knowledge: {
+    type: Knowledge,
+    required: true
+  }
+});
 
 cytoscape.use(dagre);
 
-let listener: TypeListener | null = null;
+let listener;
+
+const layout = {
+  name: 'dagre',
+  fit: false,
+  nodeDimensionsIncludeLabels: true
+};
 
 class TypeListener extends KnowledgeListener {
 
-  cy: cytoscape.Core;
-  layout = {
-    name: 'dagre',
-    fit: false,
-    nodeDimensionsIncludeLabels: true
-  };
-
-
-  constructor(knowledge: Knowledge) {
+  constructor(knowledge) {
     super();
 
     this.cy = cytoscape({
       container: document.getElementById('taxonomy-graph'),
-      layout: this.layout,
+      layout: layout,
       style: [
         {
           selector: 'node',
@@ -59,21 +60,21 @@ class TypeListener extends KnowledgeListener {
     knowledge.add_listener(this);
   }
 
-  types(types: coco.Type[]) {
+  types(types) {
     for (const type of types.values())
       this.cy.add({ group: 'nodes', data: { id: type.id, name: type.name } });
-    this.cy.layout(this.layout).run();
+    this.cy.layout(layout).run();
   }
-  type_added(type: coco.Type) {
+  type_added(type) {
     this.cy.add({ group: 'nodes', data: { id: type.id, name: type.name } });
-    this.cy.layout(this.layout).run();
+    this.cy.layout(layout).run();
   }
-  type_updated(type: coco.Type) {
+  type_updated(type) {
     this.cy.$id(type.id).data('name', type.name);
   }
-  type_removed(id: string) {
+  type_removed(id) {
     this.cy.$id(id).remove();
-    this.cy.layout(this.layout).run();
+    this.cy.layout(layout).run();
   }
 }
 
@@ -82,8 +83,8 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  props.knowledge.remove_listener(listener!);
-  listener!.cy.destroy();
+  props.knowledge.remove_listener(listener);
+  listener.cy.destroy();
   listener = null;
 });
 </script>

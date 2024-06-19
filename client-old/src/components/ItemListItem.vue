@@ -2,8 +2,13 @@
   <v-list-item :value="item.id" :title="item.name" :subtitle="item.description" prepend-icon="mdi-circle" three-line />
 </template>
 
-<script setup lang="ts">
-import { coco } from '@/type';
+<script setup>
+import { Item } from '@/type';
 
-defineProps<{ item: coco.Item; }>();
+defineProps({
+  item: {
+    type: Item,
+    required: true
+  }
+});
 </script>

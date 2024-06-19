@@ -3,13 +3,8 @@
     prepend-icon="mdi-package-variant-closed" three-line />
 </template>
 
-<script setup>
-import { Type } from '@/type';
+<script setup lang="ts">
+import { coco } from '@/type';
 
-defineProps({
-  type: {
-    type: Type,
-    required: true
-  }
-});
+defineProps<{ type: coco.Type; }>();
 </script>

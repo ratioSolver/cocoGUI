@@ -2,31 +2,27 @@
   <v-container v-resize='on_resize' class="h-75" :id='get_graph_id(solver)' fluid />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { Solver, SolverListener } from '@/solver';
+import { Flaw, Resolver, State } from '@/graph';
 import { nextTick, onUnmounted } from 'vue';
 import cytoscape from 'cytoscape';
 import dagre from 'cytoscape-dagre';
 import popper from 'cytoscape-popper';
 import chroma from 'chroma-js';
-import tippy from 'tippy.js';
+import tippy, { Instance } from 'tippy.js';
 import 'tippy.js/themes/light-border.css';
 
 const scale = chroma.scale(['#0f0', '#f00']).mode('lrgb').domain([0, 15]);
 
-const props = defineProps({
-  solver: {
-    type: Solver,
-    required: true
-  }
-});
+const props = defineProps<{ solver: Solver; }>();
 
-const get_graph_id = (solver) => 'slv-' + solver.id + '-graph';
+const get_graph_id = (solver: Solver) => 'slv-' + solver.id + '-graph';
 
 cytoscape.use(dagre);
 cytoscape.use(popper);
 
-let listener;
+let listener: SolverListenerImpl | null = null;
 
 tippy.setDefaultProps({
   arrow: false,
@@ -37,15 +33,17 @@ tippy.setDefaultProps({
 
 class SolverListenerImpl extends SolverListener {
 
-  constructor(solver) {
-    super();
+  cy: cytoscape.Core;
+  layout = {
+    name: 'dagre',
+    rankDir: 'LR',
+    fit: false,
+    nodeDimensionsIncludeLabels: true
+  };
+  tippys: Map<cytoscape.CollectionReturnValue, Instance> = new Map();
 
-    this.layout = {
-      name: 'dagre',
-      rankDir: 'LR',
-      fit: false,
-      nodeDimensionsIncludeLabels: true
-    };
+  constructor(solver: Solver) {
+    super();
 
     this.cy = cytoscape({
       container: document.getElementById(get_graph_id(solver)),
@@ -57,7 +55,7 @@ class SolverListenerImpl extends SolverListener {
             'background-color': 'data(color)',
             'label': 'data(label)',
             'border-width': '1px',
-            'border-style': 'data(stroke)',
+            'border-style': 'data(stroke)' as any,
             'border-color': '#666'
           }
         },
@@ -68,7 +66,7 @@ class SolverListenerImpl extends SolverListener {
             'background-color': 'data(color)',
             'label': 'data(label)',
             'border-width': '1px',
-            'border-style': 'data(stroke)',
+            'border-style': 'data(stroke)' as any,
             'border-color': '#666'
           }
         },
@@ -80,7 +78,7 @@ class SolverListenerImpl extends SolverListener {
             'target-arrow-color': '#666',
             'target-arrow-shape': 'triangle',
             'width': '1px',
-            'line-style': 'data(stroke)'
+            'line-style': 'data(stroke)' as any
           }
         },
         {
@@ -96,81 +94,83 @@ class SolverListenerImpl extends SolverListener {
     solver.add_listener(this);
   }
 
-  graph(graph) {
+  graph(graph: { flaws: Flaw[], resolvers: Resolver[], current_flaw: Flaw, current_resolver: Resolver }): void {
     this.cy.elements().remove();
+    this.tippys.forEach(tippy => tippy.destroy());
+    this.tippys.clear();
     for (const flaw of graph.flaws) {
-      const n = this.cy.add({ group: 'nodes', data: { id: flaw.id, type: 'flaw', label: this.solver.flaw_label(flaw), state: flaw.state, cost: flaw.cost, color: flaw.cost < Number.POSITIVE_INFINITY ? scale(flaw.cost).hex() : '#ccc', stroke: stroke_style(flaw) } });
-      n.tippy = tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: this.solver.flaw_tooltip(flaw), });
-      n.on('mouseover', () => n.tippy.show());
-      n.on('mouseout', () => n.tippy.hide());
+      const n = this.cy.add({ group: 'nodes', data: { id: flaw.id, type: 'flaw', label: Flaw.flaw_label(flaw), state: flaw.state, cost: flaw.cost, color: flaw.cost < Number.POSITIVE_INFINITY ? scale(flaw.cost).hex() : '#ccc', stroke: stroke_style(flaw) } });
+      this.tippys.set(n, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Flaw.flaw_tooltip(flaw), }));
+      n.on('mouseover', () => this.tippys.get(n)!.show());
+      n.on('mouseout', () => this.tippys.get(n)!.hide());
     }
     for (const resolver of graph.resolvers) {
-      const n = this.cy.add({ group: 'nodes', data: { id: resolver.id, type: 'resolver', label: this.solver.resolver_label(resolver), state: resolver.state, cost: resolver.cost, color: resolver.cost < Number.POSITIVE_INFINITY ? scale(resolver.cost).hex() : '#ccc', stroke: stroke_style(resolver) } });
-      n.tippy = tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: this.solver.resolver_tooltip(resolver), });
-      n.on('mouseover', () => n.tippy.show());
-      n.on('mouseout', () => n.tippy.hide());
+      const n = this.cy.add({ group: 'nodes', data: { id: resolver.id, type: 'resolver', label: Resolver.resolver_label(resolver), state: resolver.state, cost: resolver.cost, color: resolver.cost < Number.POSITIVE_INFINITY ? scale(resolver.cost).hex() : '#ccc', stroke: stroke_style(resolver) } });
+      this.tippys.set(n, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Resolver.resolver_tooltip(resolver), }));
+      n.on('mouseover', () => this.tippys.get(n)!.show());
+      n.on('mouseout', () => this.tippys.get(n)!.hide());
       this.cy.add({ group: 'edges', data: { id: resolver.id + '-' + resolver.flaw.id, source: resolver.id, target: resolver.flaw.id, state: resolver.state, stroke: stroke_style(resolver) } });
       for (const precondition of resolver.preconditions)
         this.cy.add({ group: 'edges', data: { id: precondition + '-' + resolver.id, source: precondition, target: resolver.id, state: resolver.state, stroke: stroke_style(resolver) } });
     }
     this.cy.layout(this.layout).run();
   }
-  flaw_created(flaw) {
-    const n = this.cy.add({ group: 'nodes', data: { id: flaw.id, type: 'flaw', label: this.solver.flaw_label(flaw), state: flaw.state, cost: flaw.cost, color: flaw.cost < Number.POSITIVE_INFINITY ? scale(flaw.cost).hex() : '#ccc', stroke: stroke_style(flaw) } });
-    n.tippy = tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: this.solver.flaw_tooltip(flaw), });
-    n.on('mouseover', () => n.tippy.show());
-    n.on('mouseout', () => n.tippy.hide());
+  flaw_created(flaw: Flaw): void {
+    const n = this.cy.add({ group: 'nodes', data: { id: flaw.id, type: 'flaw', label: Flaw.flaw_label(flaw), state: flaw.state, cost: flaw.cost, color: flaw.cost < Number.POSITIVE_INFINITY ? scale(flaw.cost).hex() : '#ccc', stroke: stroke_style(flaw) } });
+    this.tippys.set(n, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Flaw.flaw_tooltip(flaw), }));
+    n.on('mouseover', () => this.tippys.get(n)!.show());
+    n.on('mouseout', () => this.tippys.get(n)!.hide());
     this.cy.layout(this.layout).run();
   }
-  flaw_state_changed(flaw) {
+  flaw_state_changed(flaw: Flaw): void {
     this.cy.$id(flaw.id).data({ state: flaw.state, stroke: stroke_style(flaw) });
   }
-  flaw_cost_changed(flaw) {
+  flaw_cost_changed(flaw: Flaw): void {
     this.cy.$id(flaw.id).data({ cost: flaw.cost, color: flaw.cost < Number.POSITIVE_INFINITY ? scale(flaw.cost).hex() : '#ccc' });
   }
-  flaw_position_changed(flaw) {
-    this.cy.$id(flaw.id).tippy.setContent(this.solver.flaw_tooltip(flaw));
+  flaw_position_changed(flaw: Flaw): void {
+    this.tippys.get(this.cy.$id(flaw.id))!.setContent(Flaw.flaw_tooltip(flaw));
   }
-  current_flaw_changed(flaw) {
-    if (flaw.current)
+  current_flaw_changed(flaw: Flaw, old_flaw: Flaw): void {
+    if (old_flaw)
+      this.cy.$id(old_flaw.id).removeClass('current');
+    if (flaw)
       this.cy.$id(flaw.id).addClass('current');
-    else
-      this.cy.$id(flaw.id).removeClass('current');
   }
-  resolver_created(resolver) {
-    const n = this.cy.add({ group: 'nodes', data: { id: resolver.id, type: 'resolver', label: this.solver.resolver_label(resolver), state: resolver.state, cost: resolver.cost, color: resolver.cost < Number.POSITIVE_INFINITY ? scale(resolver.cost).hex() : '#ccc', stroke: stroke_style(resolver) } });
-    n.tippy = tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: this.solver.resolver_tooltip(resolver), });
-    n.on('mouseover', () => n.tippy.show());
-    n.on('mouseout', () => n.tippy.hide());
+  resolver_created(resolver: Resolver): void {
+    const n = this.cy.add({ group: 'nodes', data: { id: resolver.id, type: 'resolver', label: Resolver.resolver_label(resolver), state: resolver.state, cost: resolver.cost, color: resolver.cost < Number.POSITIVE_INFINITY ? scale(resolver.cost).hex() : '#ccc', stroke: stroke_style(resolver) } });
+    this.tippys.set(n, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Resolver.resolver_tooltip(resolver), }));
+    n.on('mouseover', () => this.tippys.get(n)!.show());
+    n.on('mouseout', () => this.tippys.get(n)!.hide());
     this.cy.add({ group: 'edges', data: { id: resolver.id + '-' + resolver.flaw.id, source: resolver.id, target: resolver.flaw.id, state: resolver.state, stroke: stroke_style(resolver) } });
     for (const precondition of resolver.preconditions)
       this.cy.add({ group: 'edges', data: { id: precondition + '-' + resolver.id, source: precondition, target: resolver.id, state: resolver.state, stroke: stroke_style(resolver) } });
     this.cy.layout(this.layout).run();
   }
-  resolver_state_changed(resolver) {
+  resolver_state_changed(resolver: Resolver): void {
     this.cy.$id(resolver.id).data({ state: resolver.state, stroke: stroke_style(resolver) });
     this.cy.$id(resolver.id + '-' + resolver.flaw.id).data({ state: resolver.state, stroke: stroke_style(resolver) });
     for (const precondition of resolver.preconditions)
       this.cy.$id(precondition + '-' + resolver.id).data({ state: resolver.state, stroke: stroke_style(resolver) });
   }
-  resolver_cost_changed(resolver) {
+  resolver_cost_changed(resolver: Resolver): void {
     this.cy.$id(resolver.id).data({ cost: resolver.cost, color: resolver.cost < Number.POSITIVE_INFINITY ? scale(resolver.cost).hex() : '#ccc' });
   }
-  current_resolver_changed(resolver) {
-    if (resolver.current)
+  current_resolver_changed(resolver: Resolver, old_resolver: Resolver): void {
+    if (old_resolver)
+      this.cy.$id(old_resolver.id).removeClass('current');
+    if (resolver)
       this.cy.$id(resolver.id).addClass('current');
-    else
-      this.cy.$id(resolver.id).removeClass('current');
   }
-  causal_link_added(link) {
-    this.cy.add({ group: 'edges', data: { id: link.from + '-' + link.to, source: link.from, target: link.to, state: link.state, stroke: stroke_style(link) } });
+  causal_link_added(flaw: Flaw, resolver: Resolver): void {
+    this.cy.add({ group: 'edges', data: { id: flaw.id + '-' + resolver.id, source: flaw.id, target: resolver.id, state: resolver.state, stroke: stroke_style(resolver) } });
     this.cy.layout(this.layout).run();
   }
 }
 
 onUnmounted(() => {
-  props.solver.remove_listener(listener);
-  listener.cy.destroy();
+  props.solver.remove_listener(listener!);
+  listener!.cy.destroy();
   listener = null;
 });
 
@@ -178,20 +178,20 @@ function on_resize() {
   nextTick(() => {
     if (listener)
       listener.cy.resize();
-    else if (document.getElementById(get_graph_id(props.solver)).offsetWidth && document.getElementById(get_graph_id(props.solver)).offsetHeight)
+    else if (document.getElementById(get_graph_id(props.solver))!.offsetWidth && document.getElementById(get_graph_id(props.solver))!.offsetHeight)
       listener = new SolverListenerImpl(props.solver);
   });
 }
 </script>
 
-<script>
-function stroke_style(node) {
+<script lang="ts">
+function stroke_style(node: Flaw | Resolver): string {
   switch (node.state) {
-    case 'forbidden':
+    case State.Active:
       return 'dotted';
-    case 'active':
+    case State.Forbidden:
       return 'solid';
-    case 'inactive':
+    case State.Inactive:
       return 'dashed';
   }
 }

@@ -10,16 +10,11 @@
   </v-card>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { Rule } from '@/knowledge';
 
-const props = defineProps({
-  rule: {
-    type: Rule,
-    required: true
-  }
-});
+const props = defineProps<{ rule: Rule; }>();
 
 const code = ref('');
 
@@ -28,11 +23,12 @@ onMounted(() => {
 });
 </script>
 
-<script>
+<script lang="ts">
 import 'highlight.js/styles/default.min.css'
 import hljs from 'highlight.js/lib/core'
+import { HLJSApi } from 'highlight.js';
 
-hljs.registerLanguage('clips', function (hljs) {
+hljs.registerLanguage('clips', function (hljs: HLJSApi) {
   return {
     case_insensitive: true,
     keywords: {
