@@ -13,8 +13,6 @@ import chroma from 'chroma-js';
 import tippy, { Instance } from 'tippy.js';
 import 'tippy.js/themes/light-border.css';
 
-const scale = chroma.scale(['#0f0', '#f00']).mode('lrgb').domain([0, 15]);
-
 const props = defineProps<{ solver: Solver; }>();
 
 const get_graph_id = (solver: Solver) => 'slv-' + solver.id + '-graph';
@@ -99,71 +97,79 @@ class SolverListenerImpl extends SolverListener {
     this.tippys.forEach(tippy => tippy.destroy());
     this.tippys.clear();
     for (const flaw of graph.flaws) {
-      const n = this.cy.add({ group: 'nodes', data: { id: flaw.id, type: 'flaw', label: Flaw.flaw_label(flaw), state: flaw.state, cost: flaw.cost, color: flaw.cost < Number.POSITIVE_INFINITY ? scale(flaw.cost).hex() : '#ccc', stroke: stroke_style(flaw) } });
+      const n = this.cy.add({ group: 'nodes', data: { id: flaw.id, type: 'flaw', label: Flaw.flaw_label(flaw), color: color(flaw), stroke: stroke_style(flaw) } });
       this.tippys.set(flaw.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Flaw.flaw_tooltip(flaw), }));
       n.on('mouseover', () => this.tippys.get(flaw.id)!.show());
       n.on('mouseout', () => this.tippys.get(flaw.id)!.hide());
     }
     for (const resolver of graph.resolvers) {
-      const n = this.cy.add({ group: 'nodes', data: { id: resolver.id, type: 'resolver', label: Resolver.resolver_label(resolver), state: resolver.state, cost: resolver.cost, color: resolver.cost < Number.POSITIVE_INFINITY ? scale(resolver.cost).hex() : '#ccc', stroke: stroke_style(resolver) } });
+      const n = this.cy.add({ group: 'nodes', data: { id: resolver.id, type: 'resolver', label: Resolver.resolver_label(resolver), color: color(resolver), stroke: stroke_style(resolver) } });
       this.tippys.set(resolver.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Resolver.resolver_tooltip(resolver), }));
       n.on('mouseover', () => this.tippys.get(resolver.id)!.show());
       n.on('mouseout', () => this.tippys.get(resolver.id)!.hide());
-      this.cy.add({ group: 'edges', data: { id: resolver.id + '-' + resolver.flaw.id, source: resolver.id, target: resolver.flaw.id, state: resolver.state, stroke: stroke_style(resolver) } });
+      this.cy.add({ group: 'edges', data: { id: resolver.id + '-' + resolver.flaw.id, source: resolver.id, target: resolver.flaw.id, stroke: stroke_style(resolver) } });
       for (const precondition of resolver.preconditions)
-        this.cy.add({ group: 'edges', data: { id: precondition + '-' + resolver.id, source: precondition, target: resolver.id, state: resolver.state, stroke: stroke_style(resolver) } });
+        this.cy.add({ group: 'edges', data: { id: precondition + '-' + resolver.id, source: precondition, target: resolver.id, stroke: stroke_style(resolver) } });
     }
     this.cy.layout(this.layout).run();
   }
   flaw_created(flaw: Flaw): void {
-    const n = this.cy.add({ group: 'nodes', data: { id: flaw.id, type: 'flaw', label: Flaw.flaw_label(flaw), state: flaw.state, cost: flaw.cost, color: flaw.cost < Number.POSITIVE_INFINITY ? scale(flaw.cost).hex() : '#ccc', stroke: stroke_style(flaw) } });
+    const n = this.cy.add({ group: 'nodes', data: { id: flaw.id, type: 'flaw', label: Flaw.flaw_label(flaw), color: color(flaw), stroke: stroke_style(flaw) } });
     this.tippys.set(flaw.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Flaw.flaw_tooltip(flaw), }));
     n.on('mouseover', () => this.tippys.get(flaw.id)!.show());
     n.on('mouseout', () => this.tippys.get(flaw.id)!.hide());
     for (const cause of flaw.causes)
-      this.cy.add({ group: 'edges', data: { id: flaw.id + '-' + cause.id, source: cause, target: flaw.id, state: flaw.state, stroke: stroke_style(flaw) } });
+      this.cy.add({ group: 'edges', data: { id: flaw.id + '-' + cause.id, source: cause, target: flaw.id, stroke: stroke_style(flaw) } });
     this.cy.layout(this.layout).run();
   }
   flaw_state_changed(flaw: Flaw): void {
-    this.cy.$id(flaw.id).data({ state: flaw.state, stroke: stroke_style(flaw) });
+    this.cy.$id(flaw.id).data({ color: color(flaw), stroke: stroke_style(flaw) });
+    this.cy.layout(this.layout).run();
   }
   flaw_cost_changed(flaw: Flaw): void {
-    this.cy.$id(flaw.id).data({ cost: flaw.cost, color: flaw.cost < Number.POSITIVE_INFINITY ? scale(flaw.cost).hex() : '#ccc' });
+    this.cy.$id(flaw.id).data({ color: color(flaw) });
+    this.tippys.get(flaw.id)!.setContent(Flaw.flaw_tooltip(flaw));
+    this.cy.layout(this.layout).run();
   }
   flaw_position_changed(flaw: Flaw): void {
     this.tippys.get(flaw.id)!.setContent(Flaw.flaw_tooltip(flaw));
+    this.cy.layout(this.layout).run();
   }
   current_flaw_changed(flaw: Flaw): void {
     if (flaw.current)
       this.cy.$id(flaw.id).addClass('current');
     else
       this.cy.$id(flaw.id).removeClass('current');
+    this.cy.layout(this.layout).run();
   }
   resolver_created(resolver: Resolver): void {
-    const n = this.cy.add({ group: 'nodes', data: { id: resolver.id, type: 'resolver', label: Resolver.resolver_label(resolver), state: resolver.state, cost: resolver.cost, color: resolver.cost < Number.POSITIVE_INFINITY ? scale(resolver.cost).hex() : '#ccc', stroke: stroke_style(resolver) } });
+    const n = this.cy.add({ group: 'nodes', data: { id: resolver.id, type: 'resolver', label: Resolver.resolver_label(resolver), color: color(resolver), stroke: stroke_style(resolver) } });
     this.tippys.set(resolver.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Resolver.resolver_tooltip(resolver), }));
     n.on('mouseover', () => this.tippys.get(resolver.id)!.show());
     n.on('mouseout', () => this.tippys.get(resolver.id)!.hide());
-    this.cy.add({ group: 'edges', data: { id: resolver.id + '-' + resolver.flaw.id, source: resolver.id, target: resolver.flaw.id, state: resolver.state, stroke: stroke_style(resolver) } });
+    this.cy.add({ group: 'edges', data: { id: resolver.id + '-' + resolver.flaw.id, source: resolver.id, target: resolver.flaw.id, stroke: stroke_style(resolver) } });
     this.cy.layout(this.layout).run();
   }
   resolver_state_changed(resolver: Resolver): void {
-    this.cy.$id(resolver.id).data({ state: resolver.state, stroke: stroke_style(resolver) });
-    this.cy.$id(resolver.id + '-' + resolver.flaw.id).data({ state: resolver.state, stroke: stroke_style(resolver) });
+    this.cy.$id(resolver.id).data({ color: color(resolver), stroke: stroke_style(resolver) });
+    this.cy.$id(resolver.id + '-' + resolver.flaw.id).data({ stroke: stroke_style(resolver) });
     for (const precondition of resolver.preconditions)
-      this.cy.$id(precondition + '-' + resolver.id).data({ state: resolver.state, stroke: stroke_style(resolver) });
+      this.cy.$id(precondition + '-' + resolver.id).data({ stroke: stroke_style(resolver) });
+    this.cy.layout(this.layout).run();
   }
   resolver_cost_changed(resolver: Resolver): void {
-    this.cy.$id(resolver.id).data({ cost: resolver.cost, color: resolver.cost < Number.POSITIVE_INFINITY ? scale(resolver.cost).hex() : '#ccc' });
+    this.cy.$id(resolver.id).data({ color: color(resolver) });
+    this.cy.layout(this.layout).run();
   }
   current_resolver_changed(resolver: Resolver): void {
     if (resolver.current)
       this.cy.$id(resolver.id).addClass('current');
     else
       this.cy.$id(resolver.id).removeClass('current');
+    this.cy.layout(this.layout).run();
   }
   causal_link_added(flaw: Flaw, resolver: Resolver): void {
-    this.cy.add({ group: 'edges', data: { id: flaw.id + '-' + resolver.id, source: flaw.id, target: resolver.id, state: resolver.state, stroke: stroke_style(resolver) } });
+    this.cy.add({ group: 'edges', data: { id: flaw.id + '-' + resolver.id, source: flaw.id, target: resolver.id, stroke: stroke_style(resolver) } });
     this.cy.layout(this.layout).run();
   }
 }
@@ -185,6 +191,8 @@ function on_resize() {
 </script>
 
 <script lang="ts">
+const scale = chroma.scale(['#0f0', '#f00']).mode('lrgb').domain([0, 15]);
+
 function stroke_style(node: Flaw | Resolver): string {
   switch (node.state) {
     case State.active:
@@ -194,5 +202,14 @@ function stroke_style(node: Flaw | Resolver): string {
     case State.inactive:
       return 'dashed';
   }
+}
+
+function color(node: Flaw | Resolver): string {
+  if (node.state == State.forbidden)
+    return '#ccc';
+  else if (node.cost == Infinity)
+    return '#000';
+  else
+    return scale(node.cost).hex();
 }
 </script>
