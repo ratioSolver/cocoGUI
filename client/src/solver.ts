@@ -248,7 +248,7 @@ export class Solver {
 
     set_flaw_position(flaw_position_changed_message: any): void {
         const flaw = this.flaws.get(flaw_position_changed_message.id)!;
-        flaw.set_pos(flaw_position_changed_message.pos);
+        flaw.set_pos(flaw_position_changed_message.position);
         this.listeners.forEach(listener => listener.flaw_position_changed(flaw));
     }
 

@@ -40,7 +40,7 @@ class SolverListenerImpl extends SolverListener {
     fit: false,
     nodeDimensionsIncludeLabels: true
   };
-  tippys: Map<cytoscape.CollectionReturnValue, Instance> = new Map();
+  tippys: Map<string, Instance> = new Map();
 
   constructor(solver: Solver) {
     super();
@@ -100,15 +100,15 @@ class SolverListenerImpl extends SolverListener {
     this.tippys.clear();
     for (const flaw of graph.flaws) {
       const n = this.cy.add({ group: 'nodes', data: { id: flaw.id, type: 'flaw', label: Flaw.flaw_label(flaw), state: flaw.state, cost: flaw.cost, color: flaw.cost < Number.POSITIVE_INFINITY ? scale(flaw.cost).hex() : '#ccc', stroke: stroke_style(flaw) } });
-      this.tippys.set(n, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Flaw.flaw_tooltip(flaw), }));
-      n.on('mouseover', () => this.tippys.get(n)!.show());
-      n.on('mouseout', () => this.tippys.get(n)!.hide());
+      this.tippys.set(flaw.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Flaw.flaw_tooltip(flaw), }));
+      n.on('mouseover', () => this.tippys.get(flaw.id)!.show());
+      n.on('mouseout', () => this.tippys.get(flaw.id)!.hide());
     }
     for (const resolver of graph.resolvers) {
       const n = this.cy.add({ group: 'nodes', data: { id: resolver.id, type: 'resolver', label: Resolver.resolver_label(resolver), state: resolver.state, cost: resolver.cost, color: resolver.cost < Number.POSITIVE_INFINITY ? scale(resolver.cost).hex() : '#ccc', stroke: stroke_style(resolver) } });
-      this.tippys.set(n, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Resolver.resolver_tooltip(resolver), }));
-      n.on('mouseover', () => this.tippys.get(n)!.show());
-      n.on('mouseout', () => this.tippys.get(n)!.hide());
+      this.tippys.set(resolver.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Resolver.resolver_tooltip(resolver), }));
+      n.on('mouseover', () => this.tippys.get(resolver.id)!.show());
+      n.on('mouseout', () => this.tippys.get(resolver.id)!.hide());
       this.cy.add({ group: 'edges', data: { id: resolver.id + '-' + resolver.flaw.id, source: resolver.id, target: resolver.flaw.id, state: resolver.state, stroke: stroke_style(resolver) } });
       for (const precondition of resolver.preconditions)
         this.cy.add({ group: 'edges', data: { id: precondition + '-' + resolver.id, source: precondition, target: resolver.id, state: resolver.state, stroke: stroke_style(resolver) } });
@@ -117,9 +117,9 @@ class SolverListenerImpl extends SolverListener {
   }
   flaw_created(flaw: Flaw): void {
     const n = this.cy.add({ group: 'nodes', data: { id: flaw.id, type: 'flaw', label: Flaw.flaw_label(flaw), state: flaw.state, cost: flaw.cost, color: flaw.cost < Number.POSITIVE_INFINITY ? scale(flaw.cost).hex() : '#ccc', stroke: stroke_style(flaw) } });
-    this.tippys.set(n, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Flaw.flaw_tooltip(flaw), }));
-    n.on('mouseover', () => this.tippys.get(n)!.show());
-    n.on('mouseout', () => this.tippys.get(n)!.hide());
+    this.tippys.set(flaw.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Flaw.flaw_tooltip(flaw), }));
+    n.on('mouseover', () => this.tippys.get(flaw.id)!.show());
+    n.on('mouseout', () => this.tippys.get(flaw.id)!.hide());
     for (const cause of flaw.causes)
       this.cy.add({ group: 'edges', data: { id: flaw.id + '-' + cause.id, source: cause, target: flaw.id, state: flaw.state, stroke: stroke_style(flaw) } });
     this.cy.layout(this.layout).run();
@@ -131,7 +131,7 @@ class SolverListenerImpl extends SolverListener {
     this.cy.$id(flaw.id).data({ cost: flaw.cost, color: flaw.cost < Number.POSITIVE_INFINITY ? scale(flaw.cost).hex() : '#ccc' });
   }
   flaw_position_changed(flaw: Flaw): void {
-    this.tippys.get(this.cy.$id(flaw.id))!.setContent(Flaw.flaw_tooltip(flaw));
+    this.tippys.get(flaw.id)!.setContent(Flaw.flaw_tooltip(flaw));
   }
   current_flaw_changed(flaw: Flaw): void {
     if (flaw.current)
@@ -141,9 +141,9 @@ class SolverListenerImpl extends SolverListener {
   }
   resolver_created(resolver: Resolver): void {
     const n = this.cy.add({ group: 'nodes', data: { id: resolver.id, type: 'resolver', label: Resolver.resolver_label(resolver), state: resolver.state, cost: resolver.cost, color: resolver.cost < Number.POSITIVE_INFINITY ? scale(resolver.cost).hex() : '#ccc', stroke: stroke_style(resolver) } });
-    this.tippys.set(n, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Resolver.resolver_tooltip(resolver), }));
-    n.on('mouseover', () => this.tippys.get(n)!.show());
-    n.on('mouseout', () => this.tippys.get(n)!.hide());
+    this.tippys.set(resolver.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Resolver.resolver_tooltip(resolver), }));
+    n.on('mouseover', () => this.tippys.get(resolver.id)!.show());
+    n.on('mouseout', () => this.tippys.get(resolver.id)!.hide());
     this.cy.add({ group: 'edges', data: { id: resolver.id + '-' + resolver.flaw.id, source: resolver.id, target: resolver.flaw.id, state: resolver.state, stroke: stroke_style(resolver) } });
     this.cy.layout(this.layout).run();
   }
