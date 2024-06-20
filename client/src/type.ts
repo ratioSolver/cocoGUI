@@ -216,6 +216,10 @@ export namespace coco {
             this.static_parameters = static_parameters;
             this.dynamic_parameters = dynamic_parameters;
         }
+
+        static type_tooltip(type: Type): string {
+            return type.description;
+        }
     }
 
     /**

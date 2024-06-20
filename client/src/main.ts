@@ -21,4 +21,5 @@ registerPlugins(app)
 app.mount('#app')
 
 console.log('Connecting to ' + import.meta.env.VITE_NAME + '..');
+document.title = import.meta.env.VITE_NAME;
 useCoCoStore().connect();

@@ -9,12 +9,22 @@ import { Knowledge, KnowledgeListener } from '@/knowledge';
 import { onMounted, onUnmounted } from 'vue';
 import cytoscape from 'cytoscape';
 import dagre from 'cytoscape-dagre';
+import popper from 'cytoscape-popper';
+import tippy, { Instance } from 'tippy.js';
 
 const props = defineProps<{ knowledge: Knowledge; }>();
 
 cytoscape.use(dagre);
+cytoscape.use(popper);
 
 let listener: TypeListener | null = null;
+
+tippy.setDefaultProps({
+  arrow: false,
+  trigger: 'manual',
+  theme: 'light-border',
+  placement: 'bottom'
+});
 
 class TypeListener extends KnowledgeListener {
 
@@ -24,7 +34,7 @@ class TypeListener extends KnowledgeListener {
     fit: false,
     nodeDimensionsIncludeLabels: true
   };
-
+  tippys: Map<string, Instance> = new Map();
 
   constructor(knowledge: Knowledge) {
     super();
@@ -40,7 +50,7 @@ class TypeListener extends KnowledgeListener {
             'label': 'data(name)',
             'border-width': '1px',
             'border-color': '#666',
-            'background-color': '#ccc',
+            'background-color': '#FFD700',
           }
         },
         {
@@ -59,17 +69,29 @@ class TypeListener extends KnowledgeListener {
     knowledge.add_listener(this);
   }
 
-  types(types: coco.Type[]) {
-    for (const type of types.values())
-      this.cy.add({ group: 'nodes', data: { id: type.id, name: type.name } });
+  taxonomy(types: coco.Type[]) {
+    this.cy.elements().remove();
+    this.tippys.forEach(tippy => tippy.destroy());
+    this.tippys.clear();
+    for (const type of types.values()) {
+      const n = this.cy.add({ group: 'nodes', data: { id: type.id, name: type.name } });
+      this.tippys.set(type.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: coco.Type.type_tooltip(type), }));
+      n.on('mouseover', () => this.tippys.get(type.id)!.show());
+      n.on('mouseout', () => this.tippys.get(type.id)!.hide());
+    }
     this.cy.layout(this.layout).run();
   }
   type_added(type: coco.Type) {
-    this.cy.add({ group: 'nodes', data: { id: type.id, name: type.name } });
+    const n = this.cy.add({ group: 'nodes', data: { id: type.id, name: type.name } });
+    this.tippys.set(type.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: coco.Type.type_tooltip(type), }));
+    n.on('mouseover', () => this.tippys.get(type.id)!.show());
+    n.on('mouseout', () => this.tippys.get(type.id)!.hide());
     this.cy.layout(this.layout).run();
   }
   type_updated(type: coco.Type) {
     this.cy.$id(type.id).data('name', type.name);
+    this.tippys.get(type.id)!.setContent(coco.Type.type_tooltip(type));
+    this.cy.layout(this.layout).run();
   }
   type_removed(id: string) {
     this.cy.$id(id).remove();

@@ -12,16 +12,25 @@ export class SolverListener {
     /**
      * Notifies the listener that the solver state has changed.
      * 
+     * @param items The items in the solver.
+     * @param atoms The atoms in the solver.
+     * @param exprs The expressions in the solver.
+     * @param timelines The timelines in the solver.
+     * @param executing_tasks The tasks that are executing.
+     * @param time The current time.
      * @param state The new solver state.
      */
-    state(state: { items: Map<string, ratio.Item>, atoms: Map<string, ratio.Atom>, exprs: Map<string, ratio.Value>, timelines: Map<string, Timeline<TimelineValue>>, executing_tasks: Set<ratio.Atom>, time: ratio.Rational }): void { }
+    state(items: Map<string, ratio.Item>, atoms: Map<string, ratio.Atom>, exprs: Map<string, ratio.Value>, timelines: Map<string, Timeline<TimelineValue>>, executing_tasks: Set<ratio.Atom>, time: ratio.Rational, state: SolverState): void { }
 
     /**
      * Notifies the listener that the solver graph has changed.
      * 
-     * @param graph The new solver graph.
+     * @param flaws The flaws in the graph.
+     * @param resolvers The resolvers in the graph.
+     * @param current_flaw The current flaw.
+     * @param current_resolver The current resolver.
      */
-    graph(graph: { flaws: Flaw[], resolvers: Resolver[], current_flaw: Flaw, current_resolver: Resolver }): void { }
+    graph(flaws: Flaw[], resolvers: Resolver[], current_flaw: Flaw, current_resolver: Resolver): void { }
 
     /**
      * Notifies the listener that a flaw has been created.
@@ -205,7 +214,7 @@ export class Solver {
         this.current_time = new ratio.Rational(state_message.time.num, state_message.time.den);
 
         for (const listener of this.listeners)
-            listener.state({ items: this.items, atoms: this.atoms, exprs: this.exprs, timelines: this.timelines, executing_tasks: this.executing_tasks, time: state_message.time });
+            listener.state(this.items, this.atoms, this.exprs, this.timelines, this.executing_tasks, this.current_time, this.state);
     }
 
     set_graph(graph_message: any): void {
@@ -223,7 +232,7 @@ export class Solver {
         this.current_resolver = graph_message.current_resolver ? this.resolvers.get(graph_message.current_resolver)! : undefined;
 
         for (const listener of this.listeners)
-            listener.graph({ flaws: Array.from(this.flaws.values()), resolvers: Array.from(this.resolvers.values()), current_flaw: this.current_flaw!, current_resolver: this.current_resolver! });
+            listener.graph(Array.from(this.flaws.values()), Array.from(this.resolvers.values()), this.current_flaw!, this.current_resolver!);
     }
 
     create_flaw(flaw_created_message: any): void {
@@ -344,8 +353,8 @@ export class Solver {
 
     add_listener(listener: SolverListener): void {
         this.listeners.add(listener);
-        listener.state({ items: this.items, atoms: this.atoms, exprs: this.exprs, timelines: this.timelines, executing_tasks: this.executing_tasks, time: this.current_time });
-        listener.graph({ flaws: Array.from(this.flaws.values()), resolvers: Array.from(this.resolvers.values()), current_flaw: this.current_flaw!, current_resolver: this.current_resolver! });
+        listener.state(this.items, this.atoms, this.exprs, this.timelines, this.executing_tasks, this.current_time, this.state);
+        listener.graph(Array.from(this.flaws.values()), Array.from(this.resolvers.values()), this.current_flaw!, this.current_resolver!);
     }
 
     remove_listener(listener: SolverListener): void {

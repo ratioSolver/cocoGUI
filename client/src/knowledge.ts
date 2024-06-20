@@ -6,7 +6,7 @@ export class KnowledgeListener {
     constructor() {
     }
 
-    types(types: coco.Type[]) { }
+    taxonomy(types: coco.Type[]) { }
     type_added(type: coco.Type) { }
     type_updated(type: coco.Type) { }
     type_removed(id: string) { }
@@ -205,7 +205,7 @@ export class Knowledge {
             const type = new coco.Type(type_message.id, type_message.name, type_message.description, static_parameters, dynamic_parameters);
             this.types.set(type.id, type);
         }
-        this.listeners.forEach(listener => listener.types(Array.from(this.types.values())));
+        this.listeners.forEach(listener => listener.taxonomy(Array.from(this.types.values())));
     }
 
     add_type(created_type_message: any): void {
@@ -352,7 +352,7 @@ export class Knowledge {
 
     add_listener(listener: KnowledgeListener): void {
         this.listeners.add(listener);
-        listener.types(Array.from(this.types.values()));
+        listener.taxonomy(Array.from(this.types.values()));
         listener.items(Array.from(this.items.values()));
         listener.reactive_rules(Array.from(this.reactive_rules.values()));
         listener.deliberative_rules(Array.from(this.deliberative_rules.values()));

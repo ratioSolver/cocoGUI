@@ -92,17 +92,17 @@ class SolverListenerImpl extends SolverListener {
     solver.add_listener(this);
   }
 
-  graph(graph: { flaws: Flaw[], resolvers: Resolver[], current_flaw: Flaw, current_resolver: Resolver }): void {
+  graph(flaws: Flaw[], resolvers: Resolver[], current_flaw: Flaw, current_resolver: Resolver): void {
     this.cy.elements().remove();
     this.tippys.forEach(tippy => tippy.destroy());
     this.tippys.clear();
-    for (const flaw of graph.flaws) {
+    for (const flaw of flaws) {
       const n = this.cy.add({ group: 'nodes', data: { id: flaw.id, type: 'flaw', label: Flaw.flaw_label(flaw), color: color(flaw), stroke: stroke_style(flaw) } });
       this.tippys.set(flaw.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Flaw.flaw_tooltip(flaw), }));
       n.on('mouseover', () => this.tippys.get(flaw.id)!.show());
       n.on('mouseout', () => this.tippys.get(flaw.id)!.hide());
     }
-    for (const resolver of graph.resolvers) {
+    for (const resolver of resolvers) {
       const n = this.cy.add({ group: 'nodes', data: { id: resolver.id, type: 'resolver', label: Resolver.resolver_label(resolver), color: color(resolver), stroke: stroke_style(resolver) } });
       this.tippys.set(resolver.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Resolver.resolver_tooltip(resolver), }));
       n.on('mouseover', () => this.tippys.get(resolver.id)!.show());
@@ -111,6 +111,10 @@ class SolverListenerImpl extends SolverListener {
       for (const precondition of resolver.preconditions)
         this.cy.add({ group: 'edges', data: { id: precondition + '-' + resolver.id, source: precondition, target: resolver.id, stroke: stroke_style(resolver) } });
     }
+    if (current_flaw && current_flaw.current)
+      this.cy.$id(current_flaw.id).addClass('current');
+    if (current_resolver && current_resolver.current)
+      this.cy.$id(current_resolver.id).addClass('current');
     this.cy.layout(this.layout).run();
   }
   flaw_created(flaw: Flaw): void {
