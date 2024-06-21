@@ -3,7 +3,7 @@ export namespace coco {
     /**
      * Represents a parameter.
      */
-    export class Parameter {
+    export class ParameterType {
 
         name: string;
         default_value: any;
@@ -23,7 +23,7 @@ export namespace coco {
     /**
      * Represents a boolean parameter.
      */
-    export class BooleanParameter extends Parameter {
+    export class BooleanParameter extends ParameterType {
 
         /**
          * Creates a new BooleanParameter instance.
@@ -39,7 +39,7 @@ export namespace coco {
     /**
      * Represents an integer parameter.
      */
-    export class IntegerParameter extends Parameter {
+    export class IntegerParameter extends ParameterType {
 
         min: number;
         max: number;
@@ -62,7 +62,7 @@ export namespace coco {
     /**
      * Represents a real parameter.
      */
-    export class RealParameter extends Parameter {
+    export class RealParameter extends ParameterType {
 
         min: number;
         max: number;
@@ -85,7 +85,7 @@ export namespace coco {
     /**
      * Represents a string parameter.
      */
-    export class StringParameter extends Parameter {
+    export class StringParameter extends ParameterType {
 
         /**
          * Creates a new StringParameter instance.
@@ -101,7 +101,7 @@ export namespace coco {
     /**
      * Represents a symbol parameter.
      */
-    export class SymbolParameter extends Parameter {
+    export class SymbolParameter extends ParameterType {
 
         symbols: string[];
         multiple: boolean;
@@ -132,9 +132,9 @@ export namespace coco {
     /**
      * Represents an array parameter.
      */
-    export class ArrayParameter extends Parameter {
+    export class ArrayParameter extends ParameterType {
 
-        element_type: Parameter;
+        element_type: ParameterType;
         shape: number[];
 
         /**
@@ -145,7 +145,7 @@ export namespace coco {
          * @param shape The shape of the parameter.
          * @param default_value The default value of the parameter.
          */
-        constructor(name: string, element_type: Parameter, shape: number[], default_value: any = create_default_array(shape, element_type)) {
+        constructor(name: string, element_type: ParameterType, shape: number[], default_value: any = create_default_array(shape, element_type)) {
             super(name, default_value);
             this.element_type = element_type;
             this.shape = shape;
@@ -155,7 +155,7 @@ export namespace coco {
     /**
      * Represents a geometry parameter.
      */
-    export class GeometryParameter extends Parameter {
+    export class GeometryParameter extends ParameterType {
 
         /**
          * Creates a new GeometryParameter instance.
@@ -168,7 +168,7 @@ export namespace coco {
         }
     }
 
-    export function get_parameter(parameter: any): Parameter {
+    export function get_parameter(parameter: any): ParameterType {
         switch (parameter.type) {
             case "boolean":
                 return new BooleanParameter(parameter.name, parameter.default_value);
@@ -197,8 +197,8 @@ export namespace coco {
         id: string;
         name: string;
         description: string;
-        static_parameters: Map<string, Parameter>;
-        dynamic_parameters: Map<string, Parameter>;
+        static_parameters: Map<string, ParameterType>;
+        dynamic_parameters: Map<string, ParameterType>;
 
         /**
          * Creates a new Type instance.
@@ -209,7 +209,7 @@ export namespace coco {
          * @param static_parameters The static parameters of the type.
          * @param dynamic_parameters The dynamic parameters of the type.
          */
-        constructor(id: string, name: string, description: string, static_parameters: Map<string, Parameter>, dynamic_parameters: Map<string, Parameter>) {
+        constructor(id: string, name: string, description: string, static_parameters: Map<string, ParameterType>, dynamic_parameters: Map<string, ParameterType>) {
             this.id = id;
             this.name = name;
             this.description = description;

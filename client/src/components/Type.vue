@@ -11,31 +11,31 @@
         </v-col>
       </v-row>
       <v-divider />
-      <v-table>
+      <v-table v-if="type.static_parameters.size > 0">
         <thead>
           <tr>
-            <th class="text-left">Parameter name</th>
+            <th class="text-left">Static parameter name</th>
             <th class="text-left">Parameter type</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="[index, tp] in Object.entries(type.static_parameters) as [string, coco.Parameter][]" :key="index">
-            <td>{{ tp.name }}</td>
+          <tr v-for="[name, tp] in type.static_parameters" :key="name">
+            <td>{{ name }}</td>
             <td>{{ tp.default_value }}</td>
           </tr>
         </tbody>
       </v-table>
       <v-divider />
-      <v-table>
+      <v-table v-if="type.dynamic_parameters.size > 0">
         <thead>
           <tr>
-            <th class="text-left">Parameter name</th>
+            <th class="text-left">Dynamic parameter name</th>
             <th class="text-left">Parameter type</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="[index, tp] in Object.entries(type.dynamic_parameters) as [string, coco.Parameter][]" :key="index">
-            <td>{{ tp.name }}</td>
+          <tr v-for="[name, tp] in type.static_parameters" :key="name">
+            <td>{{ name }}</td>
             <td>{{ tp.default_value }}</td>
           </tr>
         </tbody>
