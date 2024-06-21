@@ -19,9 +19,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="[name, tp] in type.static_parameters" :key="name">
-            <td>{{ name }}</td>
+          <tr v-for="[index, tp] in Object.entries(type.static_parameters) as [string, coco.Parameter][]" :key="index">
             <td>{{ tp.name }}</td>
+            <td>{{ tp.default_value }}</td>
           </tr>
         </tbody>
       </v-table>
@@ -34,9 +34,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="[name, tp] in type.dynamic_parameters" :key="name">
-            <td>{{ name }}</td>
+          <tr v-for="[index, tp] in Object.entries(type.dynamic_parameters) as [string, coco.Parameter][]" :key="index">
             <td>{{ tp.name }}</td>
+            <td>{{ tp.default_value }}</td>
           </tr>
         </tbody>
       </v-table>

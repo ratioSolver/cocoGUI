@@ -53,8 +53,13 @@ class TimelinesListener extends SolverListener {
   }
 
   state(items: Map<string, ratio.Item>, atoms: Map<string, ratio.Atom>, exprs: Map<string, ratio.Value>, timelines: Map<string, Timeline<TimelineValue>>, executing_tasks: Set<ratio.Atom>, time: ratio.Rational, state: SolverState): void {
-    this.origin = (exprs.get('origin') as ratio.Real).val.to_number();
-    this.horizon = (exprs.get('horizon') as ratio.Real).val.to_number();
+    if (exprs.size == 0) {
+      this.origin = 0;
+      this.horizon = 1;
+    } else {
+      this.origin = (exprs.get('origin') as ratio.Real).val.to_number();
+      this.horizon = (exprs.get('horizon') as ratio.Real).val.to_number();
+    }
     this.recompute_timelines(timelines);
     Plotly.react(get_timelines_id(props.solver), Array.from(this.traces.values()).flat(), this.layout, this.config);
   }

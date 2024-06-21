@@ -48,41 +48,26 @@ namespace coco
         clients.insert(&ws);
         LOG_DEBUG("Connected clients: " + std::to_string(clients.size()));
 
-        // we send the types
+        // we send the taxonomy
         ws.send(make_taxonomy_message(*this).dump());
 
         // we send the items
         ws.send(make_items_message(*this).dump());
 
         // we send the reactive rules
-        json::json j_reactive_rules{{"type", "reactive_rules"}};
-        json::json c_reactive_rules(json::json_type::array);
-        for (const auto &r : get_reactive_rules())
-            c_reactive_rules.push_back(to_json(r.get()));
-        j_reactive_rules["rules"] = std::move(c_reactive_rules);
-        ws.send(j_reactive_rules.dump());
+        ws.send(make_reactive_rules_message(*this).dump());
 
         // we send the deliberative rules
-        json::json j_deliberative_rules{{"type", "deliberative_rules"}};
-        json::json c_deliberative_rules(json::json_type::array);
-        for (const auto &r : get_deliberative_rules())
-            c_deliberative_rules.push_back(to_json(r.get()));
-        j_deliberative_rules["rules"] = std::move(c_deliberative_rules);
-        ws.send(j_deliberative_rules.dump());
+        ws.send(make_deliberative_rules_message(*this).dump());
 
         // we send the solvers
-        json::json j_solvers{{"type", "solvers"}};
-        json::json c_solvers(json::json_type::array);
-        for (const auto &cc_exec : get_solvers())
-            c_solvers.push_back(to_json(cc_exec.get()));
-        j_solvers["solvers"] = std::move(c_solvers);
-        ws.send(j_solvers.dump());
+        ws.send(make_solvers_message(*this).dump());
 
         // we send the executors
         for (const auto &cc_exec : get_solvers())
         {
             ws.send(make_solver_state_message(cc_exec.get()).dump());
-            ws.send(make_graph_message(cc_exec.get().get_solver().get_graph()).dump());
+            ws.send(make_solver_graph_message(cc_exec.get().get_solver().get_graph()).dump());
         }
     }
     void coco_server::on_ws_message(network::ws_session &ws, const std::string &msg)

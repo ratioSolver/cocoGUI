@@ -135,17 +135,17 @@ export class Knowledge {
             case 'solvers':
                 this.set_solvers(message.solvers);
                 return true;
-            case 'new_solver':
-                this.add_solver(message);
-                return true;
-            case 'deleted_solver':
-                this.remove_solver(message.id);
-                return true;
             case 'solver_state':
                 this.solvers.get(message.id)!.set_state(message);
                 return true;
             case 'solver_graph':
                 this.solvers.get(message.id)!.set_graph(message);
+                return true;
+            case 'new_solver':
+                this.add_solver(message);
+                return true;
+            case 'deleted_solver':
+                this.remove_solver(message.id);
                 return true;
             case 'flaw_created':
                 this.solvers.get(message.solver_id)!.create_flaw(message);
