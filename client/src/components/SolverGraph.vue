@@ -80,7 +80,7 @@ class SolverListenerImpl extends SolverListener {
           }
         },
         {
-          selector: '.current',
+          selector: 'node.current',
           style: {
             'border-width': '3px',
             'border-color': '#000'
