@@ -123,7 +123,7 @@ class SolverListenerImpl extends SolverListener {
     n.on('mouseover', () => this.tippys.get(flaw.id)!.show());
     n.on('mouseout', () => this.tippys.get(flaw.id)!.hide());
     for (const cause of flaw.causes)
-      this.cy.add({ group: 'edges', data: { id: flaw.id + '-' + cause.id, source: cause, target: flaw.id, stroke: stroke_style(flaw) } });
+      this.cy.add({ group: 'edges', data: { id: flaw.id + '-' + cause.id, source: flaw.id, target: cause.id, stroke: stroke_style(flaw) } });
     this.cy.layout(this.layout).run();
   }
   flaw_state_changed(flaw: Flaw): void {
