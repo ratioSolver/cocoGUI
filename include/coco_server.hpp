@@ -69,13 +69,7 @@ namespace coco
   };
 
   const json::json j_schemas{
-      parameter_schema,
-      integer_parameter_schema,
-      real_parameter_schema,
-      boolean_parameter_schema,
-      symbol_parameter_schema,
-      string_parameter_schema,
-      array_parameter_schema,
+      coco_parameter_schema,
       coco_type_schema,
       coco_item_schema,
       data_schema,
@@ -122,6 +116,19 @@ namespace coco
       ratio::resolver_state_changed_message,
       ratio::current_resolver_message,
       ratio::causal_link_added_message,
+      taxonomy_message,
+      reactive_rules_message,
+      deliberative_rules_message,
+      solvers_message,
+      new_parameter_message,
+      updated_parameter_message,
+      deleted_parameter_message,
+      new_type_message,
+      updated_type_message,
+      deleted_type_message,
+      new_item_message,
+      updated_item_message,
+      deleted_item_message,
   };
   const json::json j_open_api{
       {"openapi", "3.0.0"},
@@ -156,6 +163,8 @@ namespace coco
             {"description", "Endpoint to fetch the AsyncAPI Specification document"},
             {"responses",
              {{"200", {{"description", "Successful response with AsyncAPI Specification document"}}}}}}}}},
+        parameters_path,
+        parameters_id_path,
         types_path,
         types_id_path,
         items_path,
