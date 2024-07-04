@@ -45,6 +45,8 @@ namespace coco
 
     void coco_server::on_ws_open(network::ws_session &ws)
     {
+        LOG_TRACE("New connection from " + ws.get_remote_endpoint());
+        std::lock_guard<std::recursive_mutex> _(mtx);
         clients.insert(&ws);
         LOG_DEBUG("Connected clients: " + std::to_string(clients.size()));
 
@@ -72,6 +74,7 @@ namespace coco
     }
     void coco_server::on_ws_message(network::ws_session &ws, const std::string &msg)
     {
+        std::lock_guard<std::recursive_mutex> _(mtx);
         auto x = json::load(msg);
         if (x.get_type() != json::json_type::object || !x.contains("type"))
         {
@@ -81,11 +84,15 @@ namespace coco
     }
     void coco_server::on_ws_close(network::ws_session &ws)
     {
+        LOG_TRACE("Connection closed with " + ws.get_remote_endpoint());
+        std::lock_guard<std::recursive_mutex> _(mtx);
         clients.erase(&ws);
         LOG_DEBUG("Connected clients: " + std::to_string(clients.size()));
     }
     void coco_server::on_ws_error(network::ws_session &ws, const boost::system::error_code &)
     {
+        LOG_TRACE("Connection error with " + ws.get_remote_endpoint());
+        std::lock_guard<std::recursive_mutex> _(mtx);
         clients.erase(&ws);
         LOG_DEBUG("Connected clients: " + std::to_string(clients.size()));
     }
