@@ -111,7 +111,7 @@ class SolverListenerImpl extends SolverListener {
       n.on('mouseout', () => this.tippys.get(resolver.id)!.hide());
       this.cy.add({ group: 'edges', data: { id: resolver.id + '-' + resolver.flaw.id, source: resolver.id, target: resolver.flaw.id, stroke: stroke_style(resolver) } });
       for (const precondition of resolver.preconditions)
-        this.cy.add({ group: 'edges', data: { id: precondition + '-' + resolver.id, source: precondition, target: resolver.id, stroke: stroke_style(resolver) } });
+        this.cy.add({ group: 'edges', data: { id: precondition.id + '-' + resolver.id, source: precondition.id, target: resolver.id, stroke: stroke_style(resolver) } });
     }
     if (current_flaw && current_flaw.current)
       this.cy.$id(current_flaw.id).addClass('current');
@@ -160,7 +160,7 @@ class SolverListenerImpl extends SolverListener {
     this.cy.$id(resolver.id).data({ color: color(resolver), stroke: stroke_style(resolver) });
     this.cy.$id(resolver.id + '-' + resolver.flaw.id).data({ stroke: stroke_style(resolver) });
     for (const precondition of resolver.preconditions)
-      this.cy.$id(precondition + '-' + resolver.id).data({ stroke: stroke_style(resolver) });
+      this.cy.$id(precondition.id + '-' + resolver.id).data({ stroke: stroke_style(resolver) });
     this.cy.layout(this.layout).run();
   }
   resolver_cost_changed(resolver: Resolver): void {
