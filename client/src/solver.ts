@@ -237,8 +237,18 @@ export class Solver {
 
     create_flaw(flaw_created_message: any): void {
         const flaw = new Flaw(flaw_created_message.id, flaw_created_message.phi, [], State[flaw_created_message.state as keyof typeof State], flaw_created_message.cost.num / flaw_created_message.cost.den, flaw_created_message.pos, flaw_created_message.data);
-        for (const cause of flaw_created_message.causes)
-            flaw.causes.push(this.resolvers.get(cause)!);
+        for (const cause_id of flaw_created_message.causes) {
+            const cause = this.resolvers.get(cause_id)!;
+            flaw.causes.push(cause);
+            cause.preconditions.push(flaw);
+            // Update the cost of the cause
+            const new_cause_cost = Resolver.estimate_cost(cause);
+            if (new_cause_cost !== cause.cost) {
+                cause.cost = new_cause_cost;
+                cause.tooltip = Resolver.resolver_tooltip(cause);
+                this.listeners.forEach(listener => listener.resolver_cost_changed(cause));
+            }
+        }
         this.flaws.set(flaw_created_message.id, flaw);
         this.listeners.forEach(listener => listener.flaw_created(flaw));
     }
@@ -253,6 +263,15 @@ export class Solver {
         const flaw = this.flaws.get(flaw_cost_changed_message.id)!;
         flaw.set_cost(flaw_cost_changed_message.cost.num / flaw_cost_changed_message.cost.den);
         this.listeners.forEach(listener => listener.flaw_cost_changed(flaw));
+        // Update the cost of the causes
+        for (const cause of flaw.causes) {
+            const new_cause_cost = Resolver.estimate_cost(cause);
+            if (new_cause_cost !== cause.cost) {
+                cause.cost = new_cause_cost;
+                cause.tooltip = Resolver.resolver_tooltip(cause);
+                this.listeners.forEach(listener => listener.resolver_cost_changed(cause));
+            }
+        }
     }
 
     set_flaw_position(flaw_position_changed_message: any): void {
@@ -283,12 +302,6 @@ export class Solver {
         const resolver = this.resolvers.get(resolver_state_changed_message.id)!;
         resolver.set_state(State[resolver_state_changed_message.state as keyof typeof State]);
         this.listeners.forEach(listener => listener.resolver_state_changed(resolver));
-    }
-
-    set_resolver_cost(resolver_cost_changed_message: any): void {
-        const resolver = this.resolvers.get(resolver_cost_changed_message.id)!;
-        resolver.set_cost(resolver_cost_changed_message.cost.num / resolver_cost_changed_message.cost.den);
-        this.listeners.forEach(listener => listener.resolver_cost_changed(resolver));
     }
 
     set_current_resolver(current_resolver_changed_message: any): void {

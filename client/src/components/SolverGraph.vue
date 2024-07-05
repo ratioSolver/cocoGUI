@@ -36,7 +36,9 @@ class SolverListenerImpl extends SolverListener {
     name: 'dagre',
     rankDir: 'LR',
     fit: false,
-    nodeDimensionsIncludeLabels: true
+    nodeDimensionsIncludeLabels: true,
+    animate: true,
+    animationDuration: 100
   };
   tippys: Map<string, Instance> = new Map();
 
