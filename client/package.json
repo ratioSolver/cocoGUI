@@ -18,7 +18,8 @@
     "roboto-fontface": "*",
     "tippy.js": "^6.3.7",
     "vue": "^3.4.21",
-    "vuetify": "^3.5.8"
+    "vuetify": "^3.5.8",
+    "leaflet": "^1.9.4"
   },
   "devDependencies": {
     "@babel/types": "^7.24.0",
