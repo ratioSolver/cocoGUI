@@ -1,13 +1,13 @@
 <template>
-  <v-card :class="{ 'maximized': maximized.value }">
+  <v-card :class="{ 'maximized': maximized }" class="fill-height">
     <v-toolbar>
       <v-toolbar-title>{{ props.title }}</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn icon @click="toggle_maximized">
-        <v-icon>{{ maximized.value ? 'mdi-window-minimize' : 'mdi-window-maximize' }}</v-icon>
+        <v-icon>{{ maximized ? 'mdi-window-minimize' : 'mdi-window-maximize' }}</v-icon>
       </v-btn>
     </v-toolbar>
-    <v-card-text>
+    <v-card-text class="fill-height">
       <slot></slot>
     </v-card-text>
   </v-card>
@@ -32,6 +32,5 @@ function toggle_maximized() {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 1000;
 }
 </style>

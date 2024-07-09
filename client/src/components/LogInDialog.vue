@@ -21,7 +21,7 @@ import { ref, watch } from 'vue';
 import { Error } from '@/error';
 
 const props = defineProps<{ dialog: boolean; login: (username: string, password: string) => Promise<Error>; }>();
-defineEmits<{ (event: 'update:dialog', value: boolean): void; }>();
+const emit = defineEmits<{ (event: 'update:dialog', value: boolean): void; }>();
 
 const local_dialog = ref(props.dialog);
 const username = ref('');

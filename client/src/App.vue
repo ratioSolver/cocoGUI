@@ -2,6 +2,7 @@
   <v-app>
     <v-navigation-drawer v-model="drawer">
       <v-list dense v-model:selected="window_model">
+        <v-list-item value="home" title="Home" prepend-icon="mdi-home" />
         <v-list-item value="chat" title="Chat" prepend-icon="mdi-message-text-outline" />
         <v-list-item v-if="knowledge.types.size > 0" value="taxonomy" title="Taxonomy" prepend-icon="mdi-chart-arc" />
         <v-list-subheader v-if="knowledge.solvers.size > 0" inset>Solvers</v-list-subheader>
@@ -23,6 +24,15 @@
 
     <v-main>
       <v-window v-model="window_model" class="fill-height">
+        <v-window-item value="home" class="fill-height">
+          <v-row class="fill-height">
+            <v-col cols="12" md="6">
+              <Frame title="Chat" icon="mdi-message-text-outline">
+                <Map :center="{ lat: 51.505, lng: -0.09 }" zoom=13></Map>
+              </Frame>
+            </v-col>
+          </v-row>
+        </v-window-item>
         <v-window-item value="chat" class="fill-height">
           <Chat :messages="messages" @send="send_message" />
         </v-window-item>
@@ -59,7 +69,7 @@ import { coco } from './type';
 import { Rule } from './knowledge';
 
 const drawer = ref(false)
-const window_model = ref(['chat']);
+const window_model = ref(['home']);
 
 const { knowledge, messages } = storeToRefs(useCoCoStore());
 
