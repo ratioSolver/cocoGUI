@@ -1,6 +1,6 @@
 <template>
   <v-card :class="{ 'maximized': maximized }" class="fill-height">
-    <v-toolbar>
+    <v-toolbar density="compact">
       <v-toolbar-title>{{ props.title }}</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn icon @click="toggle_maximized">
