@@ -1,5 +1,5 @@
 <template>
-  <v-card :class="{ 'maximized': maximized }" class="fill-height">
+  <v-card v-if="!maximized" class="fill-height">
     <v-toolbar density="compact">
       <v-toolbar-title>{{ props.title }}</v-toolbar-title>
       <v-spacer></v-spacer>
@@ -11,6 +11,21 @@
       <slot></slot>
     </v-card-text>
   </v-card>
+
+  <v-dialog v-else v-model="maximized" persistent width="100%" height="100%">
+    <v-card class="fill-height">
+      <v-toolbar density="compact">
+        <v-toolbar-title>{{ props.title }}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-btn icon @click="toggle_maximized">
+          <v-icon>mdi-window-restore</v-icon>
+        </v-btn>
+      </v-toolbar>
+      <v-card-text class="fill-height">
+        <slot></slot>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup lang="ts">
@@ -24,13 +39,3 @@ function toggle_maximized() {
   maximized.value = !maximized.value;
 }
 </script>
-
-<style scoped>
-.maximized {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-</style>
