@@ -27,14 +27,14 @@
         <v-window-item value="home" class="fill-height">
           <v-row class="h-50">
             <v-col cols="12" md="6">
-              <Frame title="Map">
+              <FrameComponent title="Map">
                 <Map map_id="map1" :center="{ lat: 51.505, lng: -0.09 }" zoom=13></Map>
-              </Frame>
+              </FrameComponent>
             </v-col>
             <v-col cols="12" md="6">
-              <Frame title="Map">
+              <FrameComponent title="Map">
                 <Map map_id="map2" :center="{ lat: 48.8566, lng: 2.3522 }" zoom=13></Map>
-              </Frame>
+              </FrameComponent>
             </v-col>
           </v-row>
         </v-window-item>

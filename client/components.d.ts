@@ -10,7 +10,7 @@ declare module 'vue' {
     BooleanPublisher: typeof import('./src/components/BooleanPublisher.vue')['default']
     Chat: typeof import('./src/components/Chat.vue')['default']
     DeliberativeRule: typeof import('./src/components/DeliberativeRule.vue')['default']
-    Frame: typeof import('./src/components/Frame.vue')['default']
+    FrameComponent: typeof import('./src/components/FrameComponent.vue')['default']
     IntPublisher: typeof import('./src/components/IntPublisher.vue')['default']
     Item: typeof import('./src/components/Item.vue')['default']
     ItemChart: typeof import('./src/components/ItemChart.vue')['default']
