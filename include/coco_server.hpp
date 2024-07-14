@@ -69,7 +69,12 @@ namespace coco
   };
 
   const json::json j_schemas{
-      coco_parameter_schema,
+      property_schema,
+      integer_property_schema,
+      float_property_schema,
+      string_property_schema,
+      symbol_property_schema,
+      json_property_schema,
       coco_type_schema,
       coco_item_schema,
       data_schema,
@@ -120,9 +125,6 @@ namespace coco
       reactive_rules_message,
       deliberative_rules_message,
       solvers_message,
-      new_parameter_message,
-      updated_parameter_message,
-      deleted_parameter_message,
       new_type_message,
       updated_type_message,
       deleted_type_message,
@@ -163,8 +165,6 @@ namespace coco
             {"description", "Endpoint to fetch the AsyncAPI Specification document"},
             {"responses",
              {{"200", {{"description", "Successful response with AsyncAPI Specification document"}}}}}}}}},
-        parameters_path,
-        parameters_id_path,
         types_path,
         types_id_path,
         items_path,
