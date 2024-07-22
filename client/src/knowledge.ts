@@ -202,32 +202,42 @@ export class Knowledge {
         for (let type_message of taxonomy_message.types) {
             const static_parameters = new Map<string, coco.ParameterType>();
             for (let parameter_message of type_message.static_parameters) {
-                const parameter = coco.get_parameter(parameter_message);
+                const parameter = coco.get_parameter(this, parameter_message);
                 static_parameters.set(parameter.name, parameter);
             }
             const dynamic_parameters = new Map<string, coco.ParameterType>();
             for (let parameter_message of type_message.dynamic_parameters) {
-                const parameter = coco.get_parameter(parameter_message);
+                const parameter = coco.get_parameter(this, parameter_message);
                 dynamic_parameters.set(parameter.name, parameter);
             }
-            const type = new coco.Type(type_message.id, type_message.name, type_message.description, static_parameters, dynamic_parameters);
+            const type = new coco.Type(type_message.id, type_message.name, type_message.description, new Map<string, coco.Type>(), static_parameters, dynamic_parameters);
             this.types.set(type.id, type);
+        }
+        for (let type_message of taxonomy_message.types) {
+            const type = this.types.get(type_message.id)!;
+            for (let parent_id of type_message.parents)
+                type.parents.set(parent_id, this.types.get(parent_id)!);
         }
         this.listeners.forEach(listener => listener.taxonomy(Array.from(this.types.values())));
     }
 
     add_type(created_type_message: any): void {
+        const parents = new Map<string, coco.Type>();
+        for (let parent_id of created_type_message.parents) {
+            const parent = this.types.get(parent_id)!;
+            parents.set(parent.id, parent);
+        }
         const static_parameters = new Map<string, coco.ParameterType>();
         for (let parameter_message of created_type_message.static_parameters) {
-            const parameter = coco.get_parameter(parameter_message);
+            const parameter = coco.get_parameter(this, parameter_message);
             static_parameters.set(parameter.name, parameter);
         }
         const dynamic_parameters = new Map<string, coco.ParameterType>();
         for (let parameter_message of created_type_message.dynamic_parameters) {
-            const parameter = coco.get_parameter(parameter_message);
+            const parameter = coco.get_parameter(this, parameter_message);
             dynamic_parameters.set(parameter.name, parameter);
         }
-        const type = new coco.Type(created_type_message.id, created_type_message.name, created_type_message.description, static_parameters, dynamic_parameters);
+        const type = new coco.Type(created_type_message.id, created_type_message.name, created_type_message.description, parents, static_parameters, dynamic_parameters);
         this.types.set(type.id, type);
         this.listeners.forEach(listener => listener.type_added(type));
     }
@@ -238,16 +248,22 @@ export class Knowledge {
             type.name = updated_type_message.name;
         if (updated_type_message.description)
             type.description = updated_type_message.description;
+        if (updated_type_message.parents) {
+            const parents = new Map<string, coco.Type>();
+            for (let parent_id of updated_type_message.parents)
+                parents.set(parent_id, this.types.get(parent_id)!);
+            type.parents = parents;
+        }
         if (updated_type_message.static_parameters) {
             const static_parameters = new Map<string, coco.ParameterType>();
             for (let parameter_message of updated_type_message.static_parameters)
-                static_parameters.set(parameter_message.name, coco.get_parameter(parameter_message));
+                static_parameters.set(parameter_message.name, coco.get_parameter(this, parameter_message));
             type.static_parameters = static_parameters;
         }
         if (updated_type_message.dynamic_parameters) {
             const dynamic_parameters = new Map<string, coco.ParameterType>();
             for (let parameter_message of updated_type_message.dynamic_parameters)
-                dynamic_parameters.set(parameter_message.name, coco.get_parameter(parameter_message));
+                dynamic_parameters.set(parameter_message.name, coco.get_parameter(this, parameter_message));
             type.dynamic_parameters = dynamic_parameters;
         }
         this.listeners.forEach(listener => listener.type_updated(type));

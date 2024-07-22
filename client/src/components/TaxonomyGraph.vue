@@ -79,6 +79,16 @@ class TypeListener extends KnowledgeListener {
       n.on('mouseover', () => this.tippys.get(type.id)!.show());
       n.on('mouseout', () => this.tippys.get(type.id)!.hide());
     }
+    for (const type of types.values()) {
+      for (const parent of type.parents)
+        this.cy.add({ group: 'edges', data: { id: `${type.id}-${parent.id}`, source: type.id, target: parent.id } });
+      for (const prop of type.static_properties)
+        if (prop instanceof coco.ItemParameter)
+          this.cy.add({ group: 'edges', data: { id: `${type.id}-${prop.type.id}`, source: type.id, target: prop.id } });
+      for (const prop of type.dynamic_properties)
+        if (prop instanceof coco.ItemParameter)
+          this.cy.add({ group: 'edges', data: { id: `${type.id}-${prop.type.id}`, source: type.id, target: prop.id } });
+    }
     this.cy.layout(this.layout).run();
   }
   type_added(type: coco.Type) {
@@ -86,6 +96,14 @@ class TypeListener extends KnowledgeListener {
     this.tippys.set(type.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: coco.Type.type_tooltip(type), }));
     n.on('mouseover', () => this.tippys.get(type.id)!.show());
     n.on('mouseout', () => this.tippys.get(type.id)!.hide());
+    for (const parent of type.parents)
+      this.cy.add({ group: 'edges', data: { id: `${type.id}-${parent.id}`, source: type.id, target: parent.id } });
+    for (const prop of type.static_properties)
+      if (prop instanceof coco.ItemParameter)
+        this.cy.add({ group: 'edges', data: { id: `${type.id}-${prop.type.id}`, source: type.id, target: prop.id } });
+    for (const prop of type.dynamic_properties)
+      if (prop instanceof coco.ItemParameter)
+        this.cy.add({ group: 'edges', data: { id: `${type.id}-${prop.type.id}`, source: type.id, target: prop.id } });
     this.cy.layout(this.layout).run();
   }
   type_updated(type: coco.Type) {

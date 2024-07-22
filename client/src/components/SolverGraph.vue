@@ -109,9 +109,9 @@ class SolverListenerImpl extends SolverListener {
       this.tippys.set(resolver.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Resolver.resolver_tooltip(resolver), }));
       n.on('mouseover', () => this.tippys.get(resolver.id)!.show());
       n.on('mouseout', () => this.tippys.get(resolver.id)!.hide());
-      this.cy.add({ group: 'edges', data: { id: resolver.id + '-' + resolver.flaw.id, source: resolver.id, target: resolver.flaw.id, stroke: stroke_style(resolver) } });
+      this.cy.add({ group: 'edges', data: { id: `${resolver.id}-${resolver.flaw.id}`, source: resolver.id, target: resolver.flaw.id, stroke: stroke_style(resolver) } });
       for (const precondition of resolver.preconditions)
-        this.cy.add({ group: 'edges', data: { id: precondition.id + '-' + resolver.id, source: precondition.id, target: resolver.id, stroke: stroke_style(resolver) } });
+        this.cy.add({ group: 'edges', data: { id: `${precondition.id}-${resolver.id}`, source: precondition.id, target: resolver.id, stroke: stroke_style(resolver) } });
     }
     if (current_flaw && current_flaw.current)
       this.cy.$id(current_flaw.id).addClass('current');
@@ -125,7 +125,7 @@ class SolverListenerImpl extends SolverListener {
     n.on('mouseover', () => this.tippys.get(flaw.id)!.show());
     n.on('mouseout', () => this.tippys.get(flaw.id)!.hide());
     for (const cause of flaw.causes)
-      this.cy.add({ group: 'edges', data: { id: flaw.id + '-' + cause.id, source: flaw.id, target: cause.id, stroke: stroke_style(flaw) } });
+      this.cy.add({ group: 'edges', data: { id: `${flaw.id}-${cause.id}`, source: flaw.id, target: cause.id, stroke: stroke_style(flaw) } });
     this.cy.layout(this.layout).run();
   }
   flaw_state_changed(flaw: Flaw): void {
@@ -153,14 +153,14 @@ class SolverListenerImpl extends SolverListener {
     this.tippys.set(resolver.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: Resolver.resolver_tooltip(resolver), }));
     n.on('mouseover', () => this.tippys.get(resolver.id)!.show());
     n.on('mouseout', () => this.tippys.get(resolver.id)!.hide());
-    this.cy.add({ group: 'edges', data: { id: resolver.id + '-' + resolver.flaw.id, source: resolver.id, target: resolver.flaw.id, stroke: stroke_style(resolver) } });
+    this.cy.add({ group: 'edges', data: { id: `${resolver.id}-${resolver.flaw.id}`, source: resolver.id, target: resolver.flaw.id, stroke: stroke_style(resolver) } });
     this.cy.layout(this.layout).run();
   }
   resolver_state_changed(resolver: Resolver): void {
     this.cy.$id(resolver.id).data({ color: color(resolver), stroke: stroke_style(resolver) });
-    this.cy.$id(resolver.id + '-' + resolver.flaw.id).data({ stroke: stroke_style(resolver) });
+    this.cy.$id(`${resolver.id}-${resolver.flaw.id}`).data({ stroke: stroke_style(resolver) });
     for (const precondition of resolver.preconditions)
-      this.cy.$id(precondition.id + '-' + resolver.id).data({ stroke: stroke_style(resolver) });
+      this.cy.$id(`${precondition.id}-${resolver.id}`).data({ stroke: stroke_style(resolver) });
     this.cy.layout(this.layout).run();
   }
   resolver_cost_changed(resolver: Resolver): void {
@@ -175,7 +175,7 @@ class SolverListenerImpl extends SolverListener {
     this.cy.layout(this.layout).run();
   }
   causal_link_added(flaw: Flaw, resolver: Resolver): void {
-    this.cy.add({ group: 'edges', data: { id: flaw.id + '-' + resolver.id, source: flaw.id, target: resolver.id, stroke: stroke_style(resolver) } });
+    this.cy.add({ group: 'edges', data: { id: `${flaw.id}-${resolver.id}`, source: flaw.id, target: resolver.id, stroke: stroke_style(resolver) } });
     this.cy.layout(this.layout).run();
   }
 }

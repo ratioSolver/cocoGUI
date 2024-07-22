@@ -1,3 +1,5 @@
+import { Knowledge } from "./knowledge";
+
 export namespace coco {
 
     /**
@@ -121,54 +123,47 @@ export namespace coco {
         }
     }
 
-    function create_default_array(shape: number[], element_type: any): any[] {
-        if (shape.length == 1) {
-            return new Array(shape[0]).fill(element_type.default_value);
-        } else {
-            return new Array(shape[0]).fill(null).map(() => create_default_array(shape.slice(1), element_type));
+    /**
+     * Represents an item parameter.
+     */
+    export class ItemParameter extends ParameterType {
+
+        type: Type;
+
+        /**
+         * Creates a new ItemParameter instance.
+         *
+         * @param name The name of the parameter.
+         * @param type The type of the parameter.
+         * @param default_value The default value of the parameter.
+         */
+        constructor(name: string, type: Type, default_value?: string) {
+            super(name, default_value);
+            this.type = type;
         }
     }
 
     /**
-     * Represents an array parameter.
+     * Represents a JSON parameter.
      */
-    export class ArrayParameter extends ParameterType {
+    export class JSONParameter extends ParameterType {
 
-        element_type: ParameterType;
-        shape: number[];
+        schema: any;
 
         /**
-         * Creates a new ArrayParameter instance.
+         * Creates a new JSONParameter instance.
          *
          * @param name The name of the parameter.
-         * @param element_type The element type of the parameter.
-         * @param shape The shape of the parameter.
+         * @param schema The schema of the parameter.
          * @param default_value The default value of the parameter.
          */
-        constructor(name: string, element_type: ParameterType, shape: number[], default_value: any = create_default_array(shape, element_type)) {
+        constructor(name: string, schema: any, default_value?: any) {
             super(name, default_value);
-            this.element_type = element_type;
-            this.shape = shape;
+            this.schema = schema;
         }
     }
 
-    /**
-     * Represents a geometry parameter.
-     */
-    export class GeometryParameter extends ParameterType {
-
-        /**
-         * Creates a new GeometryParameter instance.
-         *
-         * @param name The name of the parameter.
-         * @param default_value The default value of the parameter.
-         */
-        constructor(name: string, default_value?: JSON) {
-            super(name, default_value);
-        }
-    }
-
-    export function get_parameter(parameter: any): ParameterType {
+    export function get_parameter(kb: Knowledge, parameter: any): ParameterType {
         switch (parameter.type) {
             case "boolean":
                 return new BooleanParameter(parameter.name, parameter.default_value);
@@ -180,10 +175,10 @@ export namespace coco {
                 return new StringParameter(parameter.name, parameter.default_value);
             case "symbol":
                 return new SymbolParameter(parameter.name, parameter.symbols, parameter.multiple, parameter.default_value);
-            case "array":
-                return new ArrayParameter(parameter.name, get_parameter(parameter.element_type), parameter.shape, parameter.default_value);
-            case "geometry":
-                return new GeometryParameter(parameter.name, parameter.default_value);
+            case "item":
+                return new ItemParameter(parameter.name, kb.types.get(parameter.type_id)!, parameter.default_value);
+            case "json":
+                return new JSONParameter(parameter.name, parameter.schema, parameter.default_value);
             default:
                 throw new Error(`Unknown parameter type: ${parameter.type}`);
         }
@@ -197,6 +192,7 @@ export namespace coco {
         id: string;
         name: string;
         description: string;
+        parents: Map<string, Type>;
         static_parameters: Map<string, ParameterType>;
         dynamic_parameters: Map<string, ParameterType>;
 
@@ -205,14 +201,16 @@ export namespace coco {
          *
          * @param id The ID of the type.
          * @param name The name of the type.
+         * @param parents The parents of the type.
          * @param description The description of the type.
          * @param static_parameters The static parameters of the type.
          * @param dynamic_parameters The dynamic parameters of the type.
          */
-        constructor(id: string, name: string, description: string, static_parameters: Map<string, ParameterType>, dynamic_parameters: Map<string, ParameterType>) {
+        constructor(id: string, name: string, description: string, parents: Map<string, Type>, static_parameters: Map<string, ParameterType>, dynamic_parameters: Map<string, ParameterType>) {
             this.id = id;
             this.name = name;
             this.description = description;
+            this.parents = parents;
             this.static_parameters = static_parameters;
             this.dynamic_parameters = dynamic_parameters;
         }
