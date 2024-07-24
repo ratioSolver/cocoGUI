@@ -11,7 +11,7 @@
         </v-col>
       </v-row>
       <v-divider />
-      <v-table v-if="type.static_parameters.size > 0">
+      <v-table v-if="type.static_properties.size > 0">
         <thead>
           <tr>
             <th class="text-left">Static parameter name</th>
@@ -19,14 +19,14 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="[name, tp] in type.static_parameters" :key="name">
+          <tr v-for="[name, tp] in type.static_properties" :key="name">
             <td>{{ name }}</td>
             <td>{{ tp.default_value }}</td>
           </tr>
         </tbody>
       </v-table>
       <v-divider />
-      <v-table v-if="type.dynamic_parameters.size > 0">
+      <v-table v-if="type.dynamic_properties.size > 0">
         <thead>
           <tr>
             <th class="text-left">Dynamic parameter name</th>
@@ -34,7 +34,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="[name, tp] in type.static_parameters" :key="name">
+          <tr v-for="[name, tp] in type.static_properties" :key="name">
             <td>{{ name }}</td>
             <td>{{ tp.default_value }}</td>
           </tr>

@@ -3,18 +3,18 @@ import { Knowledge } from "./knowledge";
 export namespace coco {
 
     /**
-     * Represents a parameter.
+     * Represents a property.
      */
-    export class ParameterType {
+    export class PropertyType {
 
         name: string;
         default_value: any;
 
         /**
-         * Creates a new Parameter instance.
+         * Creates a new Property instance.
          *
-         * @param name The name of the parameter.
-         * @param default_value The default value of the parameter.
+         * @param name The name of the property.
+         * @param default_value The default value of the property.
          */
         constructor(name: string, default_value?: any) {
             this.name = name;
@@ -23,15 +23,15 @@ export namespace coco {
     }
 
     /**
-     * Represents a boolean parameter.
+     * Represents a boolean property.
      */
-    export class BooleanParameter extends ParameterType {
+    export class BooleanProperty extends PropertyType {
 
         /**
-         * Creates a new BooleanParameter instance.
+         * Creates a new BooleanProperty instance.
          *
-         * @param name The name of the parameter.
-         * @param default_value The default value of the parameter.
+         * @param name The name of the property.
+         * @param default_value The default value of the property.
          */
         constructor(name: string, default_value?: boolean) {
             super(name, default_value);
@@ -39,20 +39,20 @@ export namespace coco {
     }
 
     /**
-     * Represents an integer parameter.
+     * Represents an integer property.
      */
-    export class IntegerParameter extends ParameterType {
+    export class IntegerProperty extends PropertyType {
 
         min: number;
         max: number;
 
         /**
-         * Creates a new IntegerParameter instance.
+         * Creates a new IntegerProperty instance.
          *
-         * @param name The name of the parameter.
-         * @param min The minimum value of the parameter.
-         * @param max The maximum value of the parameter.
-         * @param default_value The default value of the parameter.
+         * @param name The name of the property.
+         * @param min The minimum value of the property.
+         * @param max The maximum value of the property.
+         * @param default_value The default value of the property.
          */
         constructor(name: string, min?: number, max?: number, default_value: number = min || 0) {
             super(name, default_value);
@@ -62,20 +62,20 @@ export namespace coco {
     }
 
     /**
-     * Represents a real parameter.
+     * Represents a real property.
      */
-    export class RealParameter extends ParameterType {
+    export class RealProperty extends PropertyType {
 
         min: number;
         max: number;
 
         /**
-         * Creates a new RealParameter instance.
+         * Creates a new RealProperty instance.
          *
-         * @param name The name of the parameter.
-         * @param min The minimum value of the parameter.
-         * @param max The maximum value of the parameter.
-         * @param default_value The default value of the parameter.
+         * @param name The name of the property.
+         * @param min The minimum value of the property.
+         * @param max The maximum value of the property.
+         * @param default_value The default value of the property.
          */
         constructor(name: string, min?: number, max?: number, default_value: number = min || 0) {
             super(name, default_value);
@@ -85,15 +85,15 @@ export namespace coco {
     }
 
     /**
-     * Represents a string parameter.
+     * Represents a string property.
      */
-    export class StringParameter extends ParameterType {
+    export class StringProperty extends PropertyType {
 
         /**
-         * Creates a new StringParameter instance.
+         * Creates a new StringProperty instance.
          *
-         * @param name The name of the parameter.
-         * @param default_value The default value of the parameter.
+         * @param name The name of the property.
+         * @param default_value The default value of the property.
          */
         constructor(name: string, default_value?: string) {
             super(name, default_value);
@@ -101,20 +101,20 @@ export namespace coco {
     }
 
     /**
-     * Represents a symbol parameter.
+     * Represents a symbol property.
      */
-    export class SymbolParameter extends ParameterType {
+    export class SymbolProperty extends PropertyType {
 
         symbols: string[];
         multiple: boolean;
 
         /**
-         * Creates a new SymbolParameter instance.
+         * Creates a new SymbolProperty instance.
          *
-         * @param name The name of the parameter.
-         * @param symbols The symbols of the parameter.
-         * @param multiple Whether the parameter can have multiple values.
-         * @param default_value The default value of the parameter.
+         * @param name The name of the property.
+         * @param symbols The symbols of the property.
+         * @param multiple Whether the property can have multiple values.
+         * @param default_value The default value of the property.
          */
         constructor(name: string, symbols: string[], multiple: boolean = false, default_value?: string) {
             super(name, default_value);
@@ -124,18 +124,18 @@ export namespace coco {
     }
 
     /**
-     * Represents an item parameter.
+     * Represents an item property.
      */
-    export class ItemParameter extends ParameterType {
+    export class ItemProperty extends PropertyType {
 
         type: Type;
 
         /**
-         * Creates a new ItemParameter instance.
+         * Creates a new ItemProperty instance.
          *
-         * @param name The name of the parameter.
-         * @param type The type of the parameter.
-         * @param default_value The default value of the parameter.
+         * @param name The name of the property.
+         * @param type The type of the property.
+         * @param default_value The default value of the property.
          */
         constructor(name: string, type: Type, default_value?: string) {
             super(name, default_value);
@@ -144,18 +144,18 @@ export namespace coco {
     }
 
     /**
-     * Represents a JSON parameter.
+     * Represents a JSON property.
      */
-    export class JSONParameter extends ParameterType {
+    export class JSONProperty extends PropertyType {
 
         schema: any;
 
         /**
-         * Creates a new JSONParameter instance.
+         * Creates a new JSONProperty instance.
          *
-         * @param name The name of the parameter.
-         * @param schema The schema of the parameter.
-         * @param default_value The default value of the parameter.
+         * @param name The name of the property.
+         * @param schema The schema of the property.
+         * @param default_value The default value of the property.
          */
         constructor(name: string, schema: any, default_value?: any) {
             super(name, default_value);
@@ -163,24 +163,24 @@ export namespace coco {
         }
     }
 
-    export function get_parameter(kb: Knowledge, parameter: any): ParameterType {
-        switch (parameter.type) {
+    export function get_property(kb: Knowledge, property: any): PropertyType {
+        switch (property.type) {
             case "boolean":
-                return new BooleanParameter(parameter.name, parameter.default_value);
+                return new BooleanProperty(property.name, property.default_value);
             case "integer":
-                return new IntegerParameter(parameter.name, parameter.min, parameter.max, parameter.default_value);
+                return new IntegerProperty(property.name, property.min, property.max, property.default_value);
             case "real":
-                return new RealParameter(parameter.name, parameter.min, parameter.max, parameter.default_value);
+                return new RealProperty(property.name, property.min, property.max, property.default_value);
             case "string":
-                return new StringParameter(parameter.name, parameter.default_value);
+                return new StringProperty(property.name, property.default_value);
             case "symbol":
-                return new SymbolParameter(parameter.name, parameter.symbols, parameter.multiple, parameter.default_value);
+                return new SymbolProperty(property.name, property.symbols, property.multiple, property.default_value);
             case "item":
-                return new ItemParameter(parameter.name, kb.types.get(parameter.type_id)!, parameter.default_value);
+                return new ItemProperty(property.name, kb.types.get(property.type_id)!, property.default_value);
             case "json":
-                return new JSONParameter(parameter.name, parameter.schema, parameter.default_value);
+                return new JSONProperty(property.name, property.schema, property.default_value);
             default:
-                throw new Error(`Unknown parameter type: ${parameter.type}`);
+                throw new Error(`Unknown property type: ${property.type}`);
         }
     }
 
@@ -193,8 +193,8 @@ export namespace coco {
         name: string;
         description: string;
         parents: Map<string, Type>;
-        static_parameters: Map<string, ParameterType>;
-        dynamic_parameters: Map<string, ParameterType>;
+        static_properties: Map<string, PropertyType>;
+        dynamic_properties: Map<string, PropertyType>;
 
         /**
          * Creates a new Type instance.
@@ -203,16 +203,16 @@ export namespace coco {
          * @param name The name of the type.
          * @param parents The parents of the type.
          * @param description The description of the type.
-         * @param static_parameters The static parameters of the type.
-         * @param dynamic_parameters The dynamic parameters of the type.
+         * @param static_properties The static properties of the type.
+         * @param dynamic_properties The dynamic properties of the type.
          */
-        constructor(id: string, name: string, description: string, parents: Map<string, Type>, static_parameters: Map<string, ParameterType>, dynamic_parameters: Map<string, ParameterType>) {
+        constructor(id: string, name: string, description: string, parents: Map<string, Type>, static_properties: Map<string, PropertyType>, dynamic_properties: Map<string, PropertyType>) {
             this.id = id;
             this.name = name;
             this.description = description;
             this.parents = parents;
-            this.static_parameters = static_parameters;
-            this.dynamic_parameters = dynamic_parameters;
+            this.static_properties = static_properties;
+            this.dynamic_properties = dynamic_properties;
         }
 
         static type_tooltip(type: Type): string {
@@ -252,7 +252,7 @@ export namespace coco {
         type: Type;
         name: string;
         description: string;
-        parameters: Record<string, any>;
+        properties: Record<string, any>;
         values: Record<string, any>[];
         listeners: Set<ItemListener>;
 
@@ -263,14 +263,14 @@ export namespace coco {
          * @param type The type of the item.
          * @param name The name of the item.
          * @param description The description of the item.
-         * @param parameters The parameters of the item.
+         * @param properties The properties of the item.
          */
-        constructor(id: string, type: Type, name: string, description: string, parameters: Record<string, any>) {
+        constructor(id: string, type: Type, name: string, description: string, properties: Record<string, any>) {
             this.id = id;
             this.type = type;
             this.name = name;
             this.description = description;
-            this.parameters = parameters;
+            this.properties = properties;
             this.values = [];
             this.listeners = new Set();
         }

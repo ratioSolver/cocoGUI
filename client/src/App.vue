@@ -27,8 +27,8 @@
         <v-window-item value="home" class="fill-height">
           <v-row class="h-50">
             <v-col cols="12" md="6">
-              <FrameComponent title="Map">
-                <Map map_id="map1" :center="{ lat: 51.505, lng: -0.09 }" zoom=13></Map>
+              <FrameComponent title="Taxonomy">
+                <TaxonomyGraph :knowledge="knowledge" />
               </FrameComponent>
             </v-col>
             <v-col cols="12" md="6">
