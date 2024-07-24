@@ -24,8 +24,11 @@ namespace coco
     std::unique_ptr<network::response> open_api(network::request &req);
     std::unique_ptr<network::response> async_api(network::request &req);
 
-    std::unique_ptr<network::response> types(network::request &req);
-    std::unique_ptr<network::response> items(network::request &req);
+    std::unique_ptr<network::response> get_types(network::request &req);
+    std::unique_ptr<network::response> create_type(network::request &req);
+
+    std::unique_ptr<network::response> get_items(network::request &req);
+    std::unique_ptr<network::response> create_item(network::request &req);
 
     void on_ws_open(network::ws_session &ws);
     void on_ws_message(network::ws_session &ws, const std::string &msg);
