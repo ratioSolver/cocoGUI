@@ -1,5 +1,5 @@
 <template>
-  <v-container id="taxonomy-graph" class="fill-height" fluid />
+  <v-container id="taxonomy-graph" class="taxonomy-container" fluid />
 </template>
 
 
@@ -127,3 +127,10 @@ onUnmounted(() => {
   listener = null;
 });
 </script>
+
+<style scoped>
+.taxonomy-container {
+  height: calc(100% - 50px);
+  width: 100%;
+}
+</style>
