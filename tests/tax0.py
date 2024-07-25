@@ -22,8 +22,8 @@ print(sensor_type)
 # Add the Sensor type as a static property of the Kit type and the User type as a dynamic property
 del kit_type['name']
 del kit_type['description']
-kit_type['static_properties'] = {'sensor': {'type': 'item', 'item_type': sensor_type['id']}}
-kit_type['dynamic_properties'] = {'user': {'type': 'item', 'item_type': user_type['id']}}
+kit_type['static_properties'] = {'sensor': {'type': 'item', 'type_id': sensor_type['id']}}
+kit_type['dynamic_properties'] = {'user': {'type': 'item', 'type_id': user_type['id']}}
 print(kit_type)
 response = requests.put(url + '/types/' + kit_type['id'], json=kit_type)
 kit_type = response.json()

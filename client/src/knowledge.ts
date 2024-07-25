@@ -199,27 +199,23 @@ export class Knowledge {
 
     set_taxonomy(taxonomy_message: any): void {
         this.types.clear();
-        for (let type_message of taxonomy_message.types) {
-            const static_properties = new Map<string, coco.PropertyType>();
-            if (type_message.static_properties)
-                for (let property_message of type_message.static_properties) {
-                    const property = coco.get_property(this, property_message);
-                    static_properties.set(property.name, property);
-                }
-            const dynamic_properties = new Map<string, coco.PropertyType>();
-            if (type_message.dynamic_properties)
-                for (let property_message of type_message.dynamic_properties) {
-                    const property = coco.get_property(this, property_message);
-                    dynamic_properties.set(property.name, property);
-                }
-            const type = new coco.Type(type_message.id, type_message.name, type_message.description, new Map<string, coco.Type>(), static_properties, dynamic_properties);
-            this.types.set(type.id, type);
-        }
+        for (let type_message of taxonomy_message.types)
+            this.types.set(type_message.id, new coco.Type(type_message.id, type_message.name, type_message.description));
         for (let type_message of taxonomy_message.types) {
             const type = this.types.get(type_message.id)!;
             if (type_message.parents)
                 for (let parent_id of type_message.parents)
                     type.parents.set(parent_id, this.types.get(parent_id)!);
+            if (type_message.static_properties)
+                for (let property_message of type_message.static_properties) {
+                    const property = coco.get_property(this, property_message);
+                    type.static_properties.set(property.name, property);
+                }
+            if (type_message.dynamic_properties)
+                for (let property_message of type_message.dynamic_properties) {
+                    const property = coco.get_property(this, property_message);
+                    type.dynamic_properties.set(property.name, property);
+                }
         }
         this.listeners.forEach(listener => listener.taxonomy(Array.from(this.types.values())));
     }
