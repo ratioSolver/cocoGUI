@@ -26,6 +26,8 @@ namespace coco
 
     std::unique_ptr<network::response> get_types(network::request &req);
     std::unique_ptr<network::response> create_type(network::request &req);
+    std::unique_ptr<network::response> update_type(network::request &req);
+    std::unique_ptr<network::response> delete_type(network::request &req);
 
     std::unique_ptr<network::response> get_items(network::request &req);
     std::unique_ptr<network::response> create_item(network::request &req);
