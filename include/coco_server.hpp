@@ -37,6 +37,16 @@ namespace coco
     void on_ws_close(network::ws_session &ws);
     void on_ws_error(network::ws_session &ws, const boost::system::error_code &);
 
+    void new_type(const type &tp) override;
+    void updated_type(const type &tp) override;
+    void deleted_type(const std::string &tp_id) override;
+
+    void new_item(const item &itm) override;
+    void updated_item(const item &itm) override;
+    void deleted_item(const std::string &itm_id) override;
+
+    void new_data(const item &itm, const std::chrono::system_clock::time_point &timestamp, const json::json &data) override;
+
     void new_solver(const coco_executor &exec) override;
     void deleted_solver(const uintptr_t id) override;
 

@@ -285,6 +285,44 @@ namespace coco
         LOG_DEBUG("Connected clients: " + std::to_string(clients.size()));
     }
 
+    void coco_server::new_type(const type &tp)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_new_type_message(tp));
+    }
+    void coco_server::updated_type(const type &tp)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_updated_type_message(tp));
+    }
+    void coco_server::deleted_type(const std::string &tp_id)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_deleted_type_message(tp_id));
+    }
+
+    void coco_server::new_item(const item &itm)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_new_item_message(itm));
+    }
+    void coco_server::updated_item(const item &itm)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_updated_item_message(itm));
+    }
+    void coco_server::deleted_item(const std::string &itm_id)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_deleted_item_message(itm_id));
+    }
+
+    void coco_server::new_data(const item &itm, const std::chrono::system_clock::time_point &timestamp, const json::json &data)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        broadcast(make_new_data_message(itm, timestamp, data));
+    }
+
     void coco_server::new_solver(const coco_executor &exec)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
