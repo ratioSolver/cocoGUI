@@ -7,8 +7,8 @@ namespace coco
 {
     coco_server::coco_server() : coco_core(std::make_unique<mongo_db>()), network::server()
     {
-        LOG_TRACE("OpenAPI: " + j_open_api.dump());
-        LOG_TRACE("AsyncAPI: " + j_async_api.dump());
+        LOG_TRACE("OpenAPI: " + build_open_api().dump());
+        LOG_TRACE("AsyncAPI: " + build_async_api().dump());
 
         add_route(network::Get, "^/$", std::bind(&coco_server::index, this, std::placeholders::_1));
         add_route(network::Get, "^(/assets/.+)|/.+\\.ico|/.+\\.png", std::bind(&coco_server::assets, this, std::placeholders::_1));
@@ -414,56 +414,55 @@ namespace coco
 
     [[nodiscard]] json::json build_schemas() noexcept
     {
-        json::json components = json::json(json::json_type::array);
-        for (const auto &s : coco_schemas.as_array())
-            components.push_back(s);
-        for (const auto &s : ratio::solver_schemas.as_array())
-            components.push_back(s);
-        for (const auto &s : ratio::executor::executor_schemas.as_array())
-            components.push_back(s);
+        json::json components;
+        for (const auto &s : coco_schemas.as_object())
+            components[s.first] = s.second;
+        for (const auto &s : ratio::solver_schemas.as_object())
+            components[s.first] = s.second;
+        for (const auto &s : ratio::executor::executor_schemas.as_object())
+            components[s.first] = s.second;
         return components;
     }
     [[nodiscard]] json::json build_messages() noexcept
     {
-        json::json messages = json::json(json::json_type::array);
-        for (const auto &m : coco_messages.as_array())
-            messages.push_back(m);
-        for (const auto &m : ratio::solver_messages.as_array())
-            messages.push_back(m);
-        for (const auto &m : ratio::executor::executor_messages.as_array())
-            messages.push_back(m);
+        json::json messages;
+        for (const auto &m : coco_messages.as_object())
+            messages[m.first] = m.second;
+        for (const auto &m : ratio::solver_messages.as_object())
+            messages[m.first] = m.second;
+        for (const auto &m : ratio::executor::executor_messages.as_object())
+            messages[m.first] = m.second;
         return messages;
     }
     [[nodiscard]] json::json build_paths() noexcept
     {
-        json::json paths = json::json(json::json_type::array);
-        paths.push_back({{"/",
+        json::json paths{{"/",
                           {{"get",
                             {{"summary", "Index"},
                              {"description", "Index page"},
                              {"responses",
-                              {{"200", {{"description", "Index page"}}}}}}}}}});
-        paths.push_back({{"/assets/{file}",
+                              {{"200", {{"description", "Index page"}}}}}}}}},
+                         {"/assets/{file}",
                           {{"get",
                             {{"summary", "Assets"},
                              {"description", "Assets"},
                              {"parameters", std::vector<json::json>{{{"name", "file"}, {"in", "path"}, {"required", true}, {"schema", {{"type", "string"}}}}}},
                              {"responses",
-                              {{"200", {{"description", "Index page"}}}}}}}}}});
-        paths.push_back({{"/open_api",
+                              {{"200", {{"description", "Index page"}}}}}}}}},
+                         {"/open_api",
                           {{"get",
                             {{"summary", "Retrieve OpenAPI Specification"},
                              {"description", "Endpoint to fetch the OpenAPI Specification document"},
                              {"responses",
-                              {{"200", {{"description", "Successful response with OpenAPI Specification document"}}}}}}}}}});
-        paths.push_back({{"/async_api",
+                              {{"200", {{"description", "Successful response with OpenAPI Specification document"}}}}}}}}},
+                         {"/async_api",
                           {{"get",
                             {{"summary", "Retrieve AsyncAPI Specification"},
                              {"description", "Endpoint to fetch the AsyncAPI Specification document"},
                              {"responses",
-                              {{"200", {{"description", "Successful response with AsyncAPI Specification document"}}}}}}}}}});
-        for (const auto &p : coco_paths.as_array())
-            paths.push_back(p);
+                              {{"200", {{"description", "Successful response with AsyncAPI Specification document"}}}}}}}}}};
+        for (const auto &p : coco_paths.as_object())
+            paths[p.first] = p.second;
         return paths;
     }
     [[nodiscard]] json::json build_open_api() noexcept
