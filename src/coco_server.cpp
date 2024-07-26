@@ -1,5 +1,6 @@
 #include "coco_server.hpp"
 #include "mongo_db.hpp"
+#include "coco_api.hpp"
 #include "logging.hpp"
 
 namespace coco
@@ -33,8 +34,8 @@ namespace coco
             target = target.substr(0, target.find('?'));
         return std::make_unique<network::file_response>("client/dist" + target);
     }
-    std::unique_ptr<network::response> coco_server::open_api(network::request &) { return std::make_unique<network::json_response>(j_open_api); }
-    std::unique_ptr<network::response> coco_server::async_api(network::request &) { return std::make_unique<network::json_response>(j_async_api); }
+    std::unique_ptr<network::response> coco_server::open_api(network::request &) { return std::make_unique<network::json_response>(build_open_api()); }
+    std::unique_ptr<network::response> coco_server::async_api(network::request &) { return std::make_unique<network::json_response>(build_async_api()); }
 
     std::unique_ptr<network::response> coco_server::get_types(network::request &)
     {
@@ -409,5 +410,88 @@ namespace coco
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
         broadcast(make_tick_message(exec));
+    }
+
+    [[nodiscard]] json::json build_schemas() noexcept
+    {
+        json::json components = json::json(json::json_type::array);
+        for (const auto &s : coco_schemas.as_array())
+            components.push_back(s);
+        for (const auto &s : ratio::solver_schemas.as_array())
+            components.push_back(s);
+        for (const auto &s : ratio::executor::executor_schemas.as_array())
+            components.push_back(s);
+        return components;
+    }
+    [[nodiscard]] json::json build_messages() noexcept
+    {
+        json::json messages = json::json(json::json_type::array);
+        for (const auto &m : coco_messages.as_array())
+            messages.push_back(m);
+        for (const auto &m : ratio::solver_messages.as_array())
+            messages.push_back(m);
+        for (const auto &m : ratio::executor::executor_messages.as_array())
+            messages.push_back(m);
+        return messages;
+    }
+    [[nodiscard]] json::json build_paths() noexcept
+    {
+        json::json paths = json::json(json::json_type::array);
+        paths.push_back({{"/",
+                          {{"get",
+                            {{"summary", "Index"},
+                             {"description", "Index page"},
+                             {"responses",
+                              {{"200", {{"description", "Index page"}}}}}}}}}});
+        paths.push_back({{"/assets/{file}",
+                          {{"get",
+                            {{"summary", "Assets"},
+                             {"description", "Assets"},
+                             {"parameters", std::vector<json::json>{{{"name", "file"}, {"in", "path"}, {"required", true}, {"schema", {{"type", "string"}}}}}},
+                             {"responses",
+                              {{"200", {{"description", "Index page"}}}}}}}}}});
+        paths.push_back({{"/open_api",
+                          {{"get",
+                            {{"summary", "Retrieve OpenAPI Specification"},
+                             {"description", "Endpoint to fetch the OpenAPI Specification document"},
+                             {"responses",
+                              {{"200", {{"description", "Successful response with OpenAPI Specification document"}}}}}}}}}});
+        paths.push_back({{"/async_api",
+                          {{"get",
+                            {{"summary", "Retrieve AsyncAPI Specification"},
+                             {"description", "Endpoint to fetch the AsyncAPI Specification document"},
+                             {"responses",
+                              {{"200", {{"description", "Successful response with AsyncAPI Specification document"}}}}}}}}}});
+        for (const auto &p : coco_paths.as_array())
+            paths.push_back(p);
+        return paths;
+    }
+    [[nodiscard]] json::json build_open_api() noexcept
+    {
+        json::json open_api{
+            {"openapi", "3.0.0"},
+            {"info",
+             {{"title", "CoCo API"},
+              {"description", "The combined deduCtiOn and abduCtiOn (CoCo) API"},
+              {"version", "1.0"}}},
+            {"components", {"schemas", build_schemas()}},
+            {"paths", build_paths()},
+            {"servers", std::vector<json::json>{{"url", "http://" SERVER_HOST ":" + std::to_string(SERVER_PORT)}}}};
+        return open_api;
+    }
+    [[nodiscard]] json::json build_async_api() noexcept
+    {
+        json::json async_api{
+            {"asyncapi", "2.0.0"},
+            {"info",
+             {{"title", "CoCo API"},
+              {"description", "The combined deduCtiOn and abduCtiOn (CoCo) WebSocket API"},
+              {"version", "1.0"}}},
+            {"servers", {"coco", {{"host", SERVER_HOST ":" + std::to_string(SERVER_PORT)}, {"pathname", "/coco"}, {"protocol", "ws"}}}},
+            {"channels", {{"coco", {{"address", "/"}}}}},
+            {"components",
+             {{"messages", build_messages()},
+              {"schemas", build_schemas()}}}};
+        return async_api;
     }
 } // namespace coco

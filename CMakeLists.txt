@@ -6,6 +6,7 @@ include(CTest)
 enable_testing()
 
 set(CLIENT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client CACHE STRING "Client directory" FORCE)
+set(ENABLE_API ON CACHE BOOL "Enable CoCo API" FORCE)
 
 add_subdirectory(extern/coco)
 add_subdirectory(extern/rationet)
