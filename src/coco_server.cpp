@@ -468,7 +468,7 @@ namespace coco
     [[nodiscard]] json::json build_open_api() noexcept
     {
         json::json open_api{
-            {"openapi", "3.0.0"},
+            {"openapi", "3.1.0"},
             {"info",
              {{"title", "CoCo API"},
               {"description", "The combined deduCtiOn and abduCtiOn (CoCo) API"},
@@ -481,7 +481,7 @@ namespace coco
     [[nodiscard]] json::json build_async_api() noexcept
     {
         json::json async_api{
-            {"asyncapi", "2.0.0"},
+            {"asyncapi", "3.0.0"},
             {"info",
              {{"title", "CoCo API"},
               {"description", "The combined deduCtiOn and abduCtiOn (CoCo) WebSocket API"},
