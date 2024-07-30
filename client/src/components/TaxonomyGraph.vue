@@ -31,6 +31,7 @@ class TypeListener extends KnowledgeListener {
   cy: cytoscape.Core;
   layout = {
     name: 'dagre',
+    rankDir: 'BT',
     fit: false,
     nodeDimensionsIncludeLabels: true
   };
@@ -99,7 +100,7 @@ class TypeListener extends KnowledgeListener {
     this.tippys.clear();
     for (const type of types.values()) {
       const n = this.cy.add({ group: 'nodes', data: { id: type.id, name: type.name } });
-      this.tippys.set(type.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: coco.Type.type_tooltip(type), }));
+      this.tippys.set(type.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: coco.Type.type_tooltip(type), allowHTML: true }));
       n.on('mouseover', () => this.tippys.get(type.id)!.show());
       n.on('mouseout', () => this.tippys.get(type.id)!.hide());
     }
@@ -117,7 +118,7 @@ class TypeListener extends KnowledgeListener {
   }
   type_added(type: coco.Type) {
     const n = this.cy.add({ group: 'nodes', data: { id: type.id, name: type.name } });
-    this.tippys.set(type.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: coco.Type.type_tooltip(type), }));
+    this.tippys.set(type.id, tippy(document.createElement('div'), { getReferenceClientRect: n.popperRef().getBoundingClientRect, content: coco.Type.type_tooltip(type), allowHTML: true }));
     n.on('mouseover', () => this.tippys.get(type.id)!.show());
     n.on('mouseout', () => this.tippys.get(type.id)!.hide());
     for (const parent of type.parents.values())

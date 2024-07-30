@@ -20,6 +20,13 @@ export namespace coco {
             this.name = name;
             this.default_value = default_value;
         }
+
+        /**
+         * Returns the tooltip for the property.
+         */
+        tooltip(): string {
+            return "<em>" + this.name + "</em>" + (this.default_value ? ` (${this.default_value})` : "");
+        }
     }
 
     /**
@@ -56,8 +63,15 @@ export namespace coco {
          */
         constructor(name: string, min?: number, max?: number, default_value: number = min || 0) {
             super(name, default_value);
-            this.min = min || -Infinity;
-            this.max = max || Infinity;
+            this.min = (min === undefined) ? -Infinity : min;
+            this.max = (max === undefined) ? Infinity : max;
+        }
+
+        /**
+         * Returns the tooltip for the property.
+         */
+        tooltip(): string {
+            return "<em>" + this.name + "</em>" + ` [${this.min}, ${this.max}]` + (this.default_value ? ` (${this.default_value})` : "");
         }
     }
 
@@ -79,8 +93,15 @@ export namespace coco {
          */
         constructor(name: string, min?: number, max?: number, default_value: number = min || 0) {
             super(name, default_value);
-            this.min = min || -Infinity;
-            this.max = max || Infinity;
+            this.min = (min === undefined) ? -Infinity : min;
+            this.max = (max === undefined) ? Infinity : max;
+        }
+
+        /**
+         * Returns the tooltip for the property.
+         */
+        tooltip(): string {
+            return "<em>" + this.name + "</em>" + ` [${this.min}, ${this.max}]` + (this.default_value ? ` (${this.default_value})` : "");
         }
     }
 
@@ -121,6 +142,13 @@ export namespace coco {
             this.multiple = multiple;
             this.symbols = symbols;
         }
+
+        /**
+         * Returns the tooltip for the property.
+         */
+        tooltip(): string {
+            return "<em>" + this.name + "</em>" + (this.multiple ? " multiple" : "") + (this.symbols ? ` {${this.symbols.join(", ")}}` : "") + (this.default_value ? ` (${this.default_value})` : "");
+        }
     }
 
     /**
@@ -140,6 +168,13 @@ export namespace coco {
         constructor(name: string, type: Type, default_value?: string) {
             super(name, default_value);
             this.type = type;
+        }
+
+        /**
+         * Returns the tooltip for the property.
+         */
+        tooltip(): string {
+            return "<em>" + this.name + "</em>" + ` (${this.type.name})` + (this.default_value ? ` (${this.default_value})` : "");
         }
     }
 
@@ -174,7 +209,7 @@ export namespace coco {
             case "string":
                 return new StringProperty(property.name, property.default_value);
             case "symbol":
-                return new SymbolProperty(property.name, property.symbols, property.multiple, property.default_value);
+                return new SymbolProperty(property.name, property.values, property.multiple, property.default_value);
             case "item":
                 return new ItemProperty(property.name, kb.types.get(property.type_id)!, property.default_value);
             case "json":
@@ -216,7 +251,18 @@ export namespace coco {
         }
 
         static type_tooltip(type: Type): string {
-            return type.description;
+            let tooltip = "<html>" + type.description;
+            if (type.static_properties.size > 0) {
+                tooltip += "<br><b>Static Properties:</b>";
+                for (let property of type.static_properties.values())
+                    tooltip += `<br>${property.tooltip()}`;
+            }
+            if (type.dynamic_properties.size > 0) {
+                tooltip += "<br><b>Dynamic Properties:</b>";
+                for (let property of type.dynamic_properties.values())
+                    tooltip += `<br>${property.tooltip()}`;
+            }
+            return tooltip + "</html>";
         }
     }
 
