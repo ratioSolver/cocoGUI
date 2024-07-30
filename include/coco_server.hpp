@@ -34,6 +34,9 @@ namespace coco
     std::unique_ptr<network::response> update_item(network::request &req);
     std::unique_ptr<network::response> delete_item(network::request &req);
 
+    std::unique_ptr<network::response> get_data(network::request &req);
+    std::unique_ptr<network::response> add_data(network::request &req);
+
     void on_ws_open(network::ws_session &ws);
     void on_ws_message(network::ws_session &ws, const std::string &msg);
     void on_ws_close(network::ws_session &ws);
@@ -47,7 +50,7 @@ namespace coco
     void updated_item(const item &itm) override;
     void deleted_item(const std::string &itm_id) override;
 
-    void new_data(const item &itm, const std::chrono::system_clock::time_point &timestamp, const json::json &data) override;
+    void new_data(const item &itm, const json::json &data, const std::chrono::system_clock::time_point &timestamp) override;
 
     void new_solver(const coco_executor &exec) override;
     void deleted_solver(const uintptr_t id) override;

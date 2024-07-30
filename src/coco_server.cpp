@@ -25,6 +25,9 @@ namespace coco
         add_route(network::Put, "^/item/.*$", std::bind(&coco_server::update_item, this, std::placeholders::_1));
         add_route(network::Delete, "^/item/.*$", std::bind(&coco_server::delete_item, this, std::placeholders::_1));
 
+        add_route(network::Get, "^/data/.*$", std::bind(&coco_server::get_data, this, std::placeholders::_1));
+        add_route(network::Post, "^/data/.*$", std::bind(&coco_server::add_data, this, std::placeholders::_1));
+
         add_ws_route("/coco").on_open(std::bind(&coco_server::on_ws_open, this, std::placeholders::_1)).on_message(std::bind(&coco_server::on_ws_message, this, std::placeholders::_1, std::placeholders::_2)).on_close(std::bind(&coco_server::on_ws_close, this, std::placeholders::_1)).on_error(std::bind(&coco_server::on_ws_error, this, std::placeholders::_1, std::placeholders::_2));
     }
 
@@ -305,6 +308,46 @@ namespace coco
         return std::make_unique<network::response>();
     }
 
+    std::unique_ptr<network::response> coco_server::get_data(network::request &req)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        std::string id = req.get_target().substr(6);
+        item *s;
+        try
+        {
+            s = &coco_core::get_item(id);
+        }
+        catch (const std::exception &)
+        {
+            return std::make_unique<network::json_response>(json::json({{"message", "Item not found"}}), network::status_code::not_found);
+        }
+        std::map<std::string, std::string> params;
+        if (req.get_target().find('?') != std::string::npos)
+            params = network::parse_query(req.get_target().substr(req.get_target().find('?') + 1));
+        std::chrono::system_clock::time_point to = params.count("to") ? std::chrono::system_clock::from_time_t(std::stoll(params.at("to"))) : std::chrono::system_clock::time_point();
+        std::chrono::system_clock::time_point from = params.count("from") ? std::chrono::system_clock::from_time_t(std::stoll(params.at("from"))) : to - std::chrono::hours{24 * 30};
+        return std::make_unique<network::json_response>(coco_core::get_data(*s, from, to));
+    }
+    std::unique_ptr<network::response> coco_server::add_data(network::request &req)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        std::string id = req.get_target().substr(6);
+        item *s;
+        try
+        {
+            s = &coco_core::get_item(id);
+        }
+        catch (const std::exception &)
+        {
+            return std::make_unique<network::json_response>(json::json({{"message", "Item not found"}}), network::status_code::not_found);
+        }
+        auto &body = static_cast<network::json_request &>(req).get_body();
+        if (body.get_type() != json::json_type::object)
+            return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
+        coco_core::add_data(*s, body);
+        return std::make_unique<network::response>();
+    }
+
     void coco_server::on_ws_open(network::ws_session &ws)
     {
         LOG_TRACE("New connection from " << ws.remote_endpoint());
@@ -391,10 +434,10 @@ namespace coco
         broadcast(make_deleted_item_message(itm_id));
     }
 
-    void coco_server::new_data(const item &itm, const std::chrono::system_clock::time_point &timestamp, const json::json &data)
+    void coco_server::new_data(const item &itm, const json::json &data, const std::chrono::system_clock::time_point &timestamp)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        broadcast(make_data_message(itm, timestamp, data));
+        broadcast(make_new_data_message(itm, data, timestamp));
     }
 
     void coco_server::new_solver(const coco_executor &exec)
