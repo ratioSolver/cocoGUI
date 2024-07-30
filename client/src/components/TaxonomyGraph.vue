@@ -54,13 +54,37 @@ class TypeListener extends KnowledgeListener {
           }
         },
         {
-          selector: 'edge',
+          selector: 'edge[type="is_a"]',
           style: {
             'curve-style': 'bezier',
             'line-color': '#666',
             'target-arrow-color': '#666',
             'target-arrow-shape': 'triangle',
             'width': '1px'
+          }
+        },
+        {
+          selector: 'edge[type="static_property"]',
+          style: {
+            'curve-style': 'bezier',
+            'label': 'data(name)',
+            'line-color': '#666',
+            'target-arrow-color': '#666',
+            'target-arrow-shape': 'diamond',
+            'width': '1px',
+            'line-style': 'dashed'
+          }
+        },
+        {
+          selector: 'edge[type="dynamic_property"]',
+          style: {
+            'curve-style': 'bezier',
+            'label': 'data(name)',
+            'line-color': '#666',
+            'target-arrow-color': '#666',
+            'target-arrow-shape': 'diamond',
+            'width': '1px',
+            'line-style': 'dotted'
           }
         }
       ]
@@ -81,13 +105,13 @@ class TypeListener extends KnowledgeListener {
     }
     for (const type of types.values()) {
       for (const parent of type.parents.values())
-        this.cy.add({ group: 'edges', data: { id: `${type.id}-${parent.id}`, source: type.id, target: parent.id } });
+        this.cy.add({ group: 'edges', data: { id: `${type.id}-${parent.id}`, type: 'is_a', source: type.id, target: parent.id } });
       for (const prop of type.static_properties.values())
         if (prop instanceof coco.ItemProperty)
-          this.cy.add({ group: 'edges', data: { id: `${type.id}-${prop.type.id}`, source: type.id, target: prop.type.id } });
+          this.cy.add({ group: 'edges', data: { id: `${type.id}-${prop.type.id}`, type: 'static_property', name: prop.name, source: type.id, target: prop.type.id } });
       for (const prop of type.dynamic_properties.values())
         if (prop instanceof coco.ItemProperty)
-          this.cy.add({ group: 'edges', data: { id: `${type.id}-${prop.type.id}`, source: type.id, target: prop.type.id } });
+          this.cy.add({ group: 'edges', data: { id: `${type.id}-${prop.type.id}`, type: 'dynamic_property', name: prop.name, source: type.id, target: prop.type.id } });
     }
     this.cy.layout(this.layout).run();
   }
@@ -97,18 +121,27 @@ class TypeListener extends KnowledgeListener {
     n.on('mouseover', () => this.tippys.get(type.id)!.show());
     n.on('mouseout', () => this.tippys.get(type.id)!.hide());
     for (const parent of type.parents.values())
-      this.cy.add({ group: 'edges', data: { id: `${type.id}-${parent.id}`, source: type.id, target: parent.id } });
+      this.cy.add({ group: 'edges', data: { id: `${type.id}-${parent.id}`, type: 'is_a', source: type.id, target: parent.id } });
     for (const prop of type.static_properties.values())
       if (prop instanceof coco.ItemProperty)
-        this.cy.add({ group: 'edges', data: { id: `${type.id}-${prop.type.id}`, source: type.id, target: prop.type.id } });
+        this.cy.add({ group: 'edges', data: { id: `${type.id}-${prop.type.id}`, type: 'static_property', name: prop.name, source: type.id, target: prop.type.id } });
     for (const prop of type.dynamic_properties.values())
       if (prop instanceof coco.ItemProperty)
-        this.cy.add({ group: 'edges', data: { id: `${type.id}-${prop.type.id}`, source: type.id, target: prop.type.id } });
+        this.cy.add({ group: 'edges', data: { id: `${type.id}-${prop.type.id}`, type: 'dynamic_property', name: prop.name, source: type.id, target: prop.type.id } });
     this.cy.layout(this.layout).run();
   }
   type_updated(type: coco.Type) {
     this.cy.$id(type.id).data('name', type.name);
     this.tippys.get(type.id)!.setContent(coco.Type.type_tooltip(type));
+    this.cy.edges().filter(e => e.source().id() === type.id).remove();
+    for (const parent of type.parents.values())
+      this.cy.add({ group: 'edges', data: { id: `${type.id}-${parent.id}`, type: 'is_a', source: type.id, target: parent.id } });
+    for (const prop of type.static_properties.values())
+      if (prop instanceof coco.ItemProperty)
+        this.cy.add({ group: 'edges', data: { id: `${type.id}-${prop.type.id}`, type: 'static_property', source: type.id, target: prop.type.id } });
+    for (const prop of type.dynamic_properties.values())
+      if (prop instanceof coco.ItemProperty)
+        this.cy.add({ group: 'edges', data: { id: `${type.id}-${prop.type.id}`, type: 'dynamic_property', source: type.id, target: prop.type.id } });
     this.cy.layout(this.layout).run();
   }
   type_removed(id: string) {

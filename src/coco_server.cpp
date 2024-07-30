@@ -120,20 +120,20 @@ namespace coco
         {
             if (body["name"].get_type() != json::json_type::string)
                 return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
-            db->set_type_name(*tp, body["name"]);
+            set_type_name(*tp, body["name"]);
         }
         if (body.contains("description"))
         {
             if (body["description"].get_type() != json::json_type::string)
                 return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
-            db->set_type_description(*tp, body["description"]);
+            set_type_description(*tp, body["description"]);
         }
         if (body.contains("parents"))
         {
             if (body["parents"].get_type() != json::json_type::array)
                 return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
             for (auto &p : tp->get_parents())
-                db->remove_parent(*tp, p.second.get());
+                remove_parent(*tp, p.second.get());
             for (auto &p : body["parents"].as_array())
             {
                 if (p.get_type() != json::json_type::string)
@@ -141,7 +141,7 @@ namespace coco
                 try
                 {
                     auto &parent = coco_core::get_type(p);
-                    db->add_parent(*tp, parent);
+                    add_parent(*tp, parent);
                 }
                 catch (const std::exception &)
                 {
@@ -154,13 +154,13 @@ namespace coco
             if (body["static_properties"].get_type() != json::json_type::object)
                 return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
             for (auto &p : tp->get_static_properties())
-                db->remove_static_property(*tp, *p.second);
+                remove_static_property(*tp, *p.second);
             for (auto &p : body["static_properties"].as_object())
             {
                 if (p.second.get_type() != json::json_type::object)
                     return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
                 auto prop = make_property(*this, p.first, p.second);
-                db->add_static_property(*tp, std::move(prop));
+                add_static_property(*tp, std::move(prop));
             }
         }
         if (body.contains("dynamic_properties"))
@@ -168,13 +168,13 @@ namespace coco
             if (body["dynamic_properties"].get_type() != json::json_type::object)
                 return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
             for (auto &p : tp->get_dynamic_properties())
-                db->remove_dynamic_property(*tp, *p.second);
+                remove_dynamic_property(*tp, *p.second);
             for (auto &p : body["dynamic_properties"].as_object())
             {
                 if (p.second.get_type() != json::json_type::object)
                     return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
                 auto prop = make_property(*this, p.first, p.second);
-                db->add_dynamic_property(*tp, std::move(prop));
+                add_dynamic_property(*tp, std::move(prop));
             }
         }
         return std::make_unique<network::json_response>(to_json(*tp));
@@ -194,7 +194,7 @@ namespace coco
         {
             return std::make_unique<network::json_response>(json::json({{"message", "Type not found"}}), network::status_code::not_found);
         }
-        db->delete_type(*tp);
+        coco_core::delete_type(*tp);
         return std::make_unique<network::json_response>(json::json({{"message", "Type deleted"}}));
     }
 
@@ -321,7 +321,7 @@ namespace coco
     void coco_server::new_data(const item &itm, const std::chrono::system_clock::time_point &timestamp, const json::json &data)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        broadcast(make_new_data_message(itm, timestamp, data));
+        broadcast(make_data_message(itm, timestamp, data));
     }
 
     void coco_server::new_solver(const coco_executor &exec)
