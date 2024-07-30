@@ -31,6 +31,8 @@ namespace coco
 
     std::unique_ptr<network::response> get_items(network::request &req);
     std::unique_ptr<network::response> create_item(network::request &req);
+    std::unique_ptr<network::response> update_item(network::request &req);
+    std::unique_ptr<network::response> delete_item(network::request &req);
 
     void on_ws_open(network::ws_session &ws);
     void on_ws_message(network::ws_session &ws, const std::string &msg);
