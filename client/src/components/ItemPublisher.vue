@@ -41,8 +41,8 @@ defineEmits<{ (event: 'publish', item_id: string, value: Record<string, any>): v
 
 const value = reactive<Record<string, any>>({});
 props.item.type.dynamic_properties.forEach((property) => {
-  if (props.item.values.length && props.item.values[props.item.values.length - 1][property.name])
-    value[property.name] = props.item.values[props.item.values.length - 1][property.name];
+  if (props.item.values.length && props.item.values[props.item.values.length - 1].data[property.name])
+    value[property.name] = props.item.values[props.item.values.length - 1].data[property.name];
   else
     value[property.name] = property.default_value;
 });

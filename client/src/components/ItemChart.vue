@@ -15,7 +15,7 @@ const get_data_id = (item: coco.Item) => 'itm-' + item.id + '-data';
 class ItemChart extends coco.ItemListener {
 
   vals_xs: Date[];
-  vals_ys: Map<string, Record<string, any>[]>;
+  vals_ys: Map<string, coco.Data[]>;
   y_axes: Map<string, string>;
   traces: Map<string, any[]>;
   private layout: any;
@@ -32,17 +32,19 @@ class ItemChart extends coco.ItemListener {
     this.layout = { autosize: true, xaxis: { title: 'Time', type: 'date' }, showlegend: false };
     this.config = { responsive: true };
     this.colors = new Map();
+
+    item.add_listener(this);
   }
 
-  values(values: Record<string, any>[]): void {
+  values(values: coco.Data[]): void {
     for (const par_name of props.item.type.dynamic_properties.keys())
       this.vals_ys.set(par_name, []);
 
     for (const val of values) {
-      this.vals_xs.push(new Date(val.timestamp));
+      this.vals_xs.push(val.timestamp);
       for (const [par_name, par] of props.item.type.dynamic_properties)
         if (val.hasOwnProperty(par_name))
-          this.vals_ys.get(par_name)!.push(val[par_name]);
+          this.vals_ys.get(par_name)!.push(val.data[par_name]);
         else if (this.vals_ys.get(par_name)!.length > 0)
           this.vals_ys.get(par_name)!.push(this.vals_ys.get(par_name)![this.vals_ys.get(par_name)!.length - 1]);
         else
@@ -66,7 +68,7 @@ class ItemChart extends coco.ItemListener {
           this.layout['yaxis' + i] = { title: par_name, domain: [start_domain + domain_separator, start_domain + domain_size - domain_separator], zeroline: false, range: [par.min, par.max] };
         }
       }
-      else if (par instanceof coco.BooleanProperty || par instanceof coco.StringProperty || par instanceof coco.SymbolProperty) {
+      else if (par instanceof coco.BooleanProperty || par instanceof coco.StringProperty || par instanceof coco.SymbolProperty || par instanceof coco.ItemProperty) {
         this.traces.set(par_name, []);
         let c_colors: Map<string, string> = new Map();
         if (par instanceof coco.BooleanProperty) {
@@ -77,6 +79,13 @@ class ItemChart extends coco.ItemListener {
           const color_scale = chroma.scale(['#ff0000', '#00ff00']).mode('lch').colors(par.symbols.length);
           for (let j = 0; j < par.symbols.length; j++)
             c_colors.set(par.symbols[j], color_scale[j]);
+          this.colors.set(par_name, c_colors);
+        } else if (par instanceof coco.ItemProperty) {
+          const color_scale = chroma.scale(['#ff0000', '#00ff00']).mode('lch').colors(props.item.type.instances.size);
+          c_colors.set('null', '#000000');
+          let j = 0;
+          for (const item of props.item.type.instances.values())
+            c_colors.set(item.id, color_scale[j++]);
           this.colors.set(par_name, c_colors);
         }
 
@@ -94,7 +103,7 @@ class ItemChart extends coco.ItemListener {
             this.traces.get(par_name)![this.traces.get(par_name)!.length - 1].x[1] = this.vals_xs[j];
           if (j == 0 || String(this.vals_ys.get(par_name)![j]) != this.traces.get(par_name)![this.traces.get(par_name)!.length - 1].name) {
             let trace = { x: [this.vals_xs[j], this.vals_xs[j]], y: [1, 1], name: String(this.vals_ys.get(par_name)![j]), type: 'scatter', opacity: 0.7, mode: 'lines', line: { width: 30, color: undefined as string | undefined }, yaxis: this.y_axes.get(par_name) };
-            if ((par instanceof coco.BooleanProperty || par instanceof coco.SymbolProperty) && c_colors.has(String(this.vals_ys.get(par_name)![j])))
+            if (par instanceof coco.BooleanProperty || (par instanceof coco.SymbolProperty || par instanceof coco.ItemProperty) && c_colors.has(String(this.vals_ys.get(par_name)![j])))
               trace.line.color = c_colors.get(String(this.vals_ys.get(par_name)![j]));
             this.traces.get(par_name)!.push(trace);
           }
@@ -104,21 +113,23 @@ class ItemChart extends coco.ItemListener {
       start_domain += domain_size;
       i++;
     }
+
+    Plotly.newPlot(get_data_id(props.item), Array.from(this.traces.values()).flat(), this.layout, this.config);
   }
 
-  new_value(value: Record<string, any>): void {
-    this.vals_xs.push(new Date(value.timestamp));
+  new_value(value: coco.Data): void {
+    this.vals_xs.push(value.timestamp);
     for (const [par_name, par] of props.item.type.dynamic_properties) {
       let c_value;
       if (value.hasOwnProperty(par_name))
-        c_value = value[par_name];
+        c_value = value.data[par_name];
       else if (this.vals_ys.get(par_name)!.length > 0)
         c_value = this.vals_ys.get(par_name)![this.vals_ys.get(par_name)!.length - 1];
       else
         c_value = par.default_value;
       if (par instanceof coco.RealProperty || par instanceof coco.IntegerProperty)
         this.traces.get(par_name)![0].y.push(c_value);
-      else if (par instanceof coco.BooleanProperty || par instanceof coco.StringProperty || par instanceof coco.SymbolProperty) {
+      else if (par instanceof coco.BooleanProperty || par instanceof coco.StringProperty || par instanceof coco.SymbolProperty || par instanceof coco.ItemProperty) {
         if (this.traces.get(par_name)!.length > 0)
           this.traces.get(par_name)![this.traces.get(par_name)!.length - 1].x[1] = value.timestamp;
         if (this.traces.get(par_name)!.length == 0 || String(c_value) != this.traces.get(par_name)![this.traces.get(par_name)!.length - 1].name) {

@@ -88,31 +88,31 @@ export class Knowledge {
                 this.set_taxonomy(message);
                 return true;
             case 'new_type':
-                this.add_type(message.new_type);
+                this.add_type(message);
                 return true;
             case 'updated_type':
-                this.update_type(message.updated_type);
+                this.update_type(message);
                 return true;
             case 'deleted_type':
-                this.remove_type(message.id);
+                this.remove_type(message);
                 return true;
             case 'items':
-                this.set_items(message.items);
+                this.set_items(message);
                 return true;
             case 'new_item':
-                this.add_item(message.new_item);
+                this.add_item(message);
                 return true;
             case 'updated_item':
-                this.update_item(message.updated_item);
+                this.update_item(message);
                 return true;
             case 'new_data':
-                this.add_data(message.new_data);
+                this.add_data(message);
                 return true;
             case 'deleted_item':
-                this.remove_item(message.id);
+                this.remove_item(message);
                 return true;
             case 'reactive_rules':
-                this.set_reactive_rules(message.rules);
+                this.set_reactive_rules(message);
                 return true;
             case 'new_reactive_rule':
                 this.add_reactive_rule(message);
@@ -121,10 +121,10 @@ export class Knowledge {
                 this.update_reactive_rule(message);
                 return true;
             case 'deleted_reactive_rule':
-                this.remove_reactive_rule(message.id);
+                this.remove_reactive_rule(message);
                 return true;
             case 'deliberative_rules':
-                this.set_deliberative_rules(message.rules);
+                this.set_deliberative_rules(message);
                 return true;
             case 'new_deliberative_rule':
                 this.add_deliberative_rule(message);
@@ -133,7 +133,7 @@ export class Knowledge {
                 this.update_deliberative_rule(message);
                 return true;
             case 'deleted_deliberative_rule':
-                this.remove_deliberative_rule(message.id);
+                this.remove_deliberative_rule(message);
                 return true;
             case 'solvers':
                 this.set_solvers(message.solvers);
@@ -148,7 +148,7 @@ export class Knowledge {
                 this.add_solver(message);
                 return true;
             case 'deleted_solver':
-                this.remove_solver(message.id);
+                this.remove_solver(message);
                 return true;
             case 'flaw_created':
                 this.solvers.get(message.solver_id)!.create_flaw(message);
@@ -224,65 +224,69 @@ export class Knowledge {
     }
 
     add_type(created_type_message: any): void {
+        const new_type = created_type_message.new_type;
         const parents = new Map<string, coco.Type>();
-        if (created_type_message.parents)
-            for (let parent_id of created_type_message.parents) {
+        if (new_type.parents)
+            for (let parent_id of new_type.parents) {
                 const parent = this.types.get(parent_id)!;
                 parents.set(parent.id, parent);
             }
         const static_properties = new Map<string, coco.Property>();
-        if (created_type_message.static_properties)
-            for (let property_message of created_type_message.static_properties) {
+        if (new_type.static_properties)
+            for (let property_message of new_type.static_properties) {
                 const property = coco.get_property(this, property_message);
                 static_properties.set(property.name, property);
             }
         const dynamic_properties = new Map<string, coco.Property>();
-        if (created_type_message.dynamic_properties)
-            for (let property_message of created_type_message.dynamic_properties) {
+        if (new_type.dynamic_properties)
+            for (let property_message of new_type.dynamic_properties) {
                 const property = coco.get_property(this, property_message);
                 dynamic_properties.set(property.name, property);
             }
-        const type = new coco.Type(created_type_message.id, created_type_message.name, created_type_message.description, parents, static_properties, dynamic_properties);
+        const type = new coco.Type(new_type.id, new_type.name, new_type.description, parents, static_properties, dynamic_properties);
         this.types.set(type.id, type);
         this.listeners.forEach(listener => listener.type_added(type));
     }
 
     update_type(updated_type_message: any): void {
-        const type = this.types.get(updated_type_message.id)!;
-        if (updated_type_message.name)
-            type.name = updated_type_message.name;
-        if (updated_type_message.description)
-            type.description = updated_type_message.description;
-        if (updated_type_message.parents) {
+        const updated_type = updated_type_message.updated_type;
+        const type = this.types.get(updated_type.id)!;
+        if (updated_type.name)
+            type.name = updated_type.name;
+        if (updated_type.description)
+            type.description = updated_type.description;
+        if (updated_type.parents) {
             const parents = new Map<string, coco.Type>();
-            for (let parent_id of updated_type_message.parents)
+            for (let parent_id of updated_type.parents)
                 parents.set(parent_id, this.types.get(parent_id)!);
             type.parents = parents;
         }
-        if (updated_type_message.static_properties) {
+        if (updated_type.static_properties) {
             const static_properties = new Map<string, coco.Property>();
-            for (let property_message of updated_type_message.static_properties)
+            for (let property_message of updated_type.static_properties)
                 static_properties.set(property_message.name, coco.get_property(this, property_message));
             type.static_properties = static_properties;
         }
-        if (updated_type_message.dynamic_properties) {
+        if (updated_type.dynamic_properties) {
             const dynamic_properties = new Map<string, coco.Property>();
-            for (let property_message of updated_type_message.dynamic_properties)
+            for (let property_message of updated_type.dynamic_properties)
                 dynamic_properties.set(property_message.name, coco.get_property(this, property_message));
             type.dynamic_properties = dynamic_properties;
         }
         this.listeners.forEach(listener => listener.type_updated(type));
     }
 
-    remove_type(removed_type_id: string): void {
-        const type = this.types.get(removed_type_id)!;
-        this.types.delete(removed_type_id);
-        this.listeners.forEach(listener => listener.type_removed(type.id));
+    remove_type(removed_type_message: any): void {
+        const removed_type_id = removed_type_message.id;
+        if (!this.types.delete(removed_type_id))
+            console.error(`Type ${removed_type_id} not found`);
+        this.listeners.forEach(listener => listener.type_removed(removed_type_id));
     }
 
     set_items(items_message: any): void {
+        const items = items_message.items;
         this.items.clear();
-        for (let item_message of items_message) {
+        for (let item_message of items) {
             const type = this.types.get(item_message.type)!;
             const item = new coco.Item(item_message.id, type, item_message.name, item_message.description, item_message.properties);
             this.items.set(item.id, item);
@@ -291,37 +295,41 @@ export class Knowledge {
     }
 
     add_item(created_item_message: any): void {
-        const type = this.types.get(created_item_message.type)!;
-        const item = new coco.Item(created_item_message.id, type, created_item_message.name, created_item_message.description, created_item_message.properties);
+        const new_item = created_item_message.new_item;
+        const type = this.types.get(new_item.type)!;
+        const item = new coco.Item(new_item.id, type, new_item.name, new_item.description, new_item.properties);
         this.items.set(item.id, item);
         this.listeners.forEach(listener => listener.item_added(item));
     }
 
     update_item(updated_item_message: any): void {
-        const item = this.items.get(updated_item_message.id)!;
-        if (updated_item_message.name)
-            item.name = updated_item_message.name;
-        if (updated_item_message.description)
-            item.description = updated_item_message.description;
-        if (updated_item_message.properties)
-            item.properties = updated_item_message.properties;
+        const updated_item = updated_item_message.updated_item;
+        const item = this.items.get(updated_item.id)!;
+        if (updated_item.name)
+            item.name = updated_item.name;
+        if (updated_item.description)
+            item.description = updated_item.description;
+        if (updated_item.properties)
+            item.properties = updated_item.properties;
         this.listeners.forEach(listener => listener.item_updated(item));
     }
 
-    remove_item(removed_item_id: string): void {
-        const item = this.items.get(removed_item_id)!;
-        this.items.delete(removed_item_id);
-        this.listeners.forEach(listener => listener.item_removed(item.id));
+    remove_item(removed_item_message: any): void {
+        const removed_item_id = removed_item_message.id;
+        if (!this.items.delete(removed_item_id))
+            console.error(`Item ${removed_item_id} not found`);
+        this.listeners.forEach(listener => listener.item_removed(removed_item_id));
     }
 
     add_data(new_data_message: any): void {
         const item = this.items.get(new_data_message.item_id)!;
-        item.add_value({ timestamp: new Date(new_data_message.timestamp), data: new_data_message.data });
+        item.add_value(new coco.Data(new Date(new_data_message.timestamp), new_data_message.data));
     }
 
     set_reactive_rules(reactive_rules_message: any): void {
+        const reactive_rules = reactive_rules_message.rules;
         this.reactive_rules.clear();
-        for (let reactive_rule_message of reactive_rules_message) {
+        for (let reactive_rule_message of reactive_rules) {
             const reactive_rule = new Rule(reactive_rule_message.id, reactive_rule_message.name, reactive_rule_message.content);
             this.reactive_rules.set(reactive_rule.id, reactive_rule);
         }
@@ -335,23 +343,26 @@ export class Knowledge {
     }
 
     update_reactive_rule(updated_reactive_rule_message: any): void {
-        const reactive_rule = this.reactive_rules.get(updated_reactive_rule_message.id)!;
-        if (updated_reactive_rule_message.name)
-            reactive_rule.name = updated_reactive_rule_message.name;
-        if (updated_reactive_rule_message.content)
-            reactive_rule.content = updated_reactive_rule_message.content;
+        const update_reactive_rule = updated_reactive_rule_message.updated_reactive_rule;
+        const reactive_rule = this.reactive_rules.get(update_reactive_rule.id)!;
+        if (update_reactive_rule.name)
+            reactive_rule.name = update_reactive_rule.name;
+        if (update_reactive_rule.content)
+            reactive_rule.content = update_reactive_rule.content;
         this.listeners.forEach(listener => listener.reactive_rule_updated(reactive_rule));
     }
 
-    remove_reactive_rule(removed_reactive_rule_id: string): void {
+    remove_reactive_rule(removed_reactive_rule_message: any): void {
+        const removed_reactive_rule_id = removed_reactive_rule_message.id;
         const reactive_rule = this.reactive_rules.get(removed_reactive_rule_id)!;
         this.reactive_rules.delete(removed_reactive_rule_id);
         this.listeners.forEach(listener => listener.reactive_rule_removed(reactive_rule.id));
     }
 
     set_deliberative_rules(deliberative_rules_message: any): void {
+        const deliberative_rules = deliberative_rules_message.rules;
         this.deliberative_rules.clear();
-        for (let deliberative_rule_message of deliberative_rules_message) {
+        for (let deliberative_rule_message of deliberative_rules) {
             const deliberative_rule = new Rule(deliberative_rule_message.id, deliberative_rule_message.name, deliberative_rule_message.content);
             this.deliberative_rules.set(deliberative_rule.id, deliberative_rule);
         }
@@ -365,15 +376,17 @@ export class Knowledge {
     }
 
     update_deliberative_rule(updated_deliberative_rule_message: any): void {
-        const deliberative_rule = this.deliberative_rules.get(updated_deliberative_rule_message.id)!;
-        if (updated_deliberative_rule_message.name)
-            deliberative_rule.name = updated_deliberative_rule_message.name;
-        if (updated_deliberative_rule_message.content)
-            deliberative_rule.content = updated_deliberative_rule_message.content;
+        const update_deliberative_rule = updated_deliberative_rule_message.updated_deliberative_rule;
+        const deliberative_rule = this.deliberative_rules.get(update_deliberative_rule.id)!;
+        if (update_deliberative_rule.name)
+            deliberative_rule.name = update_deliberative_rule.name;
+        if (update_deliberative_rule.content)
+            deliberative_rule.content = update_deliberative_rule.content;
         this.listeners.forEach(listener => listener.deliberative_rule_updated(deliberative_rule));
     }
 
-    remove_deliberative_rule(removed_deliberative_rule_id: string): void {
+    remove_deliberative_rule(removed_deliberative_rule_message: any): void {
+        const removed_deliberative_rule_id = removed_deliberative_rule_message.id;
         const deliberative_rule = this.deliberative_rules.get(removed_deliberative_rule_id)!;
         this.deliberative_rules.delete(removed_deliberative_rule_id);
         this.listeners.forEach(listener => listener.deliberative_rule_removed(deliberative_rule.id));
@@ -394,10 +407,11 @@ export class Knowledge {
         this.listeners.forEach(listener => listener.solver_added(solver));
     }
 
-    remove_solver(removed_solver_id: string): void {
-        const solver = this.solvers.get(removed_solver_id)!;
-        this.solvers.delete(removed_solver_id);
-        this.listeners.forEach(listener => listener.solver_removed(solver.id));
+    remove_solver(removed_solver_message: any): void {
+        const removed_solver_id = removed_solver_message.id;
+        if (!this.solvers.delete(removed_solver_id))
+            console.error(`Solver ${removed_solver_id} not found`);
+        this.listeners.forEach(listener => listener.solver_removed(removed_solver_id));
     }
 
     add_listener(listener: KnowledgeListener): void {

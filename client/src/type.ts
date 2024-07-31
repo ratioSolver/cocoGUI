@@ -284,14 +284,34 @@ export namespace coco {
          *
          * @param values - The values of the item.
          */
-        values(values: Record<string, any>[]): void { }
+        values(values: Data[]): void { }
 
         /**
          * Adds a new value for an item.
          *
          * @param value - The value of the item.
          */
-        new_value(value: Record<string, any>): void { }
+        new_value(value: Data): void { }
+    }
+
+    /**
+     * Represents a data object with a timestamp and a data payload.
+     */
+    export class Data {
+
+        timestamp: Date;
+        data: Record<string, any>;
+
+        /**
+         * Creates a new Data instance.
+         *
+         * @param timestamp The timestamp of the data.
+         * @param data The data payload.
+         */
+        constructor(timestamp: Date, data: Record<string, any>) {
+            this.timestamp = timestamp;
+            this.data = data;
+        }
     }
 
     /**
@@ -304,7 +324,7 @@ export namespace coco {
         name: string;
         description: string;
         properties: Record<string, any>;
-        values: Record<string, any>[];
+        values: Data[];
         listeners: Set<ItemListener>;
 
         /**
@@ -339,7 +359,7 @@ export namespace coco {
          * 
          * @param values The values of the item.
          */
-        set_values(values: Record<string, any>[]) {
+        set_values(values: Data[]) {
             this.values = values;
             this.listeners.forEach(listener => listener.values(values));
         }
@@ -349,7 +369,7 @@ export namespace coco {
          * 
          * @param value The value of the item.
          */
-        add_value(value: Record<string, any>) {
+        add_value(value: Data) {
             this.values.push(value);
             this.listeners.forEach(listener => listener.new_value(value));
         }
@@ -361,6 +381,7 @@ export namespace coco {
          */
         add_listener(listener: ItemListener) {
             this.listeners.add(listener);
+            listener.values(this.values);
         }
 
         /**
