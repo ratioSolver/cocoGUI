@@ -20,7 +20,7 @@ declare module 'vue' {
     LogInDialog: typeof import('./src/components/LogInDialog.vue')['default']
     Map: typeof import('./src/components/Map.vue')['default']
     ReactiveRule: typeof import('./src/components/ReactiveRule.vue')['default']
-    RealPublisher: typeof import('./src/components/RealPublisher.vue')['default']
+    RealPropertyPublisher: typeof import('./src/components/RealPropertyPublisher.vue')['default']
     RegisterDialog: typeof import('./src/components/RegisterDialog.vue')['default']
     RuleListItem: typeof import('./src/components/RuleListItem.vue')['default']
     Solver: typeof import('./src/components/Solver.vue')['default']

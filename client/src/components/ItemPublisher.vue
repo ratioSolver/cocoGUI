@@ -8,21 +8,21 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="[name, par] in item.type.dynamic_properties" :key="name">
+        <tr v-for="[name, prop] in item.type.dynamic_properties" :key="name">
           <td>{{ name }}</td>
           <td>
-            <BooleanPropertyPublisher v-if="(par instanceof coco.BooleanProperty)" :name="name" :par="par"
-              :value="value[name]" />
-            <IntPropertyPublisher v-else-if="(par instanceof coco.IntegerProperty)" :name="name" :par="par"
-              :value="value[name]" />
-            <RealPropertyPublisher v-else-if="(par instanceof coco.RealProperty)" :name="name" :par="par"
-              :value="value[name]" />
-            <StringPropertyPublisher v-else-if="(par instanceof coco.StringProperty)" :name="name" :par="par"
-              :value="value[name]" />
-            <SymbolPropertyPublisher v-else-if="(par instanceof coco.SymbolProperty)" :name="name" :par="par"
-              :value="value[name]" />
-            <ItemPropertyPublisher v-else-if="(par instanceof coco.ItemProperty)" :name="name" :par="par"
-              :value="value[name]" />
+            <BooleanPropertyPublisher v-if="(prop instanceof coco.BooleanProperty)" :name="name" :par="prop"
+              :value="value[name]" @update="update_value(prop, $event)" />
+            <IntPropertyPublisher v-else-if="(prop instanceof coco.IntegerProperty)" :name="name" :par="prop"
+              :value="value[name]" @update="update_value(prop, $event)" />
+            <RealPropertyPublisher v-else-if="(prop instanceof coco.RealProperty)" :name="name" :par="prop"
+              :value="value[name]" @update="update_value(prop, $event)" />
+            <StringPropertyPublisher v-else-if="(prop instanceof coco.StringProperty)" :name="name" :par="prop"
+              :value="value[name]" @update="update_value(prop, $event)" />
+            <SymbolPropertyPublisher v-else-if="(prop instanceof coco.SymbolProperty)" :name="name" :par="prop"
+              :value="value[name]" @update="update_value(prop, $event)" />
+            <ItemPropertyPublisher v-else-if="(prop instanceof coco.ItemProperty)" :name="name" :par="prop"
+              :value="value[name]" @update="update_value(prop, $event)" />
           </td>
         </tr>
       </tbody>
@@ -46,4 +46,14 @@ props.item.type.dynamic_properties.forEach((property) => {
   else
     value[property.name] = property.default_value;
 });
+
+function update_value(prop: coco.Property, new_value: any) {
+  if (prop instanceof coco.ItemProperty)
+    if (prop.multiple)
+      value[prop.name] = new_value.map((item: coco.Item) => item.id);
+    else
+      value[prop.name] = new_value.id;
+  else
+    value[prop.name] = new_value;
+}
 </script>

@@ -6,9 +6,12 @@
 
 <script setup lang="ts">
 import { coco } from '@/type';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 const props = defineProps<{ name: string; par: coco.SymbolProperty; value: string | string[]; }>();
+const emit = defineEmits<{ (event: 'update', value: string | string[]): void; }>();
 
 const value = ref(props.value);
+
+watch(value, (new_value) => emit('update', new_value));
 </script>

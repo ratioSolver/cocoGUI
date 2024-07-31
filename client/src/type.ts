@@ -5,7 +5,7 @@ export namespace coco {
     /**
      * Represents a property.
      */
-    export class PropertyType {
+    export class Property {
 
         name: string;
         default_value: any;
@@ -32,7 +32,7 @@ export namespace coco {
     /**
      * Represents a boolean property.
      */
-    export class BooleanProperty extends PropertyType {
+    export class BooleanProperty extends Property {
 
         /**
          * Creates a new BooleanProperty instance.
@@ -48,7 +48,7 @@ export namespace coco {
     /**
      * Represents an integer property.
      */
-    export class IntegerProperty extends PropertyType {
+    export class IntegerProperty extends Property {
 
         min: number;
         max: number;
@@ -78,7 +78,7 @@ export namespace coco {
     /**
      * Represents a real property.
      */
-    export class RealProperty extends PropertyType {
+    export class RealProperty extends Property {
 
         min: number;
         max: number;
@@ -108,7 +108,7 @@ export namespace coco {
     /**
      * Represents a string property.
      */
-    export class StringProperty extends PropertyType {
+    export class StringProperty extends Property {
 
         /**
          * Creates a new StringProperty instance.
@@ -124,7 +124,7 @@ export namespace coco {
     /**
      * Represents a symbol property.
      */
-    export class SymbolProperty extends PropertyType {
+    export class SymbolProperty extends Property {
 
         symbols: string[];
         multiple: boolean;
@@ -154,7 +154,7 @@ export namespace coco {
     /**
      * Represents an item property.
      */
-    export class ItemProperty extends PropertyType {
+    export class ItemProperty extends Property {
 
         type: Type;
         multiple: boolean;
@@ -184,7 +184,7 @@ export namespace coco {
     /**
      * Represents a JSON property.
      */
-    export class JSONProperty extends PropertyType {
+    export class JSONProperty extends Property {
 
         schema: any;
 
@@ -201,7 +201,7 @@ export namespace coco {
         }
     }
 
-    export function get_property(kb: Knowledge, property: any): PropertyType {
+    export function get_property(kb: Knowledge, property: any): Property {
         switch (property.type) {
             case "boolean":
                 return new BooleanProperty(property.name, property.default_value);
@@ -231,8 +231,8 @@ export namespace coco {
         name: string;
         description: string;
         parents: Map<string, Type>;
-        static_properties: Map<string, PropertyType>;
-        dynamic_properties: Map<string, PropertyType>;
+        static_properties: Map<string, Property>;
+        dynamic_properties: Map<string, Property>;
         instances: Set<Item>;
 
         /**
@@ -245,7 +245,7 @@ export namespace coco {
          * @param static_properties The static properties of the type.
          * @param dynamic_properties The dynamic properties of the type.
          */
-        constructor(id: string, name: string, description: string, parents: Map<string, Type> = new Map(), static_properties: Map<string, PropertyType> = new Map(), dynamic_properties: Map<string, PropertyType> = new Map()) {
+        constructor(id: string, name: string, description: string, parents: Map<string, Type> = new Map(), static_properties: Map<string, Property> = new Map(), dynamic_properties: Map<string, Property> = new Map()) {
             this.id = id;
             this.name = name;
             this.description = description;

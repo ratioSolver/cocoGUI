@@ -41,6 +41,8 @@ export const useCoCoStore = defineStore('CoCo', {
             }).then(res => {
                 if (res.ok)
                     res.json().then(data => {
+                        for (let i in data)
+                            data[i].timestamp = new Date(data[i].timestamp);
                         console.log(data);
                         useCoCoStore().knowledge.items.get(item_id)!.set_values(data);
                     });

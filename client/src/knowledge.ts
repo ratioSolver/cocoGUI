@@ -105,6 +105,9 @@ export class Knowledge {
             case 'updated_item':
                 this.update_item(message.updated_item);
                 return true;
+            case 'new_data':
+                this.add_data(message.new_data);
+                return true;
             case 'deleted_item':
                 this.remove_item(message.id);
                 return true;
@@ -227,13 +230,13 @@ export class Knowledge {
                 const parent = this.types.get(parent_id)!;
                 parents.set(parent.id, parent);
             }
-        const static_properties = new Map<string, coco.PropertyType>();
+        const static_properties = new Map<string, coco.Property>();
         if (created_type_message.static_properties)
             for (let property_message of created_type_message.static_properties) {
                 const property = coco.get_property(this, property_message);
                 static_properties.set(property.name, property);
             }
-        const dynamic_properties = new Map<string, coco.PropertyType>();
+        const dynamic_properties = new Map<string, coco.Property>();
         if (created_type_message.dynamic_properties)
             for (let property_message of created_type_message.dynamic_properties) {
                 const property = coco.get_property(this, property_message);
@@ -257,13 +260,13 @@ export class Knowledge {
             type.parents = parents;
         }
         if (updated_type_message.static_properties) {
-            const static_properties = new Map<string, coco.PropertyType>();
+            const static_properties = new Map<string, coco.Property>();
             for (let property_message of updated_type_message.static_properties)
                 static_properties.set(property_message.name, coco.get_property(this, property_message));
             type.static_properties = static_properties;
         }
         if (updated_type_message.dynamic_properties) {
-            const dynamic_properties = new Map<string, coco.PropertyType>();
+            const dynamic_properties = new Map<string, coco.Property>();
             for (let property_message of updated_type_message.dynamic_properties)
                 dynamic_properties.set(property_message.name, coco.get_property(this, property_message));
             type.dynamic_properties = dynamic_properties;
@@ -309,6 +312,11 @@ export class Knowledge {
         const item = this.items.get(removed_item_id)!;
         this.items.delete(removed_item_id);
         this.listeners.forEach(listener => listener.item_removed(item.id));
+    }
+
+    add_data(new_data_message: any): void {
+        const item = this.items.get(new_data_message.item_id)!;
+        item.add_value({ timestamp: new Date(new_data_message.timestamp), data: new_data_message.data });
     }
 
     set_reactive_rules(reactive_rules_message: any): void {
