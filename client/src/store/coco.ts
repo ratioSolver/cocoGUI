@@ -1,5 +1,4 @@
 import { Knowledge } from '@/knowledge';
-import { coco } from '@/type';
 import { defineStore } from 'pinia'
 
 export const useCoCoStore = defineStore('CoCo', {
@@ -41,13 +40,7 @@ export const useCoCoStore = defineStore('CoCo', {
                 headers: { 'Content-Type': 'application/json' }
             }).then(res => {
                 if (res.ok)
-                    res.json().then(data_res => {
-                        console.log(data_res);
-                        const data: coco.Data[] = [];
-                        for (let i in data_res)
-                            data.push(new coco.Data(new Date(data_res[i].timestamp), data_res[i].data));
-                        this.knowledge.items.get(item_id)!.set_values(data);
-                    });
+                    res.json().then(data => this.knowledge.set_data(this.knowledge.items.get(item_id)!, data));
                 else
                     res.json().then(data => alert(data.message));
             });

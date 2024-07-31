@@ -321,8 +321,22 @@ export class Knowledge {
         this.listeners.forEach(listener => listener.item_removed(removed_item_id));
     }
 
+    set_data(item: coco.Item, data_message: any): void {
+        const data = [];
+        for (let i in data_message) {
+            for (const [k, v] of Object.entries(data_message[i].data))
+                if (item.type.dynamic_properties.get(k) instanceof coco.ItemProperty)
+                    data_message[i].data[k] = this.items.get(v as string);
+            data.push(new coco.Data(new Date(data_message[i].timestamp), data_message[i].data));
+        }
+        item.set_values(data);
+    }
+
     add_data(new_data_message: any): void {
         const item = this.items.get(new_data_message.item_id)!;
+        for (let [k, v] of Object.entries(new_data_message.data))
+            if (item.type.dynamic_properties.get(k) instanceof coco.ItemProperty)
+                new_data_message.data[k] = this.items.get(v as string);
         item.add_value(new coco.Data(new Date(new_data_message.timestamp), new_data_message.data));
     }
 
