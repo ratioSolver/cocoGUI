@@ -35,7 +35,7 @@ export const useCoCoStore = defineStore('CoCo', {
         },
         load_data(item_id: string, from = Date.now() - 1000 * 60 * 60 * 24 * 14, to = Date.now()) {
             console.log('load_data', item_id, from, to);
-            fetch('http://' + location.host + '/item/' + item_id + '?' + new URLSearchParams({ from: from.toString(), to: to.toString() }), {
+            fetch('http://' + location.host + '/data/' + item_id + '?' + new URLSearchParams({ from: from.toString(), to: to.toString() }), {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             }).then(res => {
@@ -50,7 +50,7 @@ export const useCoCoStore = defineStore('CoCo', {
         },
         publish_data(item_id: string, data: JSON) {
             console.log('publish_data', item_id, data);
-            fetch('http://' + location.host + '/item/' + item_id, {
+            fetch('http://' + location.host + '/data/' + item_id, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)

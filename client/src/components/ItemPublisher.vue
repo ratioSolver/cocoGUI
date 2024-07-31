@@ -11,15 +11,17 @@
         <tr v-for="[name, par] in item.type.dynamic_properties" :key="name">
           <td>{{ name }}</td>
           <td>
-            <IntPublisher v-if="(par instanceof coco.IntegerProperty)" :name="name" :par="par" :value="value[name]" />
-            <RealPublisher v-else-if="(par instanceof coco.RealProperty)" :name="name" :par="par" :value="value[name]" />
-            <StringPublisher v-else-if="(par instanceof coco.StringProperty)" :name="name" :par="par"
+            <BooleanPropertyPublisher v-if="(par instanceof coco.BooleanProperty)" :name="name" :par="par"
               :value="value[name]" />
-            <SingleSymbolPublisher v-else-if="(par instanceof coco.SymbolProperty && !par.multiple)" :name="name" :par="par"
+            <IntPropertyPublisher v-else-if="(par instanceof coco.IntegerProperty)" :name="name" :par="par"
               :value="value[name]" />
-            <MultipleSymbolPublisher v-else-if="(par instanceof coco.SymbolProperty && par.multiple)" :name="name"
-              :par="par" :value="value[name]" />
-            <BooleanPublisher v-else-if="(par instanceof coco.BooleanProperty)" :name="name" :par="par"
+            <RealPropertyPublisher v-else-if="(par instanceof coco.RealProperty)" :name="name" :par="par"
+              :value="value[name]" />
+            <StringPropertyPublisher v-else-if="(par instanceof coco.StringProperty)" :name="name" :par="par"
+              :value="value[name]" />
+            <SymbolPropertyPublisher v-else-if="(par instanceof coco.SymbolProperty)" :name="name" :par="par"
+              :value="value[name]" />
+            <ItemPropertyPublisher v-else-if="(par instanceof coco.ItemProperty)" :name="name" :par="par"
               :value="value[name]" />
           </td>
         </tr>

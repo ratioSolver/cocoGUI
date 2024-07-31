@@ -157,16 +157,19 @@ export namespace coco {
     export class ItemProperty extends PropertyType {
 
         type: Type;
+        multiple: boolean;
 
         /**
          * Creates a new ItemProperty instance.
          *
          * @param name The name of the property.
          * @param type The type of the property.
+         * @param multiple Whether the property can have multiple values.
          * @param default_value The default value of the property.
          */
-        constructor(name: string, type: Type, default_value?: string) {
+        constructor(name: string, type: Type, multiple: boolean = false, default_value?: Item) {
             super(name, default_value);
+            this.multiple = multiple;
             this.type = type;
         }
 
@@ -174,7 +177,7 @@ export namespace coco {
          * Returns the tooltip for the property.
          */
         tooltip(): string {
-            return "<em>" + this.name + "</em>" + ` (${this.type.name})` + (this.default_value ? ` (${this.default_value})` : "");
+            return "<em>" + this.name + "</em>" + (this.multiple ? " multiple" : "") + ` (${this.type.name})` + (this.default_value ? ` (${this.default_value.name})` : "");
         }
     }
 
@@ -211,7 +214,7 @@ export namespace coco {
             case "symbol":
                 return new SymbolProperty(property.name, property.values, property.multiple, property.default_value);
             case "item":
-                return new ItemProperty(property.name, kb.types.get(property.type_id)!, property.default_value);
+                return new ItemProperty(property.name, kb.types.get(property.type_id)!, property.multiple, property.default_value);
             case "json":
                 return new JSONProperty(property.name, property.schema, property.default_value);
             default:
@@ -230,6 +233,7 @@ export namespace coco {
         parents: Map<string, Type>;
         static_properties: Map<string, PropertyType>;
         dynamic_properties: Map<string, PropertyType>;
+        instances: Set<Item>;
 
         /**
          * Creates a new Type instance.
@@ -248,6 +252,7 @@ export namespace coco {
             this.parents = parents;
             this.static_properties = static_properties;
             this.dynamic_properties = dynamic_properties;
+            this.instances = new Set();
         }
 
         static type_tooltip(type: Type): string {
@@ -319,6 +324,14 @@ export namespace coco {
             this.properties = properties;
             this.values = [];
             this.listeners = new Set();
+
+            const q = [type];
+            while (q.length > 0) {
+                const t = q.shift()!;
+                t.instances.add(this);
+                for (const parent of t.parents.values())
+                    q.push(parent);
+            }
         }
 
         /**

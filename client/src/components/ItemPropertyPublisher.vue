@@ -1,0 +1,15 @@
+<template>
+    <v-select v-if="props.par.multiple" v-model="value" :items="Array.from(props.par.type.instances)" item-title="name"
+        :label="props.name" chips multiple required />
+    <v-combobox v-else v-model="value" :items="Array.from(props.par.type.instances)" :label="props.name"
+        item-title="name" required />
+</template>
+
+<script setup lang="ts">
+import { coco } from '@/type';
+import { ref } from 'vue';
+
+const props = defineProps<{ name: string; par: coco.ItemProperty; value: coco.Item | coco.Item[]; }>();
+
+const value = ref(props.value);
+</script>

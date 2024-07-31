@@ -312,6 +312,12 @@ namespace coco
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
         std::string id = req.get_target().substr(6);
+        std::map<std::string, std::string> params;
+        if (id.find('?') != std::string::npos)
+        {
+            params = network::parse_query(id.substr(id.find('?') + 1));
+            id = id.substr(0, id.find('?'));
+        }
         item *s;
         try
         {
@@ -321,11 +327,8 @@ namespace coco
         {
             return std::make_unique<network::json_response>(json::json({{"message", "Item not found"}}), network::status_code::not_found);
         }
-        std::map<std::string, std::string> params;
-        if (req.get_target().find('?') != std::string::npos)
-            params = network::parse_query(req.get_target().substr(req.get_target().find('?') + 1));
-        std::chrono::system_clock::time_point to = params.count("to") ? std::chrono::system_clock::from_time_t(std::stoll(params.at("to"))) : std::chrono::system_clock::time_point();
-        std::chrono::system_clock::time_point from = params.count("from") ? std::chrono::system_clock::from_time_t(std::stoll(params.at("from"))) : to - std::chrono::hours{24 * 30};
+        std::chrono::system_clock::time_point to = params.count("to") ? std::chrono::system_clock::time_point(std::chrono::milliseconds{std::stol(params.at("to"))}) : std::chrono::system_clock::time_point();
+        std::chrono::system_clock::time_point from = params.count("from") ? std::chrono::system_clock::time_point(std::chrono::milliseconds{std::stol(params.at("from"))}) : to - std::chrono::hours{24 * 30};
         return std::make_unique<network::json_response>(coco_core::get_data(*s, from, to));
     }
     std::unique_ptr<network::response> coco_server::add_data(network::request &req)
