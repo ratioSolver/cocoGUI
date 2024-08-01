@@ -40,7 +40,7 @@ defineProps<{ item: coco.Item; }>();
 
 const emit = defineEmits<{
   (event: 'update', item_id: string, from_date: Date, to_date: Date): void;
-  (event: 'publish', item_id: string, data: JSON): void;
+  (event: 'publish', item_id: string, data: Record<string, any>): void;
 }>();
 
 const from_menu = ref(false);
@@ -48,7 +48,7 @@ const from_date = ref(new Date(Date.now() - 1000 * 60 * 60 * 24 * 7));
 const to_menu = ref(false);
 const to_date = ref(new Date());
 
-function publish(item_id: string, data: JSON) {
+function publish(item_id: string, data: Record<string, any>) {
   emit('publish', item_id, data);
 }
 </script>

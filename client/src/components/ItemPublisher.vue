@@ -12,48 +12,56 @@
           <td>{{ name }}</td>
           <td>
             <BooleanPropertyPublisher v-if="(prop instanceof coco.BooleanProperty)" :name="name" :par="prop"
-              :value="value[name]" @update="update_value(prop, $event)" />
+              :value="value[name]" @update="value[prop.name] = $event" />
             <IntPropertyPublisher v-else-if="(prop instanceof coco.IntegerProperty)" :name="name" :par="prop"
-              :value="value[name]" @update="update_value(prop, $event)" />
+              :value="value[name]" @update="value[prop.name] = $event" />
             <RealPropertyPublisher v-else-if="(prop instanceof coco.RealProperty)" :name="name" :par="prop"
-              :value="value[name]" @update="update_value(prop, $event)" />
+              :value="value[name]" @update="value[prop.name] = $event" />
             <StringPropertyPublisher v-else-if="(prop instanceof coco.StringProperty)" :name="name" :par="prop"
-              :value="value[name]" @update="update_value(prop, $event)" />
+              :value="value[name]" @update="value[prop.name] = $event" />
             <SymbolPropertyPublisher v-else-if="(prop instanceof coco.SymbolProperty)" :name="name" :par="prop"
-              :value="value[name]" @update="update_value(prop, $event)" />
+              :value="value[name]" @update="value[prop.name] = $event" />
             <ItemPropertyPublisher v-else-if="(prop instanceof coco.ItemProperty)" :name="name" :par="prop"
-              :value="value[name]" @update="update_value(prop, $event)" />
+              :value="value[name]" @update="value[prop.name] = $event" />
           </td>
         </tr>
       </tbody>
     </v-table>
-    <v-btn block @click="$emit('publish', item.id, value)">Publish</v-btn>
+    <v-btn block @click="publish" color="primary">Publish</v-btn>
   </v-container>
 </template>
 
 <script setup lang="ts">
 import { coco } from '@/type';
-import { reactive } from 'vue';
+import { reactive, watch } from 'vue';
 
 const props = defineProps<{ item: coco.Item; }>();
 
-defineEmits<{ (event: 'publish', item_id: string, value: Record<string, any>): void; }>();
+const emit = defineEmits<{ (event: 'publish', item_id: string, value: Record<string, any>): void; }>();
 
 const value = reactive<Record<string, any>>({});
-props.item.type.dynamic_properties.forEach((property) => {
-  if (props.item.values.length && props.item.values[props.item.values.length - 1].data[property.name])
-    value[property.name] = props.item.values[props.item.values.length - 1].data[property.name];
-  else
-    value[property.name] = property.default_value;
-});
 
-function update_value(prop: coco.Property, new_value: any) {
-  if (prop instanceof coco.ItemProperty)
-    if (prop.multiple)
-      value[prop.name] = new_value.map((item: coco.Item) => item.id);
+updated_values(props.item.values);
+watch(() => props.item.values, (values) => updated_values(values));
+
+function updated_values(values: coco.Data[]) {
+  for (const [name, prop] of props.item.type.dynamic_properties)
+    if (values.length && values[values.length - 1].data[name])
+      value[name] = values[values.length - 1].data[name];
     else
-      value[prop.name] = new_value.id;
-  else
-    value[prop.name] = new_value;
+      value[name] = prop.default_value;
+}
+
+function publish() {
+  const data: Record<string, any> = {};
+  for (const [name, prop] of props.item.type.dynamic_properties)
+    if (prop instanceof coco.ItemProperty)
+      if (prop.multiple)
+        data[name] = value[name].map((item: coco.Item) => item.id);
+      else
+        data[name] = value[name].id;
+    else
+      data[name] = value[name];
+  emit('publish', props.item.id, data);
 }
 </script>

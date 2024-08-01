@@ -14,5 +14,6 @@ const emit = defineEmits<{ (event: 'update', value: coco.Item | coco.Item[]): vo
 
 const value = ref(props.value);
 
+watch(() => props.value, (new_value) => value.value = new_value);
 watch(value, (new_value) => emit('update', new_value));
 </script>
