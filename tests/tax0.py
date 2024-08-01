@@ -5,7 +5,13 @@ def init_db(url):
     # Create the User type
     response = requests.post(url + '/type', json={'name': 'User', 'description': 'User type',
                                                   'static_properties': {'name': {'type': 'string'},
-                                                                        'gender': {'type': 'symbol', 'values': ['M', 'F']}}})
+                                                                        'gender': {'type': 'symbol', 'values': ['M', 'F']}},
+                                                   'dynamic_properties': {'HR': {'type': 'integer', 'min': 40, 'max': 220},
+                                                                          'BR': {'type': 'integer', 'min': 7, 'max': 30},
+                                                                          'SpO2': {'type': 'integer', 'min': 0, 'max': 100},
+                                                                          'Movement': {'type': 'symbol', 'values': ['Basso', 'Medio', 'Alto']},
+                                                                          'Sleep/Awake': {'type': 'symbol', 'values': ['Awake', 'Sleep'],
+                                                                          'Fall': {'type': 'integer', 'min': 0, 'max': 1}}}})
     user_type = response.json()
     print(user_type)
 
@@ -82,6 +88,9 @@ def init_db(url):
     response = requests.post(url + '/item', json={'type': garmin_sensor_type['id'], 'name': 'garmin1', 'properties': {'kit': kit2['id']}})
     garmin1 = response.json()
     print(garmin1)
+
+    # Create some reactive rules
+    response = requests.post(url + '/reactive_rule', json={'name': 'rppg_rule', 'content': '(defrule rppg_rule (rPPG_has_HR (item_id ?item_id) (HR ?hr) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ HR) (create$ ?hr) ?timestamp))'})
 
 
 if __name__ == '__main__':

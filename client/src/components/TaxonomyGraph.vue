@@ -94,7 +94,7 @@ class TypeListener extends KnowledgeListener {
     knowledge.add_listener(this);
   }
 
-  taxonomy(types: coco.Type[]) {
+  types(types: coco.Type[]) {
     this.cy.elements().remove();
     this.tippys.forEach(tippy => tippy.destroy());
     this.tippys.clear();

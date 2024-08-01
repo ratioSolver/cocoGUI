@@ -37,6 +37,16 @@ namespace coco
     std::unique_ptr<network::response> get_data(network::request &req);
     std::unique_ptr<network::response> add_data(network::request &req);
 
+    std::unique_ptr<network::response> get_reactive_rules(network::request &req);
+    std::unique_ptr<network::response> create_reactive_rule(network::request &req);
+    std::unique_ptr<network::response> update_reactive_rule(network::request &req);
+    std::unique_ptr<network::response> delete_reactive_rule(network::request &req);
+
+    std::unique_ptr<network::response> get_deliberative_rules(network::request &req);
+    std::unique_ptr<network::response> create_deliberative_rule(network::request &req);
+    std::unique_ptr<network::response> update_deliberative_rule(network::request &req);
+    std::unique_ptr<network::response> delete_deliberative_rule(network::request &req);
+
     void on_ws_open(network::ws_session &ws);
     void on_ws_message(network::ws_session &ws, const std::string &msg);
     void on_ws_close(network::ws_session &ws);

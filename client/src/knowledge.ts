@@ -6,7 +6,7 @@ export class KnowledgeListener {
     constructor() {
     }
 
-    taxonomy(types: coco.Type[]) { }
+    types(types: coco.Type[]) { }
     type_added(type: coco.Type) { }
     type_updated(type: coco.Type) { }
     type_removed(id: string) { }
@@ -84,8 +84,8 @@ export class Knowledge {
 
     update_knowledge(message: any): boolean {
         switch (message.type) {
-            case 'taxonomy':
-                this.set_taxonomy(message);
+            case 'types':
+                this.set_types(message);
                 return true;
             case 'new_type':
                 this.add_type(message);
@@ -200,11 +200,11 @@ export class Knowledge {
         }
     }
 
-    set_taxonomy(taxonomy_message: any): void {
+    set_types(types_message: any): void {
         this.types.clear();
-        for (let type_message of taxonomy_message.types)
+        for (let type_message of types_message.types)
             this.types.set(type_message.id, new coco.Type(type_message.id, type_message.name, type_message.description));
-        for (let type_message of taxonomy_message.types) {
+        for (let type_message of types_message.types) {
             const type = this.types.get(type_message.id)!;
             if (type_message.parents)
                 for (let parent_id of type_message.parents)
@@ -220,7 +220,7 @@ export class Knowledge {
                     type.dynamic_properties.set(property.name, property);
                 }
         }
-        this.listeners.forEach(listener => listener.taxonomy(Array.from(this.types.values())));
+        this.listeners.forEach(listener => listener.types(Array.from(this.types.values())));
     }
 
     add_type(created_type_message: any): void {
@@ -430,7 +430,7 @@ export class Knowledge {
 
     add_listener(listener: KnowledgeListener): void {
         this.listeners.add(listener);
-        listener.taxonomy(Array.from(this.types.values()));
+        listener.types(Array.from(this.types.values()));
         listener.items(Array.from(this.items.values()));
         listener.reactive_rules(Array.from(this.reactive_rules.values()));
         listener.deliberative_rules(Array.from(this.deliberative_rules.values()));

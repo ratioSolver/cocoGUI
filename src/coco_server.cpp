@@ -28,6 +28,16 @@ namespace coco
         add_route(network::Get, "^/data/.*$", std::bind(&coco_server::get_data, this, std::placeholders::_1));
         add_route(network::Post, "^/data/.*$", std::bind(&coco_server::add_data, this, std::placeholders::_1));
 
+        add_route(network::Get, "^/reactive_rules$", std::bind(&coco_server::get_reactive_rules, this, std::placeholders::_1));
+        add_route(network::Post, "^/reactive_rule$", std::bind(&coco_server::create_reactive_rule, this, std::placeholders::_1));
+        add_route(network::Put, "^/reactive_rule/.*$", std::bind(&coco_server::update_reactive_rule, this, std::placeholders::_1));
+        add_route(network::Delete, "^/reactive_rule/.*$", std::bind(&coco_server::delete_reactive_rule, this, std::placeholders::_1));
+
+        add_route(network::Get, "^/deliberative_rules$", std::bind(&coco_server::get_deliberative_rules, this, std::placeholders::_1));
+        add_route(network::Post, "^/deliberative_rule$", std::bind(&coco_server::create_deliberative_rule, this, std::placeholders::_1));
+        add_route(network::Put, "^/deliberative_rule/.*$", std::bind(&coco_server::update_deliberative_rule, this, std::placeholders::_1));
+        add_route(network::Delete, "^/deliberative_rule/.*$", std::bind(&coco_server::delete_deliberative_rule, this, std::placeholders::_1));
+
         add_ws_route("/coco").on_open(std::bind(&coco_server::on_ws_open, this, std::placeholders::_1)).on_message(std::bind(&coco_server::on_ws_message, this, std::placeholders::_1, std::placeholders::_2)).on_close(std::bind(&coco_server::on_ws_close, this, std::placeholders::_1)).on_error(std::bind(&coco_server::on_ws_error, this, std::placeholders::_1, std::placeholders::_2));
     }
 
@@ -351,6 +361,154 @@ namespace coco
         return std::make_unique<network::response>();
     }
 
+    std::unique_ptr<network::response> coco_server::get_reactive_rules(network::request &)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        json::json sts(json::json_type::array);
+        for (auto &st : coco_core::get_reactive_rules())
+            sts.push_back(to_json(st));
+        return std::make_unique<network::json_response>(std::move(sts));
+    }
+    std::unique_ptr<network::response> coco_server::create_reactive_rule(network::request &req)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        auto &body = static_cast<network::json_request &>(req).get_body();
+        if (body.get_type() != json::json_type::object || !body.contains("name") || body["name"].get_type() != json::json_type::string || !body.contains("content") || body["content"].get_type() != json::json_type::string)
+            return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
+        std::string name = body["name"];
+        std::string content = body["content"];
+        try
+        {
+            auto &st = coco_core::create_reactive_rule(name, content);
+            return std::make_unique<network::json_response>(to_json(st));
+        }
+        catch (const std::exception &e)
+        {
+            return std::make_unique<network::json_response>(json::json({{"message", e.what()}}), network::status_code::conflict);
+        }
+    }
+    std::unique_ptr<network::response> coco_server::update_reactive_rule(network::request &req)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        std::string id = req.get_target().substr(15);
+        rule *st;
+        try
+        {
+            st = &coco_core::get_reactive_rule(id);
+        }
+        catch (const std::exception &)
+        {
+            return std::make_unique<network::json_response>(json::json({{"message", "Reactive rule not found"}}), network::status_code::not_found);
+        }
+        auto &body = static_cast<network::json_request &>(req).get_body();
+        if (body.contains("name"))
+        {
+            if (body["name"].get_type() != json::json_type::string)
+                return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
+            set_reactive_rule_name(*st, body["name"]);
+        }
+        if (body.contains("content"))
+        {
+            if (body["content"].get_type() != json::json_type::string)
+                return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
+            set_reactive_rule_content(*st, body["content"]);
+        }
+        return std::make_unique<network::json_response>(to_json(*st));
+    }
+    std::unique_ptr<network::response> coco_server::delete_reactive_rule(network::request &req)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        auto &body = static_cast<network::json_request &>(req).get_body();
+        if (body.get_type() != json::json_type::object || !body.contains("id") || body["id"].get_type() != json::json_type::string)
+            return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
+        std::string id = body["id"];
+        rule *st;
+        try
+        {
+            st = &coco_core::get_reactive_rule(id);
+        }
+        catch (const std::exception &)
+        {
+            return std::make_unique<network::json_response>(json::json({{"message", "Reactive rule not found"}}), network::status_code::not_found);
+        }
+        coco_core::delete_reactive_rule(*st);
+        return std::make_unique<network::response>();
+    }
+
+    std::unique_ptr<network::response> coco_server::get_deliberative_rules(network::request &)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        json::json sts(json::json_type::array);
+        for (auto &st : coco_core::get_deliberative_rules())
+            sts.push_back(to_json(st));
+        return std::make_unique<network::json_response>(std::move(sts));
+    }
+    std::unique_ptr<network::response> coco_server::create_deliberative_rule(network::request &req)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        auto &body = static_cast<network::json_request &>(req).get_body();
+        if (body.get_type() != json::json_type::object || !body.contains("name") || body["name"].get_type() != json::json_type::string || !body.contains("content") || body["content"].get_type() != json::json_type::string)
+            return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
+        std::string name = body["name"];
+        std::string content = body["content"];
+        try
+        {
+            auto &st = coco_core::create_deliberative_rule(name, content);
+            return std::make_unique<network::json_response>(to_json(st));
+        }
+        catch (const std::exception &e)
+        {
+            return std::make_unique<network::json_response>(json::json({{"message", e.what()}}), network::status_code::conflict);
+        }
+    }
+    std::unique_ptr<network::response> coco_server::update_deliberative_rule(network::request &req)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        std::string id = req.get_target().substr(18);
+        rule *st;
+        try
+        {
+            st = &coco_core::get_deliberative_rule(id);
+        }
+        catch (const std::exception &)
+        {
+            return std::make_unique<network::json_response>(json::json({{"message", "Deliberative rule not found"}}), network::status_code::not_found);
+        }
+        auto &body = static_cast<network::json_request &>(req).get_body();
+        if (body.contains("name"))
+        {
+            if (body["name"].get_type() != json::json_type::string)
+                return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
+            set_deliberative_rule_name(*st, body["name"]);
+        }
+        if (body.contains("content"))
+        {
+            if (body["content"].get_type() != json::json_type::string)
+                return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
+            set_deliberative_rule_content(*st, body["content"]);
+        }
+        return std::make_unique<network::json_response>(to_json(*st));
+    }
+    std::unique_ptr<network::response> coco_server::delete_deliberative_rule(network::request &req)
+    {
+        std::lock_guard<std::recursive_mutex> _(mtx);
+        auto &body = static_cast<network::json_request &>(req).get_body();
+        if (body.get_type() != json::json_type::object || !body.contains("id") || body["id"].get_type() != json::json_type::string)
+            return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
+        std::string id = body["id"];
+        rule *st;
+        try
+        {
+            st = &coco_core::get_deliberative_rule(id);
+        }
+        catch (const std::exception &)
+        {
+            return std::make_unique<network::json_response>(json::json({{"message", "Deliberative rule not found"}}), network::status_code::not_found);
+        }
+        coco_core::delete_deliberative_rule(*st);
+        return std::make_unique<network::response>();
+    }
+
     void coco_server::on_ws_open(network::ws_session &ws)
     {
         LOG_TRACE("New connection from " << ws.remote_endpoint());
@@ -358,8 +516,8 @@ namespace coco
         clients.insert(&ws);
         LOG_DEBUG("Connected clients: " + std::to_string(clients.size()));
 
-        // we send the taxonomy
-        ws.send(make_taxonomy_message(*this).dump());
+        // we send the types
+        ws.send(make_types_message(*this).dump());
 
         // we send the items
         ws.send(make_items_message(*this).dump());
@@ -457,12 +615,12 @@ namespace coco
     void coco_server::new_reactive_rule(const rule &r)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        broadcast(make_reactive_rule_message(r));
+        broadcast(make_new_reactive_rule_message(r));
     }
     void coco_server::new_deliberative_rule(const rule &r)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        broadcast(make_deliberative_rule_message(r));
+        broadcast(make_new_deliberative_rule_message(r));
     }
 
     void coco_server::state_changed(const coco_executor &exec)
