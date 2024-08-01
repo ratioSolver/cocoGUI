@@ -92,7 +92,6 @@ def init_db(url):
     # Create some reactive rules
     response = requests.post(url + '/reactive_rule', json={'name': 'rppg_rule', 'content': '(defrule rppg_rule (rPPG_has_HR (item_id ?item_id) (HR ?hr) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ HR) (create$ ?hr) ?timestamp))'})
 
-
 if __name__ == '__main__':
     url = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8081'
     init_db(url)
