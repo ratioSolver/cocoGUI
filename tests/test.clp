@@ -1,4 +1,0 @@
-
-(defrule rppg_rule_hr (rPPG_has_HR (item_id ?item_id) (HR ?hr) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ HR) (create$ ?hr) ?timestamp))
-(defrule rppg_rule_br (rPPG_has_BR (item_id ?item_id) (BR ?br) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ BR) (create$ ?br) ?timestamp))
-(defrule rppg_rule_spo2 (rPPG_has_SpO2 (item_id ?item_id) (SpO2 ?spo2) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ SpO2) (create$ ?spo2) ?timestamp))

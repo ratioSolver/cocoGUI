@@ -1,12 +1,12 @@
 <template>
-    <v-checkbox v-model="value" :label="props.name" required />
+  <v-checkbox v-model="value" :label="props.name" required :disabled="props.disabled" />
 </template>
 
 <script setup lang="ts">
 import { coco } from '@/type';
 import { ref, watch } from 'vue';
 
-const props = defineProps<{ name: string; par: coco.BooleanProperty; value: boolean; }>();
+const props = withDefaults(defineProps<{ name: string; par: coco.BooleanProperty; value: boolean; disabled: boolean; }>(), { disabled: false });
 const emit = defineEmits<{ (event: 'update', value: boolean): void; }>();
 
 const value = ref(props.value);

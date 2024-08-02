@@ -2,6 +2,23 @@ import sys
 import requests
 
 def init_db(url):
+    ####################################################################################################################
+    # We initialize the knowledge base with the following types and rules:
+    #
+    # - User type with static properties
+    # - Kit type with dynamic properties
+    # - Sensor type with dynamic properties
+    # - rPPG Sensor type with dynamic properties
+    # - WWS Sensor type with dynamic properties
+    # - SWF Sensor type with dynamic properties
+    # - Garmin Sensor type with dynamic properties
+    # - rPPG reactive rules
+    # - WWS reactive rules
+    # - SWF reactive rules
+    # - Garmin reactive rules
+    #
+    ####################################################################################################################
+
     # Create the User type
     response = requests.post(url + '/type', json={'name': 'User', 'description': 'User type',
                                                   'static_properties': {'name': {'type': 'string'},
@@ -10,8 +27,8 @@ def init_db(url):
                                                                           'BR': {'type': 'integer', 'min': 7, 'max': 30},
                                                                           'SpO2': {'type': 'integer', 'min': 0, 'max': 100},
                                                                           'Movement': {'type': 'symbol', 'values': ['Basso', 'Medio', 'Alto']},
-                                                                          'SleepAwake': {'type': 'symbol', 'values': ['Awake', 'Sleep'],
-                                                                          'Fall': {'type': 'integer', 'min': 0, 'max': 1}}}})
+                                                                          'SleepAwake': {'type': 'symbol', 'values': ['Awake', 'Sleep']},
+                                                                          'Fall': {'type': 'integer', 'min': 0, 'max': 1}}})
     user_type = response.json()
     print(user_type)
 
@@ -59,36 +76,6 @@ def init_db(url):
     garmin_sensor_type = response.json()
     print(garmin_sensor_type)
 
-    # Create some users
-    response = requests.post(url + '/item', json={'type': user_type['id'], 'name': 'alice@ageit.it', 'properties': {'name': 'Alice', 'gender': 'F'}})
-    alice = response.json()
-    print(alice)
-    response = requests.post(url + '/item', json={'type': user_type['id'], 'name': 'bob@ageit.it', 'properties': {'name': 'Bob', 'gender': 'M'}})
-    bob = response.json()
-    print(bob)
-
-    # Create some kits
-    response = requests.post(url + '/item', json={'type': kit_type['id'], 'name': 'kit1'})
-    kit1 = response.json()
-    print(kit1)
-    response = requests.post(url + '/item', json={'type': kit_type['id'], 'name': 'kit2'})
-    kit2 = response.json()
-    print(kit2)
-
-    # Create some sensors
-    response = requests.post(url + '/item', json={'type': rppg_sensor_type['id'], 'name': 'rppg1', 'properties': {'kit': kit1['id']}})
-    rppg1 = response.json()
-    print(rppg1)
-    response = requests.post(url + '/item', json={'type': wws_sensor_type['id'], 'name': 'wws1', 'properties': {'kit': kit1['id']}})
-    wws1 = response.json()
-    print(wws1)
-    response = requests.post(url + '/item', json={'type': swf_sensor_type['id'], 'name': 'swf1', 'properties': {'kit': kit2['id']}})
-    swf1 = response.json()
-    print(swf1)
-    response = requests.post(url + '/item', json={'type': garmin_sensor_type['id'], 'name': 'garmin1', 'properties': {'kit': kit2['id']}})
-    garmin1 = response.json()
-    print(garmin1)
-
     # Create some reactive rules
     response = requests.post(url + '/reactive_rule', json={'name': 'rppg_rule_hr', 'content': '(defrule rppg_rule_hr (rPPG_has_HR (item_id ?item_id) (HR ?hr) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ HR) (create$ ?hr) ?timestamp))'})
     rppg_rule = response.json()
@@ -126,6 +113,42 @@ def init_db(url):
     response = requests.post(url + '/reactive_rule', json={'name': 'garmin_rule_movement', 'content': '(defrule garmin_rule_movement (Garmin_has_Movement (item_id ?item_id) (Movement ?movement) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ Movement) (create$ ?movement) ?timestamp))'})
     garmin_rule = response.json()
     print(garmin_rule)
+
+    ####################################################################################################################
+    #
+    # We create some users, kits and sensors
+    #
+    ####################################################################################################################
+
+    # Create some users
+    response = requests.post(url + '/item', json={'type': user_type['id'], 'name': 'alice@ageit.it', 'properties': {'name': 'Alice', 'gender': 'F'}})
+    alice = response.json()
+    print(alice)
+    response = requests.post(url + '/item', json={'type': user_type['id'], 'name': 'bob@ageit.it', 'properties': {'name': 'Bob', 'gender': 'M'}})
+    bob = response.json()
+    print(bob)
+
+    # Create some kits
+    response = requests.post(url + '/item', json={'type': kit_type['id'], 'name': 'kit1'})
+    kit1 = response.json()
+    print(kit1)
+    response = requests.post(url + '/item', json={'type': kit_type['id'], 'name': 'kit2'})
+    kit2 = response.json()
+    print(kit2)
+
+    # Create some sensors
+    response = requests.post(url + '/item', json={'type': rppg_sensor_type['id'], 'name': 'rppg1', 'properties': {'kit': kit1['id']}})
+    rppg1 = response.json()
+    print(rppg1)
+    response = requests.post(url + '/item', json={'type': wws_sensor_type['id'], 'name': 'wws1', 'properties': {'kit': kit1['id']}})
+    wws1 = response.json()
+    print(wws1)
+    response = requests.post(url + '/item', json={'type': swf_sensor_type['id'], 'name': 'swf1', 'properties': {'kit': kit2['id']}})
+    swf1 = response.json()
+    print(swf1)
+    response = requests.post(url + '/item', json={'type': garmin_sensor_type['id'], 'name': 'garmin1', 'properties': {'kit': kit2['id']}})
+    garmin1 = response.json()
+    print(garmin1)
 
 
 if __name__ == '__main__':

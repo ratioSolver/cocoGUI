@@ -202,20 +202,20 @@ export class Knowledge {
 
     set_types(types_message: any): void {
         this.types.clear();
-        for (let type_message of types_message.types)
+        for (const type_message of types_message.types)
             this.types.set(type_message.id, new coco.Type(type_message.id, type_message.name, type_message.description));
-        for (let type_message of types_message.types) {
+        for (const type_message of types_message.types) {
             const type = this.types.get(type_message.id)!;
             if (type_message.parents)
-                for (let parent_id of type_message.parents)
+                for (const parent_id of type_message.parents)
                     type.parents.set(parent_id, this.types.get(parent_id)!);
             if (type_message.static_properties)
-                for (let property_message of type_message.static_properties) {
+                for (const property_message of type_message.static_properties) {
                     const property = coco.get_property(this, property_message);
                     type.static_properties.set(property.name, property);
                 }
             if (type_message.dynamic_properties)
-                for (let property_message of type_message.dynamic_properties) {
+                for (const property_message of type_message.dynamic_properties) {
                     const property = coco.get_property(this, property_message);
                     type.dynamic_properties.set(property.name, property);
                 }
@@ -227,19 +227,19 @@ export class Knowledge {
         const new_type = created_type_message.new_type;
         const parents = new Map<string, coco.Type>();
         if (new_type.parents)
-            for (let parent_id of new_type.parents) {
+            for (const parent_id of new_type.parents) {
                 const parent = this.types.get(parent_id)!;
                 parents.set(parent.id, parent);
             }
         const static_properties = new Map<string, coco.Property>();
         if (new_type.static_properties)
-            for (let property_message of new_type.static_properties) {
+            for (const property_message of new_type.static_properties) {
                 const property = coco.get_property(this, property_message);
                 static_properties.set(property.name, property);
             }
         const dynamic_properties = new Map<string, coco.Property>();
         if (new_type.dynamic_properties)
-            for (let property_message of new_type.dynamic_properties) {
+            for (const property_message of new_type.dynamic_properties) {
                 const property = coco.get_property(this, property_message);
                 dynamic_properties.set(property.name, property);
             }
@@ -257,19 +257,19 @@ export class Knowledge {
             type.description = updated_type.description;
         if (updated_type.parents) {
             const parents = new Map<string, coco.Type>();
-            for (let parent_id of updated_type.parents)
+            for (const parent_id of updated_type.parents)
                 parents.set(parent_id, this.types.get(parent_id)!);
             type.parents = parents;
         }
         if (updated_type.static_properties) {
             const static_properties = new Map<string, coco.Property>();
-            for (let property_message of updated_type.static_properties)
+            for (const property_message of updated_type.static_properties)
                 static_properties.set(property_message.name, coco.get_property(this, property_message));
             type.static_properties = static_properties;
         }
         if (updated_type.dynamic_properties) {
             const dynamic_properties = new Map<string, coco.Property>();
-            for (let property_message of updated_type.dynamic_properties)
+            for (const property_message of updated_type.dynamic_properties)
                 dynamic_properties.set(property_message.name, coco.get_property(this, property_message));
             type.dynamic_properties = dynamic_properties;
         }
@@ -286,10 +286,16 @@ export class Knowledge {
     set_items(items_message: any): void {
         const items = items_message.items;
         this.items.clear();
-        for (let item_message of items) {
+        for (const item_message of items) {
             const type = this.types.get(item_message.type)!;
             const item = new coco.Item(item_message.id, type, item_message.name, item_message.description, item_message.properties);
             this.items.set(item.id, item);
+        }
+        for (const item of this.items.values()) {
+            const props = coco.Type.static_properties(item.type);
+            for (const [name, prop] of props)
+                if (item.properties[name] && prop instanceof coco.ItemProperty)
+                    item.properties[name] = this.items.get(item.properties[name] as string);
         }
         this.listeners.forEach(listener => listener.items(Array.from(this.items.values())));
     }
@@ -298,6 +304,10 @@ export class Knowledge {
         const new_item = created_item_message.new_item;
         const type = this.types.get(new_item.type)!;
         const item = new coco.Item(new_item.id, type, new_item.name, new_item.description, new_item.properties);
+        const props = coco.Type.static_properties(item.type);
+        for (const [name, prop] of props)
+            if (item.properties[name] && prop instanceof coco.ItemProperty)
+                item.properties[name] = this.items.get(item.properties[name] as string);
         this.items.set(item.id, item);
         this.listeners.forEach(listener => listener.item_added(item));
     }
@@ -323,7 +333,7 @@ export class Knowledge {
 
     set_data(item: coco.Item, data_message: any): void {
         const data = [];
-        for (let i in data_message) {
+        for (const i in data_message) {
             for (const [k, v] of Object.entries(data_message[i].data))
                 if (item.type.dynamic_properties.get(k) instanceof coco.ItemProperty)
                     data_message[i].data[k] = this.items.get(v as string);
@@ -334,7 +344,7 @@ export class Knowledge {
 
     add_data(new_data_message: any): void {
         const item = this.items.get(new_data_message.item_id)!;
-        for (let [k, v] of Object.entries(new_data_message.data))
+        for (const [k, v] of Object.entries(new_data_message.data))
             if (item.type.dynamic_properties.get(k) instanceof coco.ItemProperty)
                 new_data_message.data[k] = this.items.get(v as string);
         item.add_value(new coco.Data(new Date(new_data_message.timestamp), new_data_message.data));
@@ -343,7 +353,7 @@ export class Knowledge {
     set_reactive_rules(reactive_rules_message: any): void {
         const reactive_rules = reactive_rules_message.rules;
         this.reactive_rules.clear();
-        for (let reactive_rule_message of reactive_rules) {
+        for (const reactive_rule_message of reactive_rules) {
             const reactive_rule = new Rule(reactive_rule_message.id, reactive_rule_message.name, reactive_rule_message.content);
             this.reactive_rules.set(reactive_rule.id, reactive_rule);
         }
@@ -376,7 +386,7 @@ export class Knowledge {
     set_deliberative_rules(deliberative_rules_message: any): void {
         const deliberative_rules = deliberative_rules_message.rules;
         this.deliberative_rules.clear();
-        for (let deliberative_rule_message of deliberative_rules) {
+        for (const deliberative_rule_message of deliberative_rules) {
             const deliberative_rule = new Rule(deliberative_rule_message.id, deliberative_rule_message.name, deliberative_rule_message.content);
             this.deliberative_rules.set(deliberative_rule.id, deliberative_rule);
         }
@@ -408,7 +418,7 @@ export class Knowledge {
 
     set_solvers(solvers_message: any): void {
         this.solvers.clear();
-        for (let solver_message of solvers_message) {
+        for (const solver_message of solvers_message) {
             const solver = new Solver(solver_message.id, solver_message.name, SolverState[solver_message.state as keyof typeof SolverState]);
             this.solvers.set(solver.id, solver);
         }

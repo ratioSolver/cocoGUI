@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid :id="get_data_id(item)" :style="{ height: item.type.dynamic_properties.size * 200 + 'px' }" />
+  <v-container fluid :id="get_data_id(item)" :style="{ height: dynamic_properties.size * 200 + 'px' }" />
 </template>
 
 <script setup lang="ts">
@@ -9,6 +9,7 @@ import chroma from 'chroma-js'
 import { onMounted, onUnmounted } from 'vue';
 
 const props = defineProps<{ item: coco.Item; }>();
+const dynamic_properties = coco.Type.dynamic_properties(props.item.type);
 
 const get_data_id = (item: coco.Item) => 'itm-' + item.id + '-data';
 
@@ -37,12 +38,12 @@ class ItemChart extends coco.ItemListener {
   }
 
   values(values: coco.Data[]): void {
-    for (const par_name of props.item.type.dynamic_properties.keys())
+    for (const par_name of dynamic_properties.keys())
       this.vals_ys.set(par_name, []);
 
     for (const val of values) {
       this.vals_xs.push(val.timestamp);
-      for (const [par_name, par] of props.item.type.dynamic_properties)
+      for (const [par_name, par] of dynamic_properties)
         if (val.data.hasOwnProperty(par_name))
           this.vals_ys.get(par_name)!.push(val.data[par_name]);
         else if (this.vals_ys.get(par_name)!.length > 0)
@@ -53,9 +54,9 @@ class ItemChart extends coco.ItemListener {
 
     let i = 1;
     let start_domain = 0;
-    const domain_size = 1 / props.item.type.dynamic_properties.size;
+    const domain_size = 1 / dynamic_properties.size;
     const domain_separator = 0.05 * domain_size;
-    for (const [par_name, par] of props.item.type.dynamic_properties) {
+    for (const [par_name, par] of dynamic_properties) {
       if (par instanceof coco.RealProperty || par instanceof coco.IntegerProperty) {
         if (i == 1) {
           this.y_axes.set(par_name, 'y');
@@ -107,9 +108,17 @@ class ItemChart extends coco.ItemListener {
             trace.name = c_val;
             if (c_colors.has(c_val))
               trace.line.color = c_colors.get(c_val);
+            if (!trace.name) {
+              trace.name = '';
+              trace.line.color = 'rgba(0, 0, 0, 0)';
+            }
           } else if (par instanceof coco.ItemProperty) {
             trace.name = c_val.name;
             trace.line.color = c_colors.get(c_val.id);
+            if (!trace.name) {
+              trace.name = '';
+              trace.line.color = 'rgba(0, 0, 0, 0)';
+            }
           }
           this.traces.get(par_name)!.push(trace);
         }
@@ -124,7 +133,7 @@ class ItemChart extends coco.ItemListener {
 
   new_value(value: coco.Data): void {
     this.vals_xs.push(value.timestamp);
-    for (const [par_name, par] of props.item.type.dynamic_properties) {
+    for (const [par_name, par] of dynamic_properties) {
       let c_value;
       if (value.data.hasOwnProperty(par_name))
         c_value = value.data[par_name];
