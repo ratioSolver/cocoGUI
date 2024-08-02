@@ -11,6 +11,10 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview"
   },
+  "main": "dist/coco-client.umd.js",
+  "files": [
+    "dist/*"
+  ],
   "dependencies": {
     "@mdi/font": "6.2.95",
     "chroma-js": "2.4.2",
