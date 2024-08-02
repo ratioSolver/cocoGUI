@@ -1,18 +1,20 @@
 {
   "name": "coco-client",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/ratioSolver/cocoGUI"
   },
   "scripts": {
     "dev": "vite",
+    "build:lib": "vue-tsc --noEmit && vite build --mode lib",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "@mdi/font": "6.2.95",
     "chroma-js": "2.4.2",
+    "coco-client": "^1.0.2",
     "cytoscape": "^3.28.1",
     "cytoscape-dagre": "^2.5.0",
     "cytoscape-popper": "^2.0.0",
