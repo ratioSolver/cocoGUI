@@ -2,7 +2,6 @@
   <v-container id="taxonomy-graph" class="taxonomy-container" fluid />
 </template>
 
-
 <script setup lang="ts">
 import { coco } from '@/type';
 import { Knowledge, KnowledgeListener } from '@/knowledge';

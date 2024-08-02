@@ -332,22 +332,32 @@ export class Knowledge {
     }
 
     set_data(item: coco.Item, data_message: any): void {
-        const data = [];
+        const data: coco.Data[] = [];
+        const dynamic_properties = coco.Type.dynamic_properties(item.type);
         for (const i in data_message) {
             for (const [k, v] of Object.entries(data_message[i].data))
-                if (item.type.dynamic_properties.get(k) instanceof coco.ItemProperty)
+                if (dynamic_properties.get(k) instanceof coco.ItemProperty)
                     data_message[i].data[k] = this.items.get(v as string);
-            data.push(new coco.Data(new Date(data_message[i].timestamp), data_message[i].data));
+            const timestamp = new Date(data_message[i].timestamp);
+            if (data.length > 0 && timestamp.getTime() == data[data.length - 1].timestamp.getTime())
+                data[data.length - 1].data = { ...data[data.length - 1].data, ...data_message[i].data };
+            else
+                data.push(new coco.Data(timestamp, data_message[i].data));
         }
         item.set_values(data);
     }
 
     add_data(new_data_message: any): void {
         const item = this.items.get(new_data_message.item_id)!;
+        const dynamic_properties = coco.Type.dynamic_properties(item.type);
         for (const [k, v] of Object.entries(new_data_message.data))
-            if (item.type.dynamic_properties.get(k) instanceof coco.ItemProperty)
+            if (dynamic_properties.get(k) instanceof coco.ItemProperty)
                 new_data_message.data[k] = this.items.get(v as string);
-        item.add_value(new coco.Data(new Date(new_data_message.timestamp), new_data_message.data));
+        const timestamp = new Date(new_data_message.timestamp);
+        if (item.values.length > 0 && timestamp.getTime() == item.values[item.values.length - 1].timestamp.getTime())
+            item.values[item.values.length - 1].data = { ...item.values[item.values.length - 1].data, ...new_data_message.data };
+        else
+            item.add_value(new coco.Data(timestamp, new_data_message.data));
     }
 
     set_reactive_rules(reactive_rules_message: any): void {
