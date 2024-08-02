@@ -1,8 +1,9 @@
 <template>
-    <v-select v-if="props.par.multiple" v-model="value" :items="props.par.symbols" :label="props.name" chips multiple
-        required :disabled="props.disabled" />
-    <v-combobox v-else v-model="value" :items="props.par.symbols" :label="props.name" required
+    <v-select v-if="props.par.multiple" v-model="value" :items="props.par.symbols"
+        :rules="[(v: string[]) => v.length > 0 || 'Value is required']" :label="props.name" chips multiple required
         :disabled="props.disabled" />
+    <v-combobox v-else v-model="value" :items="props.par.symbols" :rules="[(v: string) => !!v || 'Value is required']"
+        :label="props.name" required :disabled="props.disabled" />
 </template>
 
 <script setup lang="ts">

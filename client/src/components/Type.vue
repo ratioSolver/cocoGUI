@@ -3,11 +3,11 @@
     <v-container>
       <v-row>
         <v-col cols="6">
-          <v-text-field v-model="type.name" :rules="[v => !!v || 'Name is required']" label="Name" required />
+          <v-text-field v-model="type.name" :rules="[(v: string) => !!v || 'Name is required']" label="Name" required />
         </v-col>
         <v-col cols="6">
-          <v-text-field v-model="type.description" :rules="[v => !!v || 'Description is required']" label="Description"
-            required />
+          <v-text-field v-model="type.description" :rules="[(v: string) => !!v || 'Description is required']"
+            label="Description" required />
         </v-col>
       </v-row>
       <v-divider />

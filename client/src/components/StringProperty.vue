@@ -1,6 +1,6 @@
 <template>
-  <v-text-field v-model="value" type="text" :rules="[v => !!v || 'Value is required']" :label="props.name" required
-    :disabled="props.disabled" />
+  <v-text-field v-model="value" type="text" :rules="[(v: string) => !!v || 'Value is required']" :label="props.name"
+    required :disabled="props.disabled" />
 </template>
 
 <script setup lang="ts">

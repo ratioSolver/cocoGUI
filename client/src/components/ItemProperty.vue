@@ -1,8 +1,10 @@
 <template>
-  <v-select v-if="props.par.multiple" v-model="value" :items="Array.from(props.par.type.instances)" item-title="name"
-    :label="props.name" chips multiple required :disabled="props.disabled" />
-  <v-combobox v-else v-model="value" :items="Array.from(props.par.type.instances)" :label="props.name" item-title="name"
-    required :disabled="props.disabled" />
+  <v-select v-if="props.par.multiple" v-model="value" :items="Array.from(props.par.type.instances)"
+    :rules="[(v: coco.Item[]) => v.length > 0 || 'Value is required']" item-title="name" :label="props.name" chips
+    multiple required :disabled="props.disabled" />
+  <v-combobox v-else v-model="value" :items="Array.from(props.par.type.instances)"
+    :rules="[(v: coco.Item) => !!v || 'Value is required']" :label="props.name" item-title="name" required
+    :disabled="props.disabled" />
 </template>
 
 <script setup lang="ts">
