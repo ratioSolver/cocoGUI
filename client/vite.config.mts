@@ -45,7 +45,7 @@ export default defineConfig(({ mode }) => {
         build: {
           lib: {
             entry: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
-            name: 'CoCoLib',
+            name: 'coco-client',
           },
           rollupOptions: {
             external: ['vue'],
