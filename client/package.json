@@ -1,6 +1,6 @@
 {
   "name": "coco-client",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "repository": {
     "type": "git",
     "url": "https://github.com/ratioSolver/cocoGUI"
@@ -11,15 +11,16 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview"
   },
-  "main": "dist/coco-client.mjs",
-  "module": "dist/coco-client.umd.js",
+  "main": "dist/coco-client.js",
+  "module": "dist/coco-client.umd.cjs",
   "exports": {
     ".": {
-      "import": "./dist/coco-client.mjs",
-      "require": "./dist/coco-client.umd.js"
+      "import": "./dist/coco-client.js",
+      "require": "./dist/coco-client.umd.cjs"
     }
   },
   "types": "dist/index.d.ts",
+  "type": "module",
   "files": [
     "dist"
   ],
