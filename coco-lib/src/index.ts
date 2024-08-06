@@ -6,5 +6,6 @@ import SymbolProperty from './components/properties/SymbolProperty.vue';
 import ItemProperty from './components/properties/ItemProperty.vue';
 
 export * from './coco';
+export * from './taxonomy';
 export * from './values';
 export { BooleanProperty, IntegerProperty, RealProperty, StringProperty, SymbolProperty, ItemProperty };
