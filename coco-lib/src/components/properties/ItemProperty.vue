@@ -1,6 +1,7 @@
 <template>
   <n-select v-model:value="value" :placeholder="props.par.name" :multiple="props.par.multiple"
-    :options="Array.from(props.par.type.instances).map((v) => ({ value: v.id, label: v.name })) clearable" />
+    :options="Array.from(props.par.type.instances).map((v) => ({ value: v.id, label: v.name }))"
+    :disabled="props.disabled" clearable />
 </template>
 
 <script setup lang="ts">
