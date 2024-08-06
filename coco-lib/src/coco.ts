@@ -4,7 +4,7 @@ import { solver } from "./solver"
 
 export namespace coco {
 
-    export class KnowledgeListener {
+    export class StateListener {
 
         constructor() {
         }
@@ -45,7 +45,7 @@ export namespace coco {
         reactive_rules: Map<string, rule.ReactiveRule>;
         deliberative_rules: Map<string, rule.DeliberativeRule>;
         solvers: Map<string, solver.Solver>;
-        listeners: Set<KnowledgeListener>;
+        listeners: Set<StateListener>;
 
         /**
          * Creates a new Knowledge instance.
@@ -428,7 +428,7 @@ export namespace coco {
             this.listeners.forEach(listener => listener.solver_removed(removed_solver_id));
         }
 
-        add_listener(listener: KnowledgeListener): void {
+        add_listener(listener: StateListener): void {
             this.listeners.add(listener);
             listener.types(Array.from(this.types.values()));
             listener.items(Array.from(this.items.values()));
@@ -437,7 +437,7 @@ export namespace coco {
             listener.solvers(Array.from(this.solvers.values()));
         }
 
-        remove_listener(listener: KnowledgeListener): void {
+        remove_listener(listener: StateListener): void {
             this.listeners.delete(listener);
         }
     }

@@ -6,19 +6,31 @@
     "url": "https://github.com/ratioSolver/cocoGUI"
   },
   "description": "CoCo Library",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "type": "module",
+  "main": "./dist/coco-lib.js",
+  "module": "./dist/coco-lib.umd.js",
+  "exports": {
+    ".": {
+      "import": "./dist/coco-lib.js",
+      "require": "./dist/coco-lib.umd.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
-    "build": "tsup"
+    "build": "vite build"
   },
   "author": "Riccardo De Benedictis",
   "license": "Apache-2.0",
   "devDependencies": {
-    "tsup": "^8.2.4",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vite": "^5.3.5",
+    "vite-plugin-dts": "^4.0.0-beta.2"
   },
   "peerDependencies": {
+    "naive-ui": "^2.39.0",
     "vue": "^3.4.35"
+  },
+  "dependencies": {
+    "@vitejs/plugin-vue": "^5.1.2"
   }
 }
