@@ -1,11 +1,21 @@
 <template>
+  <n-flex vertical>
+    <n-date-picker v-model:value="range" type="daterange"
+      :is-date-disabled="(date: number) => date <= new Date().getDate()" clearable />
+    <n-flex justify="center">
+      <div :id="get_data_id(props.item)"></div>
+    </n-flex>
+  </n-flex>
 </template>
 
 <script setup lang="ts">
+import { NFlex, NDatePicker } from 'naive-ui';
 import { taxonomy } from '@/taxonomy';
 import Plotly from 'plotly.js-dist-min';
 import chroma from 'chroma-js'
-import { onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
+
+const range = ref<[number, number]>([new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).getDate(), new Date().getDate()]);
 
 const props = defineProps<{ item: taxonomy.Item; }>();
 const dynamic_properties = taxonomy.Type.dynamic_properties(props.item.type);
