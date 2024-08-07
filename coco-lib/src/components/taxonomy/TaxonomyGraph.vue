@@ -5,14 +5,39 @@
 <script setup lang="ts">
 import { taxonomy } from '@/taxonomy';
 import { coco } from '@/coco';
-import { onMounted, onUnmounted, Ref } from 'vue';
+import { onMounted, onUnmounted } from 'vue';
 import cytoscape from 'cytoscape';
 import dagre from 'cytoscape-dagre';
+import cytoscapePopper, { RefElement } from 'cytoscape-popper';
 import tippy, { Instance } from 'tippy.js';
 
-const props = defineProps<{ knowledge: coco.State; }>();
+const props = defineProps<{ state: coco.State; }>();
+
+function tippyFactory(ref: RefElement, content: HTMLElement) {
+  // Since tippy constructor requires DOM element/elements, create a placeholder
+  var dummyDomEle = document.createElement('div');
+
+  var tip = tippy(dummyDomEle, {
+    getReferenceClientRect: ref.getBoundingClientRect,
+    trigger: 'manual', // mandatory
+    // dom element inside the tippy:
+    content: content,
+    // your own preferences:
+    arrow: true,
+    placement: 'bottom',
+    hideOnClick: false,
+    sticky: "reference",
+
+    // if interactive:
+    interactive: true,
+    appendTo: document.body // or append dummyDomEle to document.body
+  });
+
+  return tip;
+}
 
 cytoscape.use(dagre);
+cytoscape.use(cytoscapePopper(tippyFactory));
 
 let listener: TypeListener | null = null;
 
@@ -149,11 +174,11 @@ class TypeListener extends coco.StateListener {
 }
 
 onMounted(() => {
-  listener = new TypeListener(props.knowledge);
+  listener = new TypeListener(props.state);
 });
 
 onUnmounted(() => {
-  props.knowledge.remove_listener(listener!);
+  props.state.remove_listener(listener!);
   listener!.cy.destroy();
   listener = null;
 });

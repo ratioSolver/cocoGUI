@@ -4,6 +4,19 @@ import { solver } from "./solver"
 
 export namespace coco {
 
+    export class Action {
+
+        type: string;
+        timestamp: Date;
+        parameters: Record<string, any>;
+
+        constructor(type: string, timestamp: Date, parameters: Record<string, any>) {
+            this.type = type;
+            this.timestamp = timestamp;
+            this.parameters = parameters;
+        }
+    }
+
     export class StateListener {
 
         constructor() {
@@ -32,6 +45,9 @@ export namespace coco {
         solvers(solvers: solver.Solver[]) { }
         solver_added(solver: solver.Solver) { }
         solver_removed(id: string) { }
+
+        actions(actions: Action[]) { }
+        action(action: Action) { }
     }
 
     /**
@@ -45,6 +61,7 @@ export namespace coco {
         reactive_rules: Map<string, rule.ReactiveRule>;
         deliberative_rules: Map<string, rule.DeliberativeRule>;
         solvers: Map<string, solver.Solver>;
+        actions: Action[];
         listeners: Set<StateListener>;
 
         /**
@@ -59,6 +76,7 @@ export namespace coco {
             this.reactive_rules = new Map();
             this.deliberative_rules = new Map();
             this.solvers = new Map();
+            this.actions = [];
             this.listeners = new Set();
         }
 
@@ -174,6 +192,12 @@ export namespace coco {
                     return true;
                 case 'end':
                     this.solvers.get(message.id)!.end(message);
+                    return true;
+                case 'actions':
+                    this.set_actions(message.actions);
+                    return true;
+                case 'action':
+                    this.perform_action(message);
                     return true;
                 default:
                     return false;
@@ -426,6 +450,19 @@ export namespace coco {
             if (!this.solvers.delete(removed_solver_id))
                 console.error(`Solver ${removed_solver_id} not found`);
             this.listeners.forEach(listener => listener.solver_removed(removed_solver_id));
+        }
+
+        set_actions(actions_message: any): void {
+            this.actions.length = 0;
+            for (const action_message of actions_message)
+                this.actions.push(new Action(action_message.type, new Date(action_message.timestamp), action_message.parameters));
+            this.listeners.forEach(listener => listener.actions(this.actions));
+        }
+
+        perform_action(action_message: any): void {
+            const action = new Action(action_message.type, new Date(action_message.timestamp), action_message.parameters);
+            this.actions.push(action);
+            this.listeners.forEach(listener => listener.action(action));
         }
 
         add_listener(listener: StateListener): void {

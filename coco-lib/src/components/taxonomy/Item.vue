@@ -10,17 +10,17 @@
       <tr v-for="[name, prop] in static_properties" :key="name">
         <td>{{ name }}</td>
         <td>
-          <BooleanProperty v-if="(prop instanceof taxonomy.BooleanProperty)" :par="prop" :value="item.properties[name]"
+          <boolean-property v-if="(prop instanceof taxonomy.BooleanProperty)" :par="prop" :value="item.properties[name]"
             disabled />
-          <IntegerProperty v-else-if="(prop instanceof taxonomy.IntegerProperty)" :par="prop"
+          <integer-property v-else-if="(prop instanceof taxonomy.IntegerProperty)" :par="prop"
             :value="item.properties[name]" disabled />
-          <RealProperty v-else-if="(prop instanceof taxonomy.RealProperty)" :par="prop" :value="item.properties[name]"
+          <real-property v-else-if="(prop instanceof taxonomy.RealProperty)" :par="prop" :value="item.properties[name]"
             disabled />
-          <StringProperty v-else-if="(prop instanceof taxonomy.StringProperty)" :par="prop"
+          <string-property v-else-if="(prop instanceof taxonomy.StringProperty)" :par="prop"
             :value="item.properties[name]" disabled />
-          <SymbolProperty v-else-if="(prop instanceof taxonomy.SymbolProperty)" :par="prop"
+          <symbol-property v-else-if="(prop instanceof taxonomy.SymbolProperty)" :par="prop"
             :value="item.properties[name]" disabled />
-          <ItemProperty v-else-if="(prop instanceof taxonomy.ItemProperty)" :par="prop" :value="item.properties[name]"
+          <ptem-property v-else-if="(prop instanceof taxonomy.ItemProperty)" :par="prop" :value="item.properties[name]"
             disabled />
         </td>
       </tr>
