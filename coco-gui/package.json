@@ -1,18 +1,18 @@
 {
-  "name": "coco-lib",
+  "name": "coco-gui",
   "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/ratioSolver/cocoGUI"
   },
-  "description": "CoCo Library",
+  "description": "Combined deductiOn and abduCtiOn (CoCo) core library",
   "type": "module",
-  "main": "./dist/coco-lib.js",
-  "module": "./dist/coco-lib.umd.js",
+  "main": "./dist/coco-gui.js",
+  "module": "./dist/coco-gui.umd.js",
   "exports": {
     ".": {
-      "import": "./dist/coco-lib.js",
-      "require": "./dist/coco-lib.umd.js",
+      "import": "./dist/coco-gui.js",
+      "require": "./dist/coco-gui.umd.js",
       "types": "./dist/index.d.ts"
     }
   },

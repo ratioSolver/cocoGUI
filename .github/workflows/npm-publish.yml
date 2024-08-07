@@ -12,7 +12,7 @@ jobs:
         id-token: write
     defaults:
       run:
-        working-directory: ./coco-lib
+        working-directory: ./coco-gui
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
