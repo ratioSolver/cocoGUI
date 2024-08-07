@@ -1,7 +1,9 @@
 name: Publish Package to npmjs
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
+      - memory
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -10,7 +12,7 @@ jobs:
         id-token: write
     defaults:
       run:
-        working-directory: ./client
+        working-directory: ./coco-lib
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
