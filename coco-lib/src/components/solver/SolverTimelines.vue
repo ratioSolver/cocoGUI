@@ -1,5 +1,5 @@
 <template>
-  <div :id="get_timelines_id(props.solver)"></div>
+  <div :id="get_timelines_id(props.slv)"></div>
 </template>
 
 <script setup lang="ts">
@@ -9,7 +9,7 @@ import { timelines } from '@/timelines';
 import { onMounted, onUnmounted } from 'vue';
 import Plotly from 'plotly.js-dist-min';
 
-const props = defineProps<{ solver: solver.Solver; }>();
+const props = defineProps<{ slv: solver.Solver; }>();
 
 const get_timelines_id = (solver: solver.Solver) => 'slv-' + solver.id + '-timelines';
 
@@ -61,14 +61,14 @@ class TimelinesListener extends solver.SolverListener {
       this.horizon = (exprs.get('horizon') as values.Real).val.to_number();
     }
     this.recompute_timelines(timelines);
-    Plotly.react(get_timelines_id(props.solver), Array.from(this.traces.values()).flat(), this.layout, this.config);
+    Plotly.react(get_timelines_id(props.slv), Array.from(this.traces.values()).flat(), this.layout, this.config);
   }
 
   tick(time: values.Rational): void {
     this.layout.shapes[0].x0 = time.to_number();
     this.layout.shapes[0].x1 = time.to_number();
     this.layout.datarevision = Date.now();
-    Plotly.relayout(get_timelines_id(props.solver), this.layout);
+    Plotly.relayout(get_timelines_id(props.slv), this.layout);
   }
 
   recompute_timelines(tls: Map<string, timelines.Timeline<timelines.TimelineValue>>): void {
@@ -179,12 +179,12 @@ class TimelinesListener extends solver.SolverListener {
 let listener = null as TimelinesListener | null;
 
 onMounted(() => {
-  listener = new TimelinesListener(props.solver);
+  listener = new TimelinesListener(props.slv);
 });
 
 onUnmounted(() => {
-  props.solver.remove_listener(listener!);
-  Plotly.purge(get_timelines_id(props.solver));
+  props.slv.remove_listener(listener!);
+  Plotly.purge(get_timelines_id(props.slv));
   listener = null;
 });
 </script>

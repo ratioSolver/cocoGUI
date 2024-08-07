@@ -1,5 +1,7 @@
 import FrameComponent from './components/FrameComponent.vue';
 import Chat from './components/Chat.vue';
+import LogInDialog from './components/LogInDialog.vue';
+import Map from './components/Map.vue';
 
 import BooleanProperty from '@/components/properties/BooleanProperty.vue';
 import IntegerProperty from './components/properties/IntegerProperty.vue';
@@ -24,7 +26,7 @@ import SolverGraph from './components/solver/SolverGraph.vue';
 import SolverTimelines from './components/solver/SolverTimelines.vue';
 
 export { coco } from './coco';
-export { FrameComponent, Chat };
+export { FrameComponent, Chat, LogInDialog, Map };
 export { BooleanProperty, IntegerProperty, RealProperty, StringProperty, SymbolProperty, ItemProperty };
 export { ReactiveRule, DeliberativeRule, ItemListItem, ItemChart, ItemPublisher, Item, TypeListItem, Type, TaxonomyGraph };
 export { Solver, SolverListItem, SolverGraph, SolverTimelines };

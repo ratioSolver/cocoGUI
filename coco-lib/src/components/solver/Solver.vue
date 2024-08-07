@@ -1,10 +1,10 @@
 <template>
   <n-tabs type="line" animated>
     <n-tab-pane name="timelines" tab="Timelines">
-      <solver-timelines :solver="solver" />
+      <solver-timelines :slv="slv" />
     </n-tab-pane>
     <n-tab-pane name="graph" tab="Graph">
-      <solver-graph :solver="solver" />
+      <solver-graph :slv="slv" />
     </n-tab-pane>
   </n-tabs>
 </template>
@@ -15,5 +15,5 @@ import SolverTimelines from './SolverTimelines.vue';
 import SolverGraph from './SolverGraph.vue';
 import { solver } from '@/solver';
 
-defineProps<{ solver: solver.Solver; }>();
+defineProps<{ slv: solver.Solver; }>();
 </script>

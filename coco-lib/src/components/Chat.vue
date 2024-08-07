@@ -1,9 +1,9 @@
 <template>
   <n-card>
     <n-list id="chat-list" style="max-height: calc(100vh - 190px);">
-      <n-list-item v-for="msg in props.messages" :key="msg.timestamp.toDateString"
-        :class="Object.hasOwn(msg.parameters, 'me') ? 'text-right' : 'text-left'">
-        <n-tag :type="Object.hasOwn(msg.parameters, 'me') ? 'primary' : 'default'">{{ msg.parameters.text }}</n-tag>
+      <n-list-item v-for="msg in props.messages" :key="msg.timestamp.getDate()"
+        :class="Object.hasOwn(msg.data, 'me') ? 'text-right' : 'text-left'">
+        <n-tag :type="Object.hasOwn(msg.data, 'me') ? 'primary' : 'default'">{{ msg.data.content }}</n-tag>
       </n-list-item>
     </n-list>
     <template #action>
@@ -15,10 +15,10 @@
 
 <script setup lang="ts">
 import { NCard, NList, NListItem, NTag, NInput, NButton } from 'naive-ui';
-import { coco } from '@/coco';
+import { taxonomy } from '@/taxonomy';
 import { ref, nextTick } from 'vue';
 
-const props = defineProps<{ messages: coco.Action[]; }>();
+const props = defineProps<{ messages: taxonomy.Data[]; }>();
 const emit = defineEmits<{ (event: 'send', message: string): void; }>();
 
 const message = ref('');

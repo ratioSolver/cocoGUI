@@ -1,5 +1,5 @@
 <template>
-  <div :id="get_graph_id(props.solver)"></div>
+  <div :id="get_graph_id(props.slv)"></div>
 </template>
 
 <script setup lang="ts">
@@ -12,7 +12,7 @@ import cytoscapePopper, { RefElement } from 'cytoscape-popper';
 import tippy, { Instance } from 'tippy.js';
 import chroma from 'chroma-js'
 
-const props = defineProps<{ solver: solver.Solver; }>();
+const props = defineProps<{ slv: solver.Solver; }>();
 
 const get_graph_id = (solver: solver.Solver) => 'slv-' + solver.id + '-graph';
 
@@ -203,11 +203,11 @@ class SolverListenerImpl extends solver.SolverListener {
 }
 
 onMounted(() => {
-  listener = new SolverListenerImpl(props.solver);
+  listener = new SolverListenerImpl(props.slv);
 });
 
 onUnmounted(() => {
-  props.solver.remove_listener(listener!);
+  props.slv.remove_listener(listener!);
   listener!.cy.destroy();
   listener = null;
 });
