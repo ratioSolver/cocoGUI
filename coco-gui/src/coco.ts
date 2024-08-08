@@ -39,7 +39,6 @@ export namespace coco {
      */
     export class State {
 
-        name: string;
         types: Map<string, taxonomy.Type>;
         items: Map<string, taxonomy.Item>;
         reactive_rules: Map<string, rule.ReactiveRule>;
@@ -49,11 +48,8 @@ export namespace coco {
 
         /**
          * Creates a new Knowledge instance.
-         *
-         * @param name The name of the knowledge base.
          */
-        constructor(name: string) {
-            this.name = name;
+        constructor() {
             this.types = new Map();
             this.items = new Map();
             this.reactive_rules = new Map();

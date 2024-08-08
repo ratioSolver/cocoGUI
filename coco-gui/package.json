@@ -1,6 +1,6 @@
 {
   "name": "coco-gui",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/ratioSolver/cocoGUI"
@@ -17,10 +17,14 @@
       "import": "./dist/coco-gui.js",
       "require": "./dist/coco-gui.umd.cjs",
       "types": "./dist/index.d.ts"
+    },
+    "./dist/style.css": {
+      "import": "./dist/style.css",
+      "require": "./dist/style.css"
     }
   },
   "scripts": {
-    "build": "vue-tsc --declaration --emitDeclarationOnly"
+    "build": "vite build && vue-tsc --declaration --emitDeclarationOnly"
   },
   "author": "Riccardo De Benedictis",
   "license": "Apache-2.0",
@@ -45,6 +49,8 @@
     "naive-ui": "^2.39.0",
     "plotly.js-dist-min": "^2.34.0",
     "tippy.js": "^6.3.7",
-    "vue": "^3.4.35"
+    "vue": "^3.4.35",
+    "pinia": "^2.2.1",
+    "vue-router": "^4.4.3"
   }
 }

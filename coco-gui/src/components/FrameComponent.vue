@@ -1,7 +1,8 @@
 <template>
-  <n-card :title="props.title" :class="{ fullscreen: maximized }">
+  <n-card size="small" :title="props.title" :class="{ 'full-screen': maximized }"
+    header-style="background-color: #f0f2f5;" hoverable>
     <template #header-extra>
-      <n-button class="toggle-button" @click="maximized = !maximized">
+      <n-button size="small" icon-only @click="maximized = !maximized">
         <n-icon size="small" :component="maximized ? FullScreenMinimize24Regular : FullScreenMaximize20Regular" />
       </n-button>
     </template>
@@ -22,7 +23,7 @@ const maximized = ref(false);
 </script>
 
 <style scoped>
-.fullscreen {
+.full-screen {
   position: fixed;
   top: 0;
   left: 0;
@@ -31,13 +32,6 @@ const maximized = ref(false);
   z-index: 1000;
   overflow: auto;
   transition: all 0.3s;
-}
-
-.toggle-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 1001;
 }
 
 .content {
