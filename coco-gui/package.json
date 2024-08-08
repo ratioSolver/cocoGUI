@@ -7,17 +7,20 @@
   },
   "description": "Combined deductiOn and abduCtiOn (CoCo) core library",
   "type": "module",
-  "main": "./dist/coco-gui.js",
-  "module": "./dist/coco-gui.umd.js",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/coco-gui.umd.cjs",
+  "module": "./dist/coco-gui.js",
   "exports": {
     ".": {
       "import": "./dist/coco-gui.js",
-      "require": "./dist/coco-gui.umd.js",
+      "require": "./dist/coco-gui.umd.cjs",
       "types": "./dist/index.d.ts"
     }
   },
   "scripts": {
-    "build": "vite build"
+    "build": "vue-tsc --declaration --emitDeclarationOnly"
   },
   "author": "Riccardo De Benedictis",
   "license": "Apache-2.0",
@@ -28,20 +31,20 @@
     "@types/leaflet": "^1.9.12",
     "@types/plotly.js-dist-min": "^2.3.4",
     "@vicons/fluent": "^0.12.0",
+    "@vitejs/plugin-vue": "^5.1.2",
     "typescript": "^5.5.4",
     "vite": "^5.3.5",
-    "vite-plugin-dts": "^4.0.0-beta.2"
+    "vue-tsc": "^2.0.29"
   },
   "peerDependencies": {
-    "naive-ui": "^2.39.0",
-    "vue": "^3.4.35",
-    "@vitejs/plugin-vue": "^5.1.2",
     "chroma-js": "^2.6.0",
     "cytoscape": "^3.30.1",
     "cytoscape-dagre": "^2.5.0",
     "cytoscape-popper": "^4.0.0",
     "leaflet": "^1.9.4",
+    "naive-ui": "^2.39.0",
     "plotly.js-dist-min": "^2.34.0",
-    "tippy.js": "^6.3.7"
+    "tippy.js": "^6.3.7",
+    "vue": "^3.4.35"
   }
 }

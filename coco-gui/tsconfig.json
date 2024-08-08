@@ -9,12 +9,10 @@
         "noImplicitAny": true,
         "esModuleInterop": true,
         "strictNullChecks": true,
-        "target": "ES2022",
-        "moduleResolution": "Node10",
-        "module": "CommonJS",
-        "declaration": true,
+        "target": "ESNext",
+        "moduleResolution": "Node",
+        "module": "ESNext",
         "isolatedModules": true,
-        "noEmit": true,
         "outDir": "dist"
     },
     "include": [
