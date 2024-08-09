@@ -187,15 +187,11 @@ export namespace coco {
                     for (const parent_id of type_message.parents)
                         type.parents.set(parent_id, this.types.get(parent_id)!);
                 if (type_message.static_properties)
-                    for (const property_message of type_message.static_properties) {
-                        const property = taxonomy.get_property(this, property_message);
-                        type.static_properties.set(property.name, property);
-                    }
+                    for (const [prop_name, prop_type] of Object.entries(type_message.static_properties))
+                        type.static_properties.set(prop_name, taxonomy.create_property(this, prop_name, prop_type));
                 if (type_message.dynamic_properties)
-                    for (const property_message of type_message.dynamic_properties) {
-                        const property = taxonomy.get_property(this, property_message);
-                        type.dynamic_properties.set(property.name, property);
-                    }
+                    for (const [prop_name, prop_type] of Object.entries(type_message.dynamic_properties))
+                        type.dynamic_properties.set(prop_name, taxonomy.create_property(this, prop_name, prop_type));
             }
             this.listeners.forEach(listener => listener.types(Array.from(this.types.values())));
         }
@@ -210,16 +206,12 @@ export namespace coco {
                 }
             const static_properties = new Map<string, taxonomy.Property>();
             if (new_type.static_properties)
-                for (const property_message of new_type.static_properties) {
-                    const property = taxonomy.get_property(this, property_message);
-                    static_properties.set(property.name, property);
-                }
+                for (const [prop_name, prop_type] of Object.entries(new_type.static_properties))
+                    static_properties.set(prop_name, taxonomy.create_property(this, prop_name, prop_type));
             const dynamic_properties = new Map<string, taxonomy.Property>();
             if (new_type.dynamic_properties)
-                for (const property_message of new_type.dynamic_properties) {
-                    const property = taxonomy.get_property(this, property_message);
-                    dynamic_properties.set(property.name, property);
-                }
+                for (const [prop_name, prop_type] of Object.entries(new_type.dynamic_properties))
+                    dynamic_properties.set(prop_name, taxonomy.create_property(this, prop_name, prop_type));
             const type = new taxonomy.Type(new_type.id, new_type.name, new_type.description, parents, static_properties, dynamic_properties);
             this.types.set(type.id, type);
             this.listeners.forEach(listener => listener.type_added(type));
@@ -240,14 +232,14 @@ export namespace coco {
             }
             if (updated_type.static_properties) {
                 const static_properties = new Map<string, taxonomy.Property>();
-                for (const property_message of updated_type.static_properties)
-                    static_properties.set(property_message.name, taxonomy.get_property(this, property_message));
+                for (const [prop_name, prop_type] of Object.entries(updated_type.dynamic_properties))
+                    static_properties.set(prop_name, taxonomy.create_property(this, prop_name, prop_type));
                 type.static_properties = static_properties;
             }
             if (updated_type.dynamic_properties) {
                 const dynamic_properties = new Map<string, taxonomy.Property>();
-                for (const property_message of updated_type.dynamic_properties)
-                    dynamic_properties.set(property_message.name, taxonomy.get_property(this, property_message));
+                for (const [prop_name, prop_type] of Object.entries(updated_type.dynamic_properties))
+                    dynamic_properties.set(prop_name, taxonomy.create_property(this, prop_name, prop_type));
                 type.dynamic_properties = dynamic_properties;
             }
             this.listeners.forEach(listener => listener.type_updated(type));

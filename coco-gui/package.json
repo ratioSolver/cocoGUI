@@ -1,6 +1,6 @@
 {
   "name": "coco-gui",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/ratioSolver/cocoGUI"
@@ -48,6 +48,7 @@
     "leaflet": "^1.9.4",
     "naive-ui": "^2.39.0",
     "plotly.js-dist-min": "^2.34.0",
+    "highlight.js": "^11.9.0",
     "tippy.js": "^6.3.7",
     "vue": "^3.4.35",
     "pinia": "^2.2.1",

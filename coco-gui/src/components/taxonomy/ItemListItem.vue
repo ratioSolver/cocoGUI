@@ -1,12 +1,12 @@
 <template>
-  <n-list-item :value="item.id">
-    <template #prefix>
-      <n-icon size="medium" :component="Circle20Regular" />
-    </template>
-    <router-link :to="'/items/' + item.id">
+  <router-link :to="'/item/' + item.id" style="margin: 12px;">
+    <n-list-item :value="item.id">
+      <template #prefix>
+        <n-icon size="medium" :component="Circle20Regular" />
+      </template>
       <n-thing :title="item.name" :description="item.description" />
-    </router-link>
-  </n-list-item>
+    </n-list-item>
+  </router-link>
 </template>
 
 <script setup lang="ts">

@@ -1,39 +1,41 @@
 <template>
-  <n-flex direction="vertical">
-    <n-flex v-if="type" justify="space-around" size="large">
+  <n-grid v-if="type" x-gap="12" y-gap="12" :cols="2" style="padding: 12px;">
+    <n-grid-item>
       <n-input v-model:value="type.name" label="Name" required />
+    </n-grid-item>
+    <n-grid-item>
       <n-input v-model:value="type.description" label="Description" required />
-    </n-flex>
-    <n-flex v-if="static_props.size" vertical>
-      Static properties
+    </n-grid-item>
+    <n-grid-item span="2"><b>Static properties</b></n-grid-item>
+    <n-grid-item span="2">
       <n-data-table :columns="columns"
         :data="Array.from(static_props).map(([name, prop]) => ({ name, property: prop }))" />
-    </n-flex>
-    <n-flex v-if="dynamic_props.size" vertical>
-      Dynamic properties
+    </n-grid-item>
+    <n-grid-item span="2"><b>Dynamic properties</b></n-grid-item>
+    <n-grid-item span="2">
       <n-data-table :columns="columns"
         :data="Array.from(dynamic_props).map(([name, prop]) => ({ name, property: prop }))" />
-    </n-flex>
-  </n-flex>
+    </n-grid-item>
+  </n-grid>
 </template>
 
 <script setup lang="ts">
-import { NFlex, NInput, NDataTable } from 'naive-ui';
+import { NGrid, NGridItem, NInput, NDataTable } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui'
 import { taxonomy } from '@/taxonomy';
-import { onBeforeRouteUpdate } from 'vue-router';
+import { useRoute, onBeforeRouteUpdate } from 'vue-router';
 import { useCoCoStore, static_properties, dynamic_properties } from '@/stores/coco';
 import { ref } from 'vue';
 
-const type = ref<taxonomy.Type | undefined>(undefined);
-const static_props = ref<Map<string, taxonomy.Property>>(new Map());
-const dynamic_props = ref<Map<string, taxonomy.Property>>(new Map());
+const route = useRoute();
+const type = ref(useCoCoStore().state.types.get(route.params.id as string));
+const static_props = ref<Map<string, taxonomy.Property>>(type.value ? static_properties(type.value) : new Map());
+const dynamic_props = ref<Map<string, taxonomy.Property>>(type.value ? dynamic_properties(type.value) : new Map());
+
 onBeforeRouteUpdate((to, from) => {
   type.value = useCoCoStore().state.types.get(to.params.id as string);
-  if (type.value) {
-    static_props.value = static_properties(type.value);
-    dynamic_props.value = dynamic_properties(type.value);
-  }
+  static_props.value = type.value ? static_properties(type.value) : new Map();
+  dynamic_props.value = type.value ? dynamic_properties(type.value) : new Map();
 });
 
 interface PropertyRow {
@@ -45,12 +47,12 @@ const columns: DataTableColumns<PropertyRow> = [
   {
     title: 'Property name',
     key: 'name',
-    width: '80%',
+    width: '60%',
   },
   {
     title: 'Value',
     key: 'property',
-    width: '20%',
+    width: '40%',
     render(row) {
       if (row.property instanceof taxonomy.BooleanProperty) {
         return 'bool' + (row.property.default_value ? ' (' + row.property.default_value + ')' : '');

@@ -1,12 +1,12 @@
 <template>
-  <n-list-item :value="props.solver.id">
-    <template #prefix>
-      <n-icon size="medium" :component="icon" />
-    </template>
-    <router-link :to="'/solvers/' + props.solver.id">
+  <router-link :to="'/solver/' + props.solver.id" style="margin: 12px;">
+    <n-list-item :value="props.solver.id">
+      <template #prefix>
+        <n-icon size="medium" :component="icon" />
+      </template>
       <n-thing :title="props.solver.name" />
-    </router-link>
-  </n-list-item>
+    </n-list-item>
+  </router-link>
 </template>
 
 <script setup lang="ts">

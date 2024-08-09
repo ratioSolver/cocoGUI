@@ -1,11 +1,11 @@
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { coco } from '@/coco'
 import { taxonomy } from '@/taxonomy';
 
 export const useCoCoStore = defineStore('coco', () => {
   const name = ref('CoCo');
-  const state = ref(new coco.State());
+  const state = reactive(new coco.State());
 
   function publish(item: taxonomy.Item, data: Record<string, any>): void {
   }

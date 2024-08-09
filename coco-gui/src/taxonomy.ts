@@ -201,22 +201,22 @@ export namespace taxonomy {
         }
     }
 
-    export function get_property(kb: coco.State, property: any): Property {
+    export function create_property(kb: coco.State, name: string, property: any): Property {
         switch (property.type) {
             case "boolean":
-                return new BooleanProperty(property.name, property.default_value);
+                return new BooleanProperty(name, property.default_value);
             case "integer":
-                return new IntegerProperty(property.name, property.min, property.max, property.default_value);
+                return new IntegerProperty(name, property.min, property.max, property.default_value);
             case "real":
-                return new RealProperty(property.name, property.min, property.max, property.default_value);
+                return new RealProperty(name, property.min, property.max, property.default_value);
             case "string":
-                return new StringProperty(property.name, property.default_value);
+                return new StringProperty(name, property.default_value);
             case "symbol":
-                return new SymbolProperty(property.name, property.values, property.multiple, property.default_value);
+                return new SymbolProperty(name, property.values, property.multiple, property.default_value);
             case "item":
-                return new ItemProperty(property.name, kb.types.get(property.type_id)!, property.multiple, property.default_value);
+                return new ItemProperty(name, kb.types.get(property.type_id)!, property.multiple, property.default_value);
             case "json":
-                return new JSONProperty(property.name, property.schema, property.default_value);
+                return new JSONProperty(name, property.schema, property.default_value);
             default:
                 throw new Error(`Unknown property type: ${property.type}`);
         }

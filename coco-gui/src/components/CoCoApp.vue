@@ -1,9 +1,9 @@
 <template>
-  <n-layout class="full-screen">
-    <n-layout-header bordered>
-      <n-flex justify="space-between">
-        <n-flex>
-          <n-button>
+  <n-layout class="coco-app">
+    <n-layout-header bordered style="background-color: lightgray;">
+      <n-flex justify="space-between" style="align-items: center; height: 64px;">
+        <n-flex style="align-items: center;">
+          <n-button quaternary style="margin: 5px;">
             <n-icon size="large" :component="LineHorizontal320Regular" @click="drawer = !drawer" />
           </n-button>
           <slot name="header">
@@ -33,7 +33,7 @@ const drawer = ref(false);
 </script>
 
 <style scoped>
-.full-screen {
+.coco-app {
   position: fixed;
   top: 0;
   left: 0;
