@@ -1,19 +1,23 @@
 <template>
-  <n-card :title="props.rule.name">
+  <n-card v-if="rule" :title="rule.name">
     <pre v-html="code"></pre>
   </n-card>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch } from 'vue'
+import { onBeforeRouteUpdate } from 'vue-router';
+import { useCoCoStore } from '@/stores/coco';
 import { rule } from '@/rule';
 
-const props = defineProps<{ rule: rule.DeliberativeRule; }>();
+const rule = ref<rule.DeliberativeRule | undefined>(undefined);
+onBeforeRouteUpdate((to, from) => { rule.value = useCoCoStore().state.deliberative_rules.get(to.params.id as string); });
 
 const code = ref('');
 
-onMounted(() => {
-  code.value = hljs.highlight(props.rule.content.toString(), { language: 'riddle' }).value;
+watch(rule, () => {
+  if (rule.value)
+    code.value = hljs.highlight(rule.value.content.toString(), { language: 'riddle' }).value;
 });
 </script>
 

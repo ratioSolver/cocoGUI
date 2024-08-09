@@ -25,10 +25,9 @@
 </template>
 
 <script setup lang="ts">
-import { NLayout, NLayoutHeader, NLayoutContent, NButton, NIcon, NDrawer } from 'naive-ui'
+import { NLayout, NLayoutHeader, NFlex, NLayoutContent, NButton, NIcon, NDrawer } from 'naive-ui'
 import { LineHorizontal320Regular } from '@vicons/fluent'
 import { ref } from 'vue'
-import { coco } from '@/coco'
 
 const drawer = ref(false);
 </script>

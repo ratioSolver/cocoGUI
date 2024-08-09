@@ -14,11 +14,12 @@ import { taxonomy } from '@/taxonomy';
 import Plotly from 'plotly.js-dist-min';
 import chroma from 'chroma-js'
 import { ref, onMounted, onUnmounted } from 'vue';
+import { dynamic_properties } from '@/stores/coco';
 
 const range = ref<[number, number]>([new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).getDate(), new Date().getDate()]);
 
 const props = defineProps<{ item: taxonomy.Item; }>();
-const dynamic_properties = taxonomy.Type.dynamic_properties(props.item.type);
+const dynamic_props = dynamic_properties(props.item.type);
 
 const get_data_id = (item: taxonomy.Item) => 'itm-' + item.id + '-data';
 
@@ -47,12 +48,12 @@ class ItemChart extends taxonomy.ItemListener {
   }
 
   values(values: taxonomy.Data[]): void {
-    for (const par_name of dynamic_properties.keys())
+    for (const par_name of dynamic_props.keys())
       this.vals_ys.set(par_name, []);
 
     for (const val of values) {
       this.vals_xs.push(val.timestamp);
-      for (const [par_name, par] of dynamic_properties)
+      for (const [par_name, par] of dynamic_props)
         if (val.data.hasOwnProperty(par_name))
           this.vals_ys.get(par_name)!.push(val.data[par_name]);
         else if (this.vals_ys.get(par_name)!.length > 0)
@@ -63,9 +64,9 @@ class ItemChart extends taxonomy.ItemListener {
 
     let i = 1;
     let start_domain = 0;
-    const domain_size = 1 / dynamic_properties.size;
+    const domain_size = 1 / dynamic_props.size;
     const domain_separator = 0.05 * domain_size;
-    for (const [par_name, par] of dynamic_properties) {
+    for (const [par_name, par] of dynamic_props) {
       if (par instanceof taxonomy.RealProperty || par instanceof taxonomy.IntegerProperty) {
         if (i == 1) {
           this.y_axes.set(par_name, 'y');
@@ -142,7 +143,7 @@ class ItemChart extends taxonomy.ItemListener {
 
   new_value(value: taxonomy.Data): void {
     this.vals_xs.push(value.timestamp);
-    for (const [par_name, par] of dynamic_properties) {
+    for (const [par_name, par] of dynamic_props) {
       let c_value;
       if (value.data.hasOwnProperty(par_name))
         c_value = value.data[par_name];

@@ -3,7 +3,9 @@
     <template #prefix>
       <n-icon size="medium" :component="icon" />
     </template>
-    <n-thing :title="props.solver.name" />
+    <router-link :to="'/solvers/' + props.solver.id">
+      <n-thing :title="props.solver.name" />
+    </router-link>
   </n-list-item>
 </template>
 

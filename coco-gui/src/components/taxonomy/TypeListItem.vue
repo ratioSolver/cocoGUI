@@ -3,7 +3,9 @@
     <template #prefix>
       <n-icon size="medium" :component="Box20Regular" />
     </template>
-    <n-thing :title="type.name" :description="type.description" />
+    <router-link :to="'/types/' + type.id">
+      <n-thing :title="type.name" :description="type.description" />
+    </router-link>
   </n-list-item>
 </template>
 

@@ -1,19 +1,23 @@
 <template>
-  <n-card :title="props.rule.name">
+  <n-card v-if="rule" :title="rule.name">
     <pre v-html="code"></pre>
   </n-card>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch } from 'vue'
+import { onBeforeRouteUpdate } from 'vue-router';
+import { useCoCoStore } from '@/stores/coco';
 import { rule } from '@/rule';
 
-const props = defineProps<{ rule: rule.ReactiveRule; }>();
+const rule = ref<rule.ReactiveRule | undefined>(undefined);
+onBeforeRouteUpdate((to, from) => { rule.value = useCoCoStore().state.reactive_rules.get(to.params.id as string); });
 
 const code = ref('');
 
-onMounted(() => {
-  code.value = hljs.highlight(props.rule.content.toString(), { language: 'clips' }).value;
+watch(rule, () => {
+  if (rule.value)
+    code.value = hljs.highlight(rule.value.content.toString(), { language: 'clips' }).value;
 });
 </script>
 

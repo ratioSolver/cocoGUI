@@ -1,5 +1,5 @@
 <template>
-  <n-tabs type="line" animated>
+  <n-tabs v-if="slv" type="line" animated>
     <n-tab-pane name="timelines" tab="Timelines">
       <solver-timelines :slv="slv" />
     </n-tab-pane>
@@ -13,7 +13,11 @@
 import { NTabs, NTabPane } from 'naive-ui';
 import SolverTimelines from './SolverTimelines.vue';
 import SolverGraph from './SolverGraph.vue';
+import { ref } from 'vue';
+import { onBeforeRouteUpdate } from 'vue-router';
+import { useCoCoStore } from '@/stores/coco';
 import { solver } from '@/solver';
 
-defineProps<{ slv: solver.Solver; }>();
+const slv = ref<solver.Solver | undefined>(undefined);
+onBeforeRouteUpdate((to, from) => { slv.value = useCoCoStore().state.solvers.get(to.params.id as string); });
 </script>

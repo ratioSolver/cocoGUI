@@ -1,6 +1,7 @@
 import { taxonomy } from "./taxonomy"
 import { rule } from "./rule"
 import { solver } from "./solver"
+import { static_properties, dynamic_properties } from "./stores/coco";
 
 export namespace coco {
 
@@ -268,7 +269,7 @@ export namespace coco {
                 this.items.set(item.id, item);
             }
             for (const item of this.items.values()) {
-                const props = taxonomy.Type.static_properties(item.type);
+                const props = static_properties(item.type);
                 for (const [name, prop] of props)
                     if (item.properties[name] && prop instanceof taxonomy.ItemProperty)
                         item.properties[name] = this.items.get(item.properties[name] as string);
@@ -280,7 +281,7 @@ export namespace coco {
             const new_item = created_item_message.new_item;
             const type = this.types.get(new_item.type)!;
             const item = new taxonomy.Item(new_item.id, type, new_item.name, new_item.description, new_item.properties);
-            const props = taxonomy.Type.static_properties(item.type);
+            const props = static_properties(item.type);
             for (const [name, prop] of props)
                 if (item.properties[name] && prop instanceof taxonomy.ItemProperty)
                     item.properties[name] = this.items.get(item.properties[name] as string);
@@ -309,10 +310,10 @@ export namespace coco {
 
         set_data(item: taxonomy.Item, data_message: any): void {
             const data: taxonomy.Data[] = [];
-            const dynamic_properties = taxonomy.Type.dynamic_properties(item.type);
+            const dynamic_props = dynamic_properties(item.type);
             for (const i in data_message) {
                 for (const [k, v] of Object.entries(data_message[i].data))
-                    if (dynamic_properties.get(k) instanceof taxonomy.ItemProperty)
+                    if (dynamic_props.get(k) instanceof taxonomy.ItemProperty)
                         data_message[i].data[k] = this.items.get(v as string);
                 const timestamp = new Date(data_message[i].timestamp);
                 if (data.length > 0 && timestamp.getTime() == data[data.length - 1].timestamp.getTime())
@@ -325,9 +326,9 @@ export namespace coco {
 
         add_data(new_data_message: any): void {
             const item = this.items.get(new_data_message.item_id)!;
-            const dynamic_properties = taxonomy.Type.dynamic_properties(item.type);
+            const dynamic_props = dynamic_properties(item.type);
             for (const [k, v] of Object.entries(new_data_message.data))
-                if (dynamic_properties.get(k) instanceof taxonomy.ItemProperty)
+                if (dynamic_props.get(k) instanceof taxonomy.ItemProperty)
                     new_data_message.data[k] = this.items.get(v as string);
             const timestamp = new Date(new_data_message.timestamp);
             if (item.values.length > 0 && timestamp.getTime() == item.values[item.values.length - 1].timestamp.getTime())

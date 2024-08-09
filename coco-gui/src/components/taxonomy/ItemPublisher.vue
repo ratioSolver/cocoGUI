@@ -7,7 +7,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr v-for="[name, prop] in dynamic_properties" :key="name">
+      <tr v-for="[name, prop] in dynamic_props" :key="name">
         <td>{{ name }}</td>
         <td>
           <boolean-property v-if="(prop instanceof taxonomy.BooleanProperty)" :name="name" :par="prop"
@@ -38,11 +38,10 @@ import SymbolProperty from '../properties/SymbolProperty.vue';
 import ItemProperty from '../properties/ItemProperty.vue';
 import { taxonomy } from '@/taxonomy';
 import { reactive, watch } from 'vue';
+import { useCoCoStore, dynamic_properties } from '@/stores/coco';
 
 const props = defineProps<{ item: taxonomy.Item; }>();
-const dynamic_properties = taxonomy.Type.dynamic_properties(props.item.type);
-
-const emit = defineEmits<{ (event: 'publish', item_id: string, value: Record<string, any>): void; }>();
+const dynamic_props = dynamic_properties(props.item.type);
 
 const value = reactive<Record<string, any>>({});
 
@@ -50,7 +49,7 @@ updated_values(props.item.values);
 watch(() => props.item.values, (values) => updated_values(values));
 
 function updated_values(values: taxonomy.Data[]) {
-  for (const [name, prop] of dynamic_properties)
+  for (const [name, prop] of dynamic_props)
     if (values.length && values[values.length - 1].data[name])
       value[name] = values[values.length - 1].data[name];
     else
@@ -59,7 +58,7 @@ function updated_values(values: taxonomy.Data[]) {
 
 function publish() {
   const data: Record<string, any> = {};
-  for (const [name, prop] of dynamic_properties)
+  for (const [name, prop] of dynamic_props)
     if (prop instanceof taxonomy.ItemProperty)
       if (prop.multiple)
         data[name] = value[name].map((item: taxonomy.Item) => item.id);
@@ -67,6 +66,6 @@ function publish() {
         data[name] = value[name].id;
     else
       data[name] = value[name];
-  emit('publish', props.item.id, data);
+  useCoCoStore().publish(props.item, data);
 }
 </script>

@@ -3,7 +3,9 @@
     <template #prefix>
       <n-icon size="medium" :component="Circle20Regular" />
     </template>
-    <n-thing :title="item.name" :description="item.description" />
+    <router-link :to="'/items/' + item.id">
+      <n-thing :title="item.name" :description="item.description" />
+    </router-link>
   </n-list-item>
 </template>
 
