@@ -36,5 +36,7 @@ const maximized = ref(false);
 
 .content {
   padding: 10px;
+  height: 100%;
+  width: 100%;
 }
 </style>
