@@ -6,12 +6,12 @@
     <n-grid-item>
       <n-input v-model:value="type.description" label="Description" required />
     </n-grid-item>
-    <n-grid-item span="2"><b>Static properties</b></n-grid-item>
+    <n-grid-item span="2"><h3>Static properties</h3></n-grid-item>
     <n-grid-item span="2">
       <n-data-table :columns="columns"
         :data="Array.from(static_props).map(([name, prop]) => ({ name, property: prop }))" />
     </n-grid-item>
-    <n-grid-item span="2"><b>Dynamic properties</b></n-grid-item>
+    <n-grid-item span="2"><h3>Dynamic properties</h3></n-grid-item>
     <n-grid-item span="2">
       <n-data-table :columns="columns"
         :data="Array.from(dynamic_props).map(([name, prop]) => ({ name, property: prop }))" />

@@ -7,37 +7,9 @@ import { taxonomy } from '@/taxonomy';
 import { coco } from '@/coco';
 import { onMounted, onUnmounted } from 'vue';
 import cytoscape from 'cytoscape';
-import dagre from 'cytoscape-dagre';
-import cytoscapePopper, { RefElement } from 'cytoscape-popper';
 import tippy, { Instance } from 'tippy.js';
 
 const props = defineProps<{ graph_id: string, state: coco.State; }>();
-
-function tippyFactory(ref: RefElement, content: HTMLElement) {
-  // Since tippy constructor requires DOM element/elements, create a placeholder
-  var dummyDomEle = document.createElement('div');
-
-  var tip = tippy(dummyDomEle, {
-    getReferenceClientRect: ref.getBoundingClientRect,
-    trigger: 'manual', // mandatory
-    // dom element inside the tippy:
-    content: content,
-    // your own preferences:
-    arrow: true,
-    placement: 'bottom',
-    hideOnClick: false,
-    sticky: "reference",
-
-    // if interactive:
-    interactive: true,
-    appendTo: document.body // or append dummyDomEle to document.body
-  });
-
-  return tip;
-}
-
-cytoscape.use(dagre);
-cytoscape.use(cytoscapePopper(tippyFactory));
 
 let listener: TypeListener | null = null;
 
@@ -137,6 +109,7 @@ class TypeListener extends coco.StateListener {
           this.cy.add({ group: 'edges', data: { id: `${type.id}-${prop.type.id}`, type: 'dynamic_property', name: prop.name, source: type.id, target: prop.type.id } });
     }
     this.cy.layout(this.layout).run();
+    this.cy.fit();
   }
   type_added(type: taxonomy.Type) {
     const n = this.cy.add({ group: 'nodes', data: { id: type.id, name: type.name } });
@@ -186,7 +159,7 @@ onUnmounted(() => {
 
 <style scoped>
 .taxonomy-container {
-  height: calc(100% - 50px);
+  height: 100%;
   width: 100%;
 }
 </style>

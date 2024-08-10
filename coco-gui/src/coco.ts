@@ -177,7 +177,7 @@ export namespace coco {
             }
         }
 
-        set_types(types_message: any): void {
+        private set_types(types_message: any): void {
             this.types.clear();
             for (const type_message of types_message.types)
                 this.types.set(type_message.id, new taxonomy.Type(type_message.id, type_message.name, type_message.description));
@@ -196,7 +196,7 @@ export namespace coco {
             this.listeners.forEach(listener => listener.types(Array.from(this.types.values())));
         }
 
-        add_type(created_type_message: any): void {
+        private add_type(created_type_message: any): void {
             const new_type = created_type_message.new_type;
             const parents = new Map<string, taxonomy.Type>();
             if (new_type.parents)
@@ -217,7 +217,7 @@ export namespace coco {
             this.listeners.forEach(listener => listener.type_added(type));
         }
 
-        update_type(updated_type_message: any): void {
+        private update_type(updated_type_message: any): void {
             const updated_type = updated_type_message.updated_type;
             const type = this.types.get(updated_type.id)!;
             if (updated_type.name)
@@ -245,14 +245,14 @@ export namespace coco {
             this.listeners.forEach(listener => listener.type_updated(type));
         }
 
-        remove_type(removed_type_message: any): void {
+        private remove_type(removed_type_message: any): void {
             const removed_type_id = removed_type_message.id;
             if (!this.types.delete(removed_type_id))
                 console.error(`Type ${removed_type_id} not found`);
             this.listeners.forEach(listener => listener.type_removed(removed_type_id));
         }
 
-        set_items(items_message: any): void {
+        private set_items(items_message: any): void {
             const items = items_message.items;
             this.items.clear();
             for (const item_message of items) {
@@ -269,7 +269,7 @@ export namespace coco {
             this.listeners.forEach(listener => listener.items(Array.from(this.items.values())));
         }
 
-        add_item(created_item_message: any): void {
+        private add_item(created_item_message: any): void {
             const new_item = created_item_message.new_item;
             const type = this.types.get(new_item.type)!;
             const item = new taxonomy.Item(new_item.id, type, new_item.name, new_item.description, new_item.properties);
@@ -281,7 +281,7 @@ export namespace coco {
             this.listeners.forEach(listener => listener.item_added(item));
         }
 
-        update_item(updated_item_message: any): void {
+        private update_item(updated_item_message: any): void {
             const updated_item = updated_item_message.updated_item;
             const item = this.items.get(updated_item.id)!;
             if (updated_item.name)
@@ -293,14 +293,14 @@ export namespace coco {
             this.listeners.forEach(listener => listener.item_updated(item));
         }
 
-        remove_item(removed_item_message: any): void {
+        private remove_item(removed_item_message: any): void {
             const removed_item_id = removed_item_message.id;
             if (!this.items.delete(removed_item_id))
                 console.error(`Item ${removed_item_id} not found`);
             this.listeners.forEach(listener => listener.item_removed(removed_item_id));
         }
 
-        set_data(item: taxonomy.Item, data_message: any): void {
+        private set_data(item: taxonomy.Item, data_message: any): void {
             const data: taxonomy.Data[] = [];
             const dynamic_props = dynamic_properties(item.type);
             for (const i in data_message) {
@@ -316,7 +316,7 @@ export namespace coco {
             item.set_values(data);
         }
 
-        add_data(new_data_message: any): void {
+        private add_data(new_data_message: any): void {
             const item = this.items.get(new_data_message.item_id)!;
             const dynamic_props = dynamic_properties(item.type);
             for (const [k, v] of Object.entries(new_data_message.data))
@@ -329,7 +329,7 @@ export namespace coco {
                 item.add_value(new taxonomy.Data(timestamp, new_data_message.data));
         }
 
-        set_reactive_rules(reactive_rules_message: any): void {
+        private set_reactive_rules(reactive_rules_message: any): void {
             const reactive_rules = reactive_rules_message.rules;
             this.reactive_rules.clear();
             for (const reactive_rule_message of reactive_rules) {
@@ -339,13 +339,13 @@ export namespace coco {
             this.listeners.forEach(listener => listener.reactive_rules(Array.from(this.reactive_rules.values())));
         }
 
-        add_reactive_rule(created_reactive_rule_message: any): void {
+        private add_reactive_rule(created_reactive_rule_message: any): void {
             const reactive_rule = new rule.ReactiveRule(created_reactive_rule_message.id, created_reactive_rule_message.name, created_reactive_rule_message.content);
             this.reactive_rules.set(reactive_rule.id, reactive_rule);
             this.listeners.forEach(listener => listener.reactive_rule_added(reactive_rule));
         }
 
-        update_reactive_rule(updated_reactive_rule_message: any): void {
+        private update_reactive_rule(updated_reactive_rule_message: any): void {
             const update_reactive_rule = updated_reactive_rule_message.updated_reactive_rule;
             const reactive_rule = this.reactive_rules.get(update_reactive_rule.id)!;
             if (update_reactive_rule.name)
@@ -355,14 +355,14 @@ export namespace coco {
             this.listeners.forEach(listener => listener.reactive_rule_updated(reactive_rule));
         }
 
-        remove_reactive_rule(removed_reactive_rule_message: any): void {
+        private remove_reactive_rule(removed_reactive_rule_message: any): void {
             const removed_reactive_rule_id = removed_reactive_rule_message.id;
             const reactive_rule = this.reactive_rules.get(removed_reactive_rule_id)!;
             this.reactive_rules.delete(removed_reactive_rule_id);
             this.listeners.forEach(listener => listener.reactive_rule_removed(reactive_rule.id));
         }
 
-        set_deliberative_rules(deliberative_rules_message: any): void {
+        private set_deliberative_rules(deliberative_rules_message: any): void {
             const deliberative_rules = deliberative_rules_message.rules;
             this.deliberative_rules.clear();
             for (const deliberative_rule_message of deliberative_rules) {
@@ -372,13 +372,13 @@ export namespace coco {
             this.listeners.forEach(listener => listener.deliberative_rules(Array.from(this.deliberative_rules.values())));
         }
 
-        add_deliberative_rule(created_deliberative_rule_message: any): void {
+        private add_deliberative_rule(created_deliberative_rule_message: any): void {
             const deliberative_rule = new rule.DeliberativeRule(created_deliberative_rule_message.id, created_deliberative_rule_message.name, created_deliberative_rule_message.content);
             this.deliberative_rules.set(deliberative_rule.id, deliberative_rule);
             this.listeners.forEach(listener => listener.deliberative_rule_added(deliberative_rule));
         }
 
-        update_deliberative_rule(updated_deliberative_rule_message: any): void {
+        private update_deliberative_rule(updated_deliberative_rule_message: any): void {
             const update_deliberative_rule = updated_deliberative_rule_message.updated_deliberative_rule;
             const deliberative_rule = this.deliberative_rules.get(update_deliberative_rule.id)!;
             if (update_deliberative_rule.name)
@@ -388,14 +388,14 @@ export namespace coco {
             this.listeners.forEach(listener => listener.deliberative_rule_updated(deliberative_rule));
         }
 
-        remove_deliberative_rule(removed_deliberative_rule_message: any): void {
+        private remove_deliberative_rule(removed_deliberative_rule_message: any): void {
             const removed_deliberative_rule_id = removed_deliberative_rule_message.id;
             const deliberative_rule = this.deliberative_rules.get(removed_deliberative_rule_id)!;
             this.deliberative_rules.delete(removed_deliberative_rule_id);
             this.listeners.forEach(listener => listener.deliberative_rule_removed(deliberative_rule.id));
         }
 
-        set_solvers(solvers_message: any): void {
+        private set_solvers(solvers_message: any): void {
             this.solvers.clear();
             for (const solver_message of solvers_message) {
                 const slv = new solver.Solver(solver_message.id, solver_message.name, solver.State[solver_message.state as keyof typeof solver.State]);
@@ -404,19 +404,24 @@ export namespace coco {
             this.listeners.forEach(listener => listener.solvers(Array.from(this.solvers.values())));
         }
 
-        add_solver(created_solver_message: any): void {
+        private add_solver(created_solver_message: any): void {
             const slv = new solver.Solver(created_solver_message.id, created_solver_message.name, solver.State[created_solver_message.state as keyof typeof solver.State]);
             this.solvers.set(slv.id, slv);
             this.listeners.forEach(listener => listener.solver_added(slv));
         }
 
-        remove_solver(removed_solver_message: any): void {
+        private remove_solver(removed_solver_message: any): void {
             const removed_solver_id = removed_solver_message.id;
             if (!this.solvers.delete(removed_solver_id))
                 console.error(`Solver ${removed_solver_id} not found`);
             this.listeners.forEach(listener => listener.solver_removed(removed_solver_id));
         }
 
+        /**
+         * Adds a listener to the CoCo object.
+         * 
+         * @param listener - The listener to be added.
+         */
         add_listener(listener: StateListener): void {
             this.listeners.add(listener);
             listener.types(Array.from(this.types.values()));
@@ -426,6 +431,11 @@ export namespace coco {
             listener.solvers(Array.from(this.solvers.values()));
         }
 
+        /**
+         * Removes a listener from the state.
+         * 
+         * @param listener - The listener to be removed.
+         */
         remove_listener(listener: StateListener): void {
             this.listeners.delete(listener);
         }

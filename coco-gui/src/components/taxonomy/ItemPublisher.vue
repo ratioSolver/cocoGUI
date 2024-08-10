@@ -1,35 +1,18 @@
 <template>
-  <n-table size="small">
-    <thead>
-      <tr>
-        <th class="text-left" width="80%">Property name</th>
-        <th class="text-left" width="20%">Value</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="[name, prop] in dynamic_props" :key="name">
-        <td>{{ name }}</td>
-        <td>
-          <boolean-property v-if="(prop instanceof taxonomy.BooleanProperty)" :name="name" :par="prop"
-            :value="value[name]" @update="value[prop.name] = $event" />
-          <integer-property v-else-if="(prop instanceof taxonomy.IntegerProperty)" :name="name" :par="prop"
-            :value="value[name]" @update="value[prop.name] = $event" />
-          <real-property v-else-if="(prop instanceof taxonomy.RealProperty)" :name="name" :par="prop"
-            :value="value[name]" @update="value[prop.name] = $event" />
-          <string-property v-else-if="(prop instanceof taxonomy.StringProperty)" :name="name" :par="prop"
-            :value="value[name]" @update="value[prop.name] = $event" />
-          <symbol-property v-else-if="(prop instanceof taxonomy.SymbolProperty)" :name="name" :par="prop"
-            :value="value[name]" @update="value[prop.name] = $event" />
-          <item-property v-else-if="(prop instanceof taxonomy.ItemProperty)" :name="name" :par="prop"
-            :value="value[name]" @update="value[prop.name] = $event" />
-        </td>
-      </tr>
-    </tbody>
-  </n-table>
+  <n-grid y-gap="12" :cols="1">
+    <n-grid-item>
+      <n-data-table :columns="columns"
+        :data="Array.from(dynamic_props).map(([name, prop]) => ({ name, property: prop }))" />
+    </n-grid-item>
+    <n-grid-item>
+      <n-button type="primary" @click="publish">Publish</n-button>
+    </n-grid-item>
+  </n-grid>
 </template>
 
 <script setup lang="ts">
-import { NTable } from 'naive-ui';
+import type { DataTableColumns } from 'naive-ui'
+import { NGrid, NGridItem, NDataTable, NTable, NButton } from 'naive-ui';
 import BooleanProperty from '../properties/BooleanProperty.vue';
 import IntegerProperty from '../properties/IntegerProperty.vue';
 import RealProperty from '../properties/RealProperty.vue';
@@ -37,13 +20,48 @@ import StringProperty from '../properties/StringProperty.vue';
 import SymbolProperty from '../properties/SymbolProperty.vue';
 import ItemProperty from '../properties/ItemProperty.vue';
 import { taxonomy } from '@/taxonomy';
-import { reactive, watch } from 'vue';
+import { h, reactive, watch } from 'vue';
 import { useCoCoStore, dynamic_properties } from '@/stores/coco';
 
 const props = defineProps<{ item: taxonomy.Item; }>();
 const dynamic_props = dynamic_properties(props.item.type);
 
 const value = reactive<Record<string, any>>({});
+
+interface PropertyRow {
+  name: string;
+  property: taxonomy.Property;
+}
+
+const columns: DataTableColumns<PropertyRow> = [
+  {
+    title: 'Property name',
+    key: 'name',
+    width: '60%',
+  },
+  {
+    title: 'Value',
+    key: 'property',
+    width: '40%',
+    render(row) {
+      if (row.property instanceof taxonomy.BooleanProperty) {
+        return h(BooleanProperty, { par: row.property, value: value.properties[row.name] });
+      } else if (row.property instanceof taxonomy.IntegerProperty) {
+        return h(IntegerProperty, { par: row.property, value: value.properties[row.name] });
+      } else if (row.property instanceof taxonomy.RealProperty) {
+        return h(RealProperty, { par: row.property, value: value.properties[row.name] });
+      } else if (row.property instanceof taxonomy.StringProperty) {
+        return h(StringProperty, { par: row.property, value: value.properties[row.name] });
+      } else if (row.property instanceof taxonomy.SymbolProperty) {
+        return h(SymbolProperty, { par: row.property, value: value.properties[row.name] });
+      } else if (row.property instanceof taxonomy.ItemProperty) {
+        return h(ItemProperty, { par: row.property, value: value.properties[row.name] });
+      } else {
+        return '';
+      }
+    }
+  }
+];
 
 updated_values(props.item.values);
 watch(() => props.item.values, (values) => updated_values(values));

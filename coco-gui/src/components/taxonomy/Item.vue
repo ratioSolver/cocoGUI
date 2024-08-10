@@ -1,12 +1,12 @@
 <template>
-  <n-grid v-if="item" x-gap="12" y-gap="12" :cols="2">
+  <n-grid v-if="item" x-gap="12" y-gap="12" :cols="2" style="padding: 12px;">
     <n-grid-item>
       <n-input v-model:value="item.name" label="Name" required />
     </n-grid-item>
     <n-grid-item>
       <n-input v-model:value="item.description" label="Description" required />
     </n-grid-item>
-    <n-grid-item span="2"><b>Properties</b></n-grid-item>
+    <n-grid-item span="2"><h3>Properties</h3></n-grid-item>
     <n-grid-item v-if="static_props.size" span="2">
       <n-data-table :columns="columns"
         :data="Array.from(static_props).map(([name, prop]) => ({ name, property: prop }))" />
@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import type { DataTableColumns } from 'naive-ui'
-import { NGrid, NGridItem, NDataTable } from 'naive-ui';
+import { NGrid, NGridItem, NInput, NDataTable } from 'naive-ui';
 import { taxonomy } from '@/taxonomy';
 import BooleanProperty from '../properties/BooleanProperty.vue';
 import IntegerProperty from '../properties/IntegerProperty.vue';

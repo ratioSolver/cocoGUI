@@ -7,40 +7,12 @@ import { solver } from '@/solver';
 import { graph } from '@/graph';
 import { onMounted, onUnmounted } from 'vue';
 import cytoscape from 'cytoscape';
-import dagre from 'cytoscape-dagre';
-import cytoscapePopper, { RefElement } from 'cytoscape-popper';
 import tippy, { Instance } from 'tippy.js';
 import chroma from 'chroma-js'
 
 const props = defineProps<{ slv: solver.Solver; }>();
 
 const get_graph_id = (solver: solver.Solver) => 'slv-' + solver.id + '-graph';
-
-function tippyFactory(ref: RefElement, content: HTMLElement) {
-  // Since tippy constructor requires DOM element/elements, create a placeholder
-  var dummyDomEle = document.createElement('div');
-
-  var tip = tippy(dummyDomEle, {
-    getReferenceClientRect: ref.getBoundingClientRect,
-    trigger: 'manual', // mandatory
-    // dom element inside the tippy:
-    content: content,
-    // your own preferences:
-    arrow: true,
-    placement: 'bottom',
-    hideOnClick: false,
-    sticky: "reference",
-
-    // if interactive:
-    interactive: true,
-    appendTo: document.body // or append dummyDomEle to document.body
-  });
-
-  return tip;
-}
-
-cytoscape.use(dagre);
-cytoscape.use(cytoscapePopper(tippyFactory));
 
 let listener: SolverListenerImpl | null = null;
 

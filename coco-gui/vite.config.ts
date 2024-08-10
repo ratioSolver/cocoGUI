@@ -15,20 +15,14 @@ export default defineConfig({
       name: "coco-lib",
     },
     rollupOptions: {
-      external: ["vue", "pinia", "vue-router", "naive-ui", "chroma-js", "cytoscape", "cytoscape-dagre", "cytoscape-popper", "highlight.js", "leaflet", "@vicons/fluent"],
+      external: ["vue", "pinia", "vue-router", "naive-ui", "@vicons/fluent"],
       output: {
         globals: {
           vue: "Vue",
           pinia: "Pinia",
           "vue-router": "VueRouter",
           "naive-ui": "naive-ui",
-          "chroma-js": "chroma",
-          cytoscape: "cytoscape",
-          "cytoscape-dagre": "cytoscapeDagre",
-          "cytoscape-popper": "cytoscapePopper",
-          "highlight.js": "hljs",
-          leaflet: "L",
-          "@vicons/fluent": "Fluent"
+          "@vicons/fluent": "VFluent",
         },
       },
     },
