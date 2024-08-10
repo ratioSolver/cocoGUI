@@ -1,5 +1,5 @@
 <template>
-  <v-container id="taxonomy-graph" class="taxonomy-container" fluid />
+  <div :id="props.graph_id" class="taxonomy-container"></div>
 </template>
 
 <script setup lang="ts">
@@ -11,7 +11,7 @@ import dagre from 'cytoscape-dagre';
 import cytoscapePopper, { RefElement } from 'cytoscape-popper';
 import tippy, { Instance } from 'tippy.js';
 
-const props = defineProps<{ state: coco.State; }>();
+const props = defineProps<{ graph_id: string, state: coco.State; }>();
 
 function tippyFactory(ref: RefElement, content: HTMLElement) {
   // Since tippy constructor requires DOM element/elements, create a placeholder
@@ -63,7 +63,7 @@ class TypeListener extends coco.StateListener {
     super();
 
     this.cy = cytoscape({
-      container: document.getElementById('taxonomy-graph'),
+      container: document.getElementById(props.graph_id),
       layout: this.layout,
       style: [
         {

@@ -21,7 +21,7 @@ export default defineConfig({
           vue: "Vue",
           pinia: "Pinia",
           "vue-router": "VueRouter",
-          "naive-ui": "naive",
+          "naive-ui": "naive-ui",
           "chroma-js": "chroma",
           cytoscape: "cytoscape",
           "cytoscape-dagre": "cytoscapeDagre",

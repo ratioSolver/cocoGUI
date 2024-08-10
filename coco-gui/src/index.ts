@@ -26,6 +26,7 @@ import SolverListItem from './components/solver/SolverListItem.vue';
 import SolverGraph from './components/solver/SolverGraph.vue';
 import SolverTimelines from './components/solver/SolverTimelines.vue';
 
+export * from './utils';
 export { coco } from './coco';
 export { useCoCoStore } from './stores/coco';
 export { CoCoApp, FrameComponent, Chat, LogInDialog, Map };
