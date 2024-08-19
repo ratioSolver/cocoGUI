@@ -13,7 +13,7 @@ const props = defineProps<{ slv: solver.Solver; }>();
 
 const get_timelines_id = (solver: solver.Solver) => 'slv-' + solver.id + '-timelines';
 
-class TimelinesListener extends solver.SolverListener {
+class TimelinesChart extends solver.SolverListener {
 
   private origin: number;
   private horizon: number;
@@ -176,16 +176,14 @@ class TimelinesListener extends solver.SolverListener {
   }
 }
 
-let listener = null as TimelinesListener | null;
+let timelines_chart = null as TimelinesChart | null;
 
 onMounted(() => {
-  listener = new TimelinesListener(props.slv);
+  timelines_chart = new TimelinesChart(props.slv);
 });
 
 onUnmounted(() => {
-  props.slv.remove_listener(listener!);
-  Plotly.purge(get_timelines_id(props.slv));
-  listener = null;
+  props.slv.remove_listener(timelines_chart!);
 });
 </script>
 

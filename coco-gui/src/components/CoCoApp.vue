@@ -4,7 +4,7 @@
       <n-flex justify="space-between" style="align-items: center; height: 64px;">
         <n-flex style="align-items: center;">
           <n-button quaternary size="large">
-            <n-icon size="36" :component="LineHorizontal520Regular" @click="drawer = !drawer" />
+            <n-icon size="36" :component="LineHorizontal320Regular" @click="drawer = !drawer" />
           </n-button>
           <slot name="header">
           </slot>
@@ -26,7 +26,7 @@
 
 <script setup lang="ts">
 import { NLayout, NLayoutHeader, NFlex, NLayoutContent, NButton, NIcon, NDrawer } from 'naive-ui'
-import { LineHorizontal520Regular } from '@vicons/fluent'
+import { LineHorizontal320Regular } from '@vicons/fluent'
 import { ref } from 'vue'
 
 const drawer = ref(false);

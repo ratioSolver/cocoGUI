@@ -3,10 +3,10 @@
     <n-grid-item>
       <n-tabs v-if="slv" type="line" animated>
         <n-tab-pane name="timelines" tab="Timelines">
-          <solver-timelines :slv="slv" />
+          <solver-timelines :slv="slv" :key="slv.id" />
         </n-tab-pane>
         <n-tab-pane name="graph" tab="Graph">
-          <solver-graph :slv="slv" />
+          <solver-graph :slv="slv" :key="slv.id" />
         </n-tab-pane>
       </n-tabs>
     </n-grid-item>

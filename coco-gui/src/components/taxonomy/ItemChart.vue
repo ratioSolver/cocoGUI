@@ -176,12 +176,12 @@ class ItemChart extends taxonomy.ItemListener {
 let item_chart: ItemChart | null = null
 
 onMounted(() => {
-  item_chart = new ItemChart(props.item);
+  if (dynamic_props.size)
+    item_chart = new ItemChart(props.item);
 });
 
 onUnmounted(() => {
-  props.item.remove_listener(item_chart!);
-  Plotly.purge(get_data_id(props.item));
-  item_chart = null;
+  if (item_chart)
+    props.item.remove_listener(item_chart);
 });
 </script>

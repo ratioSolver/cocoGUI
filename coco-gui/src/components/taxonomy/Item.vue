@@ -12,10 +12,10 @@
         :data="Array.from(static_props).map(([name, prop]) => ({ name, property: prop }))" />
     </n-grid-item>
     <n-grid-item span="2">
-      <item-chart :item="item" />
+      <item-chart :item="item" :key="item.id" />
     </n-grid-item>
     <n-grid-item span="2">
-      <item-publisher :item="item" />
+      <item-publisher :item="item" :key="item.id" />
     </n-grid-item>
   </n-grid>
 </template>

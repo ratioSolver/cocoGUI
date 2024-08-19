@@ -14,7 +14,7 @@ const props = defineProps<{ slv: solver.Solver; }>();
 
 const get_graph_id = (solver: solver.Solver) => 'slv-' + solver.id + '-graph';
 
-let listener: SolverListenerImpl | null = null;
+let solver_graph: SolverGraph | null = null;
 
 tippy.setDefaultProps({
   arrow: false,
@@ -23,7 +23,7 @@ tippy.setDefaultProps({
   placement: 'bottom'
 });
 
-class SolverListenerImpl extends solver.SolverListener {
+class SolverGraph extends solver.SolverListener {
 
   cy: cytoscape.Core;
   layout = {
@@ -175,13 +175,11 @@ class SolverListenerImpl extends solver.SolverListener {
 }
 
 onMounted(() => {
-  listener = new SolverListenerImpl(props.slv);
+  solver_graph = new SolverGraph(props.slv);
 });
 
 onUnmounted(() => {
-  props.slv.remove_listener(listener!);
-  listener!.cy.destroy();
-  listener = null;
+  props.slv.remove_listener(solver_graph!);
 });
 
 </script>
