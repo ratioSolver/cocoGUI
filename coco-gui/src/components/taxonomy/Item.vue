@@ -6,7 +6,9 @@
     <n-grid-item>
       <n-input v-model:value="item.description" label="Description" required />
     </n-grid-item>
-    <n-grid-item span="2"><h3>Properties</h3></n-grid-item>
+    <n-grid-item v-if="static_props.size" span="2">
+      <h3>Properties</h3>
+    </n-grid-item>
     <n-grid-item v-if="static_props.size" span="2">
       <n-data-table :columns="columns"
         :data="Array.from(static_props).map(([name, prop]) => ({ name, property: prop }))" />

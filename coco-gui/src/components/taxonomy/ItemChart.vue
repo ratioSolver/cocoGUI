@@ -2,7 +2,8 @@
   <n-grid y-gap="12" :cols="1">
     <n-grid-item>
       <n-date-picker v-model:value="range" type="daterange"
-        :is-date-disabled="(date: number) => date <= new Date().getDate()" clearable />
+        :is-date-disabled="(date: number) => date <= new Date().getDate()" clearable
+        @confirm="useCoCoStore().state.load_data(item, range[0], range[1])" />
     </n-grid-item>
     <n-grid-item>
       <div :id="get_data_id(props.item)"></div>
@@ -16,11 +17,13 @@ import { taxonomy } from '@/taxonomy';
 import Plotly from 'plotly.js-dist-min';
 import chroma from 'chroma-js'
 import { ref, onMounted, onUnmounted } from 'vue';
-import { dynamic_properties } from '@/stores/coco';
+import { dynamic_properties, useCoCoStore } from '@/stores/coco';
 
-const range = ref<[number, number]>([new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).getDate(), new Date().getDate()]);
+const range = ref<[number, number]>([new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).getTime(), new Date().getTime()]);
 
 const props = defineProps<{ item: taxonomy.Item; }>();
+if (!props.item.values.length)
+  useCoCoStore().state.load_data(props.item, range.value[0], range.value[1]);
 const dynamic_props = dynamic_properties(props.item.type);
 
 const get_data_id = (item: taxonomy.Item) => 'itm-' + item.id + '-data';

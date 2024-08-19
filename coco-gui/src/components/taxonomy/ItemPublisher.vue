@@ -84,6 +84,6 @@ function publish() {
         data[name] = value[name].id;
     else
       data[name] = value[name];
-  useCoCoStore().publish(props.item, data);
+  useCoCoStore().state.publish(props.item, data);
 }
 </script>

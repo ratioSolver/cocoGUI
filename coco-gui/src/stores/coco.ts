@@ -7,10 +7,7 @@ export const useCoCoStore = defineStore('coco', () => {
   const name = ref('CoCo');
   const state = reactive(new coco.State());
 
-  function publish(item: taxonomy.Item, data: Record<string, any>): void {
-  }
-
-  return { name, state, publish };
+  return { name, state };
 });
 
 /**
