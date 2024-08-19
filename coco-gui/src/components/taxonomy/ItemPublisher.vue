@@ -45,17 +45,17 @@ const columns: DataTableColumns<PropertyRow> = [
     width: '40%',
     render(row) {
       if (row.property instanceof taxonomy.BooleanProperty) {
-        return h(BooleanProperty, { par: row.property, value: value.properties[row.name] });
+        return h(BooleanProperty, { par: row.property, value: value[row.name] });
       } else if (row.property instanceof taxonomy.IntegerProperty) {
-        return h(IntegerProperty, { par: row.property, value: value.properties[row.name] });
+        return h(IntegerProperty, { par: row.property, value: value[row.name] });
       } else if (row.property instanceof taxonomy.RealProperty) {
-        return h(RealProperty, { par: row.property, value: value.properties[row.name] });
+        return h(RealProperty, { par: row.property, value: value[row.name] });
       } else if (row.property instanceof taxonomy.StringProperty) {
-        return h(StringProperty, { par: row.property, value: value.properties[row.name] });
+        return h(StringProperty, { par: row.property, value: value[row.name] });
       } else if (row.property instanceof taxonomy.SymbolProperty) {
-        return h(SymbolProperty, { par: row.property, value: value.properties[row.name] });
+        return h(SymbolProperty, { par: row.property, value: value[row.name] });
       } else if (row.property instanceof taxonomy.ItemProperty) {
-        return h(ItemProperty, { par: row.property, value: value.properties[row.name] });
+        return h(ItemProperty, { par: row.property, value: value[row.name] });
       } else {
         return '';
       }
