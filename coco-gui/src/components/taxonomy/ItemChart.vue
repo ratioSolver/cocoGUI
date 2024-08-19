@@ -1,15 +1,17 @@
 <template>
-  <n-flex vertical>
-    <n-date-picker v-model:value="range" type="daterange"
-      :is-date-disabled="(date: number) => date <= new Date().getDate()" clearable />
-    <n-flex justify="center">
+  <n-grid y-gap="12" :cols="1">
+    <n-grid-item>
+      <n-date-picker v-model:value="range" type="daterange"
+        :is-date-disabled="(date: number) => date <= new Date().getDate()" clearable />
+    </n-grid-item>
+    <n-grid-item>
       <div :id="get_data_id(props.item)"></div>
-    </n-flex>
-  </n-flex>
+    </n-grid-item>
+  </n-grid>
 </template>
 
 <script setup lang="ts">
-import { NFlex, NDatePicker } from 'naive-ui';
+import { NGrid, NGridItem, NDatePicker } from 'naive-ui';
 import { taxonomy } from '@/taxonomy';
 import Plotly from 'plotly.js-dist-min';
 import chroma from 'chroma-js'

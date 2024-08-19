@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import type { DataTableColumns } from 'naive-ui'
-import { NGrid, NGridItem, NDataTable, NTable, NButton } from 'naive-ui';
+import { NGrid, NGridItem, NDataTable, NButton } from 'naive-ui';
 import BooleanProperty from '../properties/BooleanProperty.vue';
 import IntegerProperty from '../properties/IntegerProperty.vue';
 import RealProperty from '../properties/RealProperty.vue';
