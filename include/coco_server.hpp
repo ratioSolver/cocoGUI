@@ -3,11 +3,6 @@
 #include "coco_db.hpp"
 #include "coco_core.hpp"
 #include "server.hpp"
-#include "graph.hpp"
-#include "agent.hpp"
-#include "state_variable.hpp"
-#include "reusable_resource.hpp"
-#include "consumable_resource.hpp"
 
 namespace coco
 {
