@@ -44,7 +44,7 @@ export namespace coco {
     items: Map<string, taxonomy.Item>;
     reactive_rules: Map<string, rule.ReactiveRule>;
     deliberative_rules: Map<string, rule.DeliberativeRule>;
-    solvers: Map<string, solver.Solver>;
+    solvers: Map<number, solver.Solver>;
     listeners: Set<StateListener>;
 
     /**

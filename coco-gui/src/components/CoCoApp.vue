@@ -13,7 +13,7 @@
         </slot>
       </n-flex>
     </n-layout-header>
-    <n-layout-content>
+    <n-layout-content style="height: calc(100vh - 65px); overflow: auto;">
       <n-drawer v-model:show="drawer" placement="left" size="30%">
         <slot name="drawer">
         </slot>

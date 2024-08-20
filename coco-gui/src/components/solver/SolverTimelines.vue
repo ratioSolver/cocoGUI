@@ -39,7 +39,7 @@ class TimelinesChart extends solver.SolverListener {
       }
     ]
   } as any;
-  private config = { responsive: true };
+  private config = { responsive: true, displaylogo: false };
 
   constructor(solver: solver.Solver) {
     super();

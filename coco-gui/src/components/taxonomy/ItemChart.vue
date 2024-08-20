@@ -46,7 +46,7 @@ class ItemChart extends taxonomy.ItemListener {
     this.y_axes = new Map();
     this.traces = new Map();
     this.layout = { autosize: true, xaxis: { title: 'Time', type: 'date' }, showlegend: false };
-    this.config = { responsive: true };
+    this.config = { responsive: true, displaylogo: false };
     this.colors = new Map();
 
     item.add_listener(this);
