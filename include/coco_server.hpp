@@ -14,33 +14,33 @@ namespace coco
     void start() { network::server::start(); }
 
   private:
-    std::unique_ptr<network::response> index(network::request &req);
-    std::unique_ptr<network::response> assets(network::request &req);
-    std::unique_ptr<network::response> open_api(network::request &req);
-    std::unique_ptr<network::response> async_api(network::request &req);
+    std::unique_ptr<network::response> index(const network::request &req);
+    std::unique_ptr<network::response> assets(const network::request &req);
+    std::unique_ptr<network::response> open_api(const network::request &req);
+    std::unique_ptr<network::response> async_api(const network::request &req);
 
-    std::unique_ptr<network::response> get_types(network::request &req);
-    std::unique_ptr<network::response> create_type(network::request &req);
-    std::unique_ptr<network::response> update_type(network::request &req);
-    std::unique_ptr<network::response> delete_type(network::request &req);
+    std::unique_ptr<network::response> get_types(const network::request &req);
+    std::unique_ptr<network::response> create_type(const network::request &req);
+    std::unique_ptr<network::response> update_type(const network::request &req);
+    std::unique_ptr<network::response> delete_type(const network::request &req);
 
-    std::unique_ptr<network::response> get_items(network::request &req);
-    std::unique_ptr<network::response> create_item(network::request &req);
-    std::unique_ptr<network::response> update_item(network::request &req);
-    std::unique_ptr<network::response> delete_item(network::request &req);
+    std::unique_ptr<network::response> get_items(const network::request &req);
+    std::unique_ptr<network::response> create_item(const network::request &req);
+    std::unique_ptr<network::response> update_item(const network::request &req);
+    std::unique_ptr<network::response> delete_item(const network::request &req);
 
-    std::unique_ptr<network::response> get_data(network::request &req);
-    std::unique_ptr<network::response> add_data(network::request &req);
+    std::unique_ptr<network::response> get_data(const network::request &req);
+    std::unique_ptr<network::response> add_data(const network::request &req);
 
-    std::unique_ptr<network::response> get_reactive_rules(network::request &req);
-    std::unique_ptr<network::response> create_reactive_rule(network::request &req);
-    std::unique_ptr<network::response> update_reactive_rule(network::request &req);
-    std::unique_ptr<network::response> delete_reactive_rule(network::request &req);
+    std::unique_ptr<network::response> get_reactive_rules(const network::request &req);
+    std::unique_ptr<network::response> create_reactive_rule(const network::request &req);
+    std::unique_ptr<network::response> update_reactive_rule(const network::request &req);
+    std::unique_ptr<network::response> delete_reactive_rule(const network::request &req);
 
-    std::unique_ptr<network::response> get_deliberative_rules(network::request &req);
-    std::unique_ptr<network::response> create_deliberative_rule(network::request &req);
-    std::unique_ptr<network::response> update_deliberative_rule(network::request &req);
-    std::unique_ptr<network::response> delete_deliberative_rule(network::request &req);
+    std::unique_ptr<network::response> get_deliberative_rules(const network::request &req);
+    std::unique_ptr<network::response> create_deliberative_rule(const network::request &req);
+    std::unique_ptr<network::response> update_deliberative_rule(const network::request &req);
+    std::unique_ptr<network::response> delete_deliberative_rule(const network::request &req);
 
     void on_ws_open(network::ws_session &ws);
     void on_ws_message(network::ws_session &ws, const std::string &msg);

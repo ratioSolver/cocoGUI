@@ -41,18 +41,18 @@ namespace coco
         add_ws_route("/coco").on_open(std::bind(&coco_server::on_ws_open, this, std::placeholders::_1)).on_message(std::bind(&coco_server::on_ws_message, this, std::placeholders::_1, std::placeholders::_2)).on_close(std::bind(&coco_server::on_ws_close, this, std::placeholders::_1)).on_error(std::bind(&coco_server::on_ws_error, this, std::placeholders::_1, std::placeholders::_2));
     }
 
-    std::unique_ptr<network::response> coco_server::index(network::request &) { return std::make_unique<network::file_response>("client/dist/index.html"); }
-    std::unique_ptr<network::response> coco_server::assets(network::request &req)
+    std::unique_ptr<network::response> coco_server::index(const network::request &) { return std::make_unique<network::file_response>("client/dist/index.html"); }
+    std::unique_ptr<network::response> coco_server::assets(const network::request &req)
     {
         std::string target = req.get_target();
         if (target.find('?') != std::string::npos)
             target = target.substr(0, target.find('?'));
         return std::make_unique<network::file_response>("client/dist" + target);
     }
-    std::unique_ptr<network::response> coco_server::open_api(network::request &) { return std::make_unique<network::json_response>(build_open_api()); }
-    std::unique_ptr<network::response> coco_server::async_api(network::request &) { return std::make_unique<network::json_response>(build_async_api()); }
+    std::unique_ptr<network::response> coco_server::open_api(const network::request &) { return std::make_unique<network::json_response>(build_open_api()); }
+    std::unique_ptr<network::response> coco_server::async_api(const network::request &) { return std::make_unique<network::json_response>(build_async_api()); }
 
-    std::unique_ptr<network::response> coco_server::get_types(network::request &)
+    std::unique_ptr<network::response> coco_server::get_types(const network::request &)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
         json::json sts(json::json_type::array);
@@ -60,10 +60,10 @@ namespace coco
             sts.push_back(to_json(st));
         return std::make_unique<network::json_response>(std::move(sts));
     }
-    std::unique_ptr<network::response> coco_server::create_type(network::request &req)
+    std::unique_ptr<network::response> coco_server::create_type(const network::request &req)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        auto &body = static_cast<network::json_request &>(req).get_body();
+        auto &body = static_cast<const network::json_request &>(req).get_body();
         if (body.get_type() != json::json_type::object || !body.contains("name") || body["name"].get_type() != json::json_type::string)
             return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
         std::string name = body["name"];
@@ -120,7 +120,7 @@ namespace coco
             return std::make_unique<network::json_response>(json::json({{"message", e.what()}}), network::status_code::conflict);
         }
     }
-    std::unique_ptr<network::response> coco_server::update_type(network::request &req)
+    std::unique_ptr<network::response> coco_server::update_type(const network::request &req)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
         std::string id = req.get_target().substr(7);
@@ -133,7 +133,7 @@ namespace coco
         {
             return std::make_unique<network::json_response>(json::json({{"message", "Type not found"}}), network::status_code::not_found);
         }
-        auto &body = static_cast<network::json_request &>(req).get_body();
+        auto &body = static_cast<const network::json_request &>(req).get_body();
         if (body.contains("name"))
         {
             if (body["name"].get_type() != json::json_type::string)
@@ -197,10 +197,10 @@ namespace coco
         }
         return std::make_unique<network::json_response>(to_json(*tp));
     }
-    std::unique_ptr<network::response> coco_server::delete_type(network::request &req)
+    std::unique_ptr<network::response> coco_server::delete_type(const network::request &req)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        auto &body = static_cast<network::json_request &>(req).get_body();
+        auto &body = static_cast<const network::json_request &>(req).get_body();
         if (body.get_type() != json::json_type::object || !body.contains("id") || body["id"].get_type() != json::json_type::string)
             return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
         std::string id = body["id"];
@@ -217,7 +217,7 @@ namespace coco
         return std::make_unique<network::response>();
     }
 
-    std::unique_ptr<network::response> coco_server::get_items(network::request &req)
+    std::unique_ptr<network::response> coco_server::get_items(const network::request &req)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
         json::json ss(json::json_type::array);
@@ -243,10 +243,10 @@ namespace coco
                 ss.push_back(to_json(s));
         return std::make_unique<network::json_response>(std::move(ss));
     }
-    std::unique_ptr<network::response> coco_server::create_item(network::request &req)
+    std::unique_ptr<network::response> coco_server::create_item(const network::request &req)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        auto &body = static_cast<network::json_request &>(req).get_body();
+        auto &body = static_cast<const network::json_request &>(req).get_body();
         if (body.get_type() != json::json_type::object || !body.contains("type") || body["type"].get_type() != json::json_type::string || !body.contains("name") || body["name"].get_type() != json::json_type::string)
             return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
         std::string type = body["type"];
@@ -270,7 +270,7 @@ namespace coco
             return std::make_unique<network::json_response>(json::json({{"message", e.what()}}), network::status_code::conflict);
         }
     }
-    std::unique_ptr<network::response> coco_server::update_item(network::request &req)
+    std::unique_ptr<network::response> coco_server::update_item(const network::request &req)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
         std::string id = req.get_target().substr(7);
@@ -283,7 +283,7 @@ namespace coco
         {
             return std::make_unique<network::json_response>(json::json({{"message", "Item not found"}}), network::status_code::not_found);
         }
-        auto &body = static_cast<network::json_request &>(req).get_body();
+        auto &body = static_cast<const network::json_request &>(req).get_body();
         if (body.contains("name"))
         {
             if (body["name"].get_type() != json::json_type::string)
@@ -298,10 +298,10 @@ namespace coco
         }
         return std::make_unique<network::json_response>(to_json(*s));
     }
-    std::unique_ptr<network::response> coco_server::delete_item(network::request &req)
+    std::unique_ptr<network::response> coco_server::delete_item(const network::request &req)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        auto &body = static_cast<network::json_request &>(req).get_body();
+        auto &body = static_cast<const network::json_request &>(req).get_body();
         if (body.get_type() != json::json_type::object || !body.contains("id") || body["id"].get_type() != json::json_type::string)
             return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
         std::string id = body["id"];
@@ -318,7 +318,7 @@ namespace coco
         return std::make_unique<network::response>();
     }
 
-    std::unique_ptr<network::response> coco_server::get_data(network::request &req)
+    std::unique_ptr<network::response> coco_server::get_data(const network::request &req)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
         std::string id = req.get_target().substr(6);
@@ -341,7 +341,7 @@ namespace coco
         std::chrono::system_clock::time_point from = params.count("from") ? std::chrono::system_clock::time_point(std::chrono::milliseconds{std::stol(params.at("from"))}) : to - std::chrono::hours{24 * 30};
         return std::make_unique<network::json_response>(coco_core::get_data(*s, from, to));
     }
-    std::unique_ptr<network::response> coco_server::add_data(network::request &req)
+    std::unique_ptr<network::response> coco_server::add_data(const network::request &req)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
         std::string id = req.get_target().substr(6);
@@ -354,14 +354,14 @@ namespace coco
         {
             return std::make_unique<network::json_response>(json::json({{"message", "Item not found"}}), network::status_code::not_found);
         }
-        auto &body = static_cast<network::json_request &>(req).get_body();
+        auto &body = static_cast<const network::json_request &>(req).get_body();
         if (body.get_type() != json::json_type::object)
             return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
         coco_core::add_data(*s, body);
         return std::make_unique<network::response>();
     }
 
-    std::unique_ptr<network::response> coco_server::get_reactive_rules(network::request &)
+    std::unique_ptr<network::response> coco_server::get_reactive_rules(const network::request &)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
         json::json sts(json::json_type::array);
@@ -369,10 +369,10 @@ namespace coco
             sts.push_back(to_json(st));
         return std::make_unique<network::json_response>(std::move(sts));
     }
-    std::unique_ptr<network::response> coco_server::create_reactive_rule(network::request &req)
+    std::unique_ptr<network::response> coco_server::create_reactive_rule(const network::request &req)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        auto &body = static_cast<network::json_request &>(req).get_body();
+        auto &body = static_cast<const network::json_request &>(req).get_body();
         if (body.get_type() != json::json_type::object || !body.contains("name") || body["name"].get_type() != json::json_type::string || !body.contains("content") || body["content"].get_type() != json::json_type::string)
             return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
         std::string name = body["name"];
@@ -387,7 +387,7 @@ namespace coco
             return std::make_unique<network::json_response>(json::json({{"message", e.what()}}), network::status_code::conflict);
         }
     }
-    std::unique_ptr<network::response> coco_server::update_reactive_rule(network::request &req)
+    std::unique_ptr<network::response> coco_server::update_reactive_rule(const network::request &req)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
         std::string id = req.get_target().substr(15);
@@ -400,7 +400,7 @@ namespace coco
         {
             return std::make_unique<network::json_response>(json::json({{"message", "Reactive rule not found"}}), network::status_code::not_found);
         }
-        auto &body = static_cast<network::json_request &>(req).get_body();
+        auto &body = static_cast<const network::json_request &>(req).get_body();
         if (body.contains("name"))
         {
             if (body["name"].get_type() != json::json_type::string)
@@ -415,10 +415,10 @@ namespace coco
         }
         return std::make_unique<network::json_response>(to_json(*st));
     }
-    std::unique_ptr<network::response> coco_server::delete_reactive_rule(network::request &req)
+    std::unique_ptr<network::response> coco_server::delete_reactive_rule(const network::request &req)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        auto &body = static_cast<network::json_request &>(req).get_body();
+        auto &body = static_cast<const network::json_request &>(req).get_body();
         if (body.get_type() != json::json_type::object || !body.contains("id") || body["id"].get_type() != json::json_type::string)
             return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
         std::string id = body["id"];
@@ -435,7 +435,7 @@ namespace coco
         return std::make_unique<network::response>();
     }
 
-    std::unique_ptr<network::response> coco_server::get_deliberative_rules(network::request &)
+    std::unique_ptr<network::response> coco_server::get_deliberative_rules(const network::request &)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
         json::json sts(json::json_type::array);
@@ -443,10 +443,10 @@ namespace coco
             sts.push_back(to_json(st));
         return std::make_unique<network::json_response>(std::move(sts));
     }
-    std::unique_ptr<network::response> coco_server::create_deliberative_rule(network::request &req)
+    std::unique_ptr<network::response> coco_server::create_deliberative_rule(const network::request &req)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        auto &body = static_cast<network::json_request &>(req).get_body();
+        auto &body = static_cast<const network::json_request &>(req).get_body();
         if (body.get_type() != json::json_type::object || !body.contains("name") || body["name"].get_type() != json::json_type::string || !body.contains("content") || body["content"].get_type() != json::json_type::string)
             return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
         std::string name = body["name"];
@@ -461,7 +461,7 @@ namespace coco
             return std::make_unique<network::json_response>(json::json({{"message", e.what()}}), network::status_code::conflict);
         }
     }
-    std::unique_ptr<network::response> coco_server::update_deliberative_rule(network::request &req)
+    std::unique_ptr<network::response> coco_server::update_deliberative_rule(const network::request &req)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
         std::string id = req.get_target().substr(18);
@@ -474,7 +474,7 @@ namespace coco
         {
             return std::make_unique<network::json_response>(json::json({{"message", "Deliberative rule not found"}}), network::status_code::not_found);
         }
-        auto &body = static_cast<network::json_request &>(req).get_body();
+        auto &body = static_cast<const network::json_request &>(req).get_body();
         if (body.contains("name"))
         {
             if (body["name"].get_type() != json::json_type::string)
@@ -489,10 +489,10 @@ namespace coco
         }
         return std::make_unique<network::json_response>(to_json(*st));
     }
-    std::unique_ptr<network::response> coco_server::delete_deliberative_rule(network::request &req)
+    std::unique_ptr<network::response> coco_server::delete_deliberative_rule(const network::request &req)
     {
         std::lock_guard<std::recursive_mutex> _(mtx);
-        auto &body = static_cast<network::json_request &>(req).get_body();
+        auto &body = static_cast<const network::json_request &>(req).get_body();
         if (body.get_type() != json::json_type::object || !body.contains("id") || body["id"].get_type() != json::json_type::string)
             return std::make_unique<network::json_response>(json::json({{"message", "Invalid request"}}), network::status_code::bad_request);
         std::string id = body["id"];
