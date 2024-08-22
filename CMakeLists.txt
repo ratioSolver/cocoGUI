@@ -5,22 +5,21 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined")
 include(CTest)
 enable_testing()
 
-set(CLIENT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/client CACHE STRING "Client directory" FORCE)
+set(CLIENT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/coco-client CACHE STRING "Client directory" FORCE)
 set(ENABLE_API ON CACHE BOOL "Enable CoCo API" FORCE)
 
 add_subdirectory(extern/coco)
-add_subdirectory(extern/rationet)
 
-configure_file(.env.in ${CLIENT_DIRECTORY}/.env.local @ONLY)
-execute_process(COMMAND npm install WORKING_DIRECTORY ${CLIENT_DIRECTORY})
-execute_process(COMMAND npm run build WORKING_DIRECTORY ${CLIENT_DIRECTORY})
+configure_file(.env.in ${CLIENT_DIR}/.env.local @ONLY)
+execute_process(COMMAND npm install WORKING_DIRECTORY ${CLIENT_DIR})
+execute_process(COMMAND npm run build WORKING_DIRECTORY ${CLIENT_DIR})
 
-add_executable(CoCoGUI src/coco_main.cpp src/coco_server.cpp)
+add_executable(CoCoGUI src/coco_main.cpp)
 add_dependencies(CoCoGUI CoCo ratioNet)
 target_link_libraries(CoCoGUI PUBLIC CoCo ratioNet)
 target_include_directories(CoCoGUI PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> ${CLIPS_INCLUDE_DIR} ${LIBMONGOCXX_INCLUDE_DIR} ${LIBBSONCXX_INCLUDE_DIR})
 
-add_executable(oRatioGUI src/ratio_main.cpp src/coco_server.cpp)
+add_executable(oRatioGUI src/ratio_main.cpp)
 add_dependencies(oRatioGUI oRatioLib ratioNet)
 target_link_libraries(oRatioGUI PUBLIC CoCo ratioNet)
 target_include_directories(oRatioGUI PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> ${CLIPS_INCLUDE_DIR} ${LIBMONGOCXX_INCLUDE_DIR} ${LIBBSONCXX_INCLUDE_DIR})

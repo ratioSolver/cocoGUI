@@ -47,7 +47,7 @@ export function deliberative_rules_menu_options(rules: Map<string, rule.Delibera
     });
 }
 
-export function solvers_menu_options(solvers: Map<string, solver.Solver>): MenuOption[] {
+export function solvers_menu_options(solvers: Map<number, solver.Solver>): MenuOption[] {
     return Array.from(solvers.values()).map(slv => {
         const icn = computed(() => {
             switch (slv.state) {

@@ -12,7 +12,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: fileURLToPath(new URL("./src/index.ts", import.meta.url)),
-      name: "coco-lib",
+      name: "coco-gui",
     },
     rollupOptions: {
       external: ["vue", "pinia", "vue-router", "naive-ui", "@vicons/fluent"],
