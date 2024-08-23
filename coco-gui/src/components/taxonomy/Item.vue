@@ -28,7 +28,6 @@ import { NGrid, NGridItem, NInput, NDataTable } from 'naive-ui';
 import { taxonomy } from '@/taxonomy';
 import ItemChart from './ItemChart.vue';
 import ItemPublisher from './ItemPublisher.vue';
-import { ref } from 'vue';
 import { property_h } from '@/utils';
 
 const props = defineProps<{ item: taxonomy.Item; }>();

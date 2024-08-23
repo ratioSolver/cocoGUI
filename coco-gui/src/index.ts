@@ -28,6 +28,9 @@ import SolverTimelines from './components/solver/SolverTimelines.vue';
 
 export * from './utils';
 export { coco } from './coco';
+export { taxonomy } from './taxonomy';
+export { solver } from './solver';
+export { rule } from './rule';
 export { CoCoApp, FrameComponent, Chat, LogInDialog, Map };
 export { BooleanProperty, IntegerProperty, RealProperty, StringProperty, SymbolProperty, ItemProperty };
 export { ReactiveRule, DeliberativeRule, Item, ItemListItem, ItemChart, ItemPublisher, TypeListItem, Type, TaxonomyGraph };
