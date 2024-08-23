@@ -26,27 +26,13 @@
 import type { DataTableColumns } from 'naive-ui'
 import { NGrid, NGridItem, NInput, NDataTable } from 'naive-ui';
 import { taxonomy } from '@/taxonomy';
-import BooleanProperty from '../properties/BooleanProperty.vue';
-import IntegerProperty from '../properties/IntegerProperty.vue';
-import RealProperty from '../properties/RealProperty.vue';
-import StringProperty from '../properties/StringProperty.vue';
-import SymbolProperty from '../properties/SymbolProperty.vue';
-import ItemProperty from '../properties/ItemProperty.vue';
 import ItemChart from './ItemChart.vue';
 import ItemPublisher from './ItemPublisher.vue';
-import { useRoute, onBeforeRouteUpdate } from 'vue-router';
-import { useCoCoStore, static_properties } from '@/stores/coco';
-import { ref, h } from 'vue';
+import { ref } from 'vue';
+import { property_h } from '@/utils';
 
-const route = useRoute();
-const item = ref(useCoCoStore().state.items.get(route.params.id as string));
-const static_props = ref<Map<string, taxonomy.Property>>(new Map());
-onBeforeRouteUpdate((to, from) => {
-  item.value = useCoCoStore().state.items.get(to.params.id as string);
-  if (item.value) {
-    static_props.value = static_properties(item.value.type);
-  }
-});
+const props = defineProps<{ item: taxonomy.Item; }>();
+const static_props = taxonomy.static_properties(props.item.type);
 
 interface PropertyRow {
   name: string;
@@ -64,21 +50,7 @@ const columns: DataTableColumns<PropertyRow> = [
     key: 'property',
     width: '40%',
     render(row) {
-      if (row.property instanceof taxonomy.BooleanProperty) {
-        return h(BooleanProperty, { par: row.property, value: item.value?.properties[row.name], disabled: true });
-      } else if (row.property instanceof taxonomy.IntegerProperty) {
-        return h(IntegerProperty, { par: row.property, value: item.value?.properties[row.name], disabled: true });
-      } else if (row.property instanceof taxonomy.RealProperty) {
-        return h(RealProperty, { par: row.property, value: item.value?.properties[row.name], disabled: true });
-      } else if (row.property instanceof taxonomy.StringProperty) {
-        return h(StringProperty, { par: row.property, value: item.value?.properties[row.name], disabled: true });
-      } else if (row.property instanceof taxonomy.SymbolProperty) {
-        return h(SymbolProperty, { par: row.property, value: item.value?.properties[row.name], disabled: true });
-      } else if (row.property instanceof taxonomy.ItemProperty) {
-        return h(ItemProperty, { par: row.property, value: item.value?.properties[row.name], disabled: true });
-      } else {
-        return '';
-      }
+      return property_h(row.property, props.item.properties, true);
     }
   }
 ];

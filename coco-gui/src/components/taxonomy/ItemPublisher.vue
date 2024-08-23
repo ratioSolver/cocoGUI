@@ -13,18 +13,13 @@
 <script setup lang="ts">
 import type { DataTableColumns } from 'naive-ui'
 import { NGrid, NGridItem, NDataTable, NButton } from 'naive-ui';
-import BooleanProperty from '../properties/BooleanProperty.vue';
-import IntegerProperty from '../properties/IntegerProperty.vue';
-import RealProperty from '../properties/RealProperty.vue';
-import StringProperty from '../properties/StringProperty.vue';
-import SymbolProperty from '../properties/SymbolProperty.vue';
-import ItemProperty from '../properties/ItemProperty.vue';
+import { coco } from '@/coco';
 import { taxonomy } from '@/taxonomy';
-import { h, reactive, watch } from 'vue';
-import { useCoCoStore, dynamic_properties } from '@/stores/coco';
+import { property_h } from '@/utils';
+import { reactive, watch } from 'vue';
 
 const props = defineProps<{ item: taxonomy.Item; }>();
-const dynamic_props = dynamic_properties(props.item.type);
+const dynamic_props = taxonomy.dynamic_properties(props.item.type);
 
 const value = reactive<Record<string, any>>({});
 
@@ -44,21 +39,7 @@ const columns: DataTableColumns<PropertyRow> = [
     key: 'property',
     width: '40%',
     render(row) {
-      if (row.property instanceof taxonomy.BooleanProperty) {
-        return h(BooleanProperty, { par: row.property, value: value[row.name] });
-      } else if (row.property instanceof taxonomy.IntegerProperty) {
-        return h(IntegerProperty, { par: row.property, value: value[row.name] });
-      } else if (row.property instanceof taxonomy.RealProperty) {
-        return h(RealProperty, { par: row.property, value: value[row.name] });
-      } else if (row.property instanceof taxonomy.StringProperty) {
-        return h(StringProperty, { par: row.property, value: value[row.name] });
-      } else if (row.property instanceof taxonomy.SymbolProperty) {
-        return h(SymbolProperty, { par: row.property, value: value[row.name] });
-      } else if (row.property instanceof taxonomy.ItemProperty) {
-        return h(ItemProperty, { par: row.property, value: value[row.name] });
-      } else {
-        return '';
-      }
+      return property_h(row.property, value[row.name]);
     }
   }
 ];
@@ -84,6 +65,6 @@ function publish() {
         data[name] = value[name].id;
     else
       data[name] = value[name];
-  useCoCoStore().state.publish(props.item, data);
+  coco.KnowledgeBase.getInstance().publish(props.item, data);
 }
 </script>

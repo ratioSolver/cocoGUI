@@ -6,12 +6,16 @@
     <n-grid-item>
       <n-input v-model:value="type.description" label="Description" required />
     </n-grid-item>
-    <n-grid-item span="2"><h3>Static properties</h3></n-grid-item>
+    <n-grid-item span="2">
+      <h3>Static properties</h3>
+    </n-grid-item>
     <n-grid-item span="2">
       <n-data-table :columns="columns"
         :data="Array.from(static_props).map(([name, prop]) => ({ name, property: prop }))" />
     </n-grid-item>
-    <n-grid-item span="2"><h3>Dynamic properties</h3></n-grid-item>
+    <n-grid-item span="2">
+      <h3>Dynamic properties</h3>
+    </n-grid-item>
     <n-grid-item span="2">
       <n-data-table :columns="columns"
         :data="Array.from(dynamic_props).map(([name, prop]) => ({ name, property: prop }))" />
@@ -23,20 +27,10 @@
 import { NGrid, NGridItem, NInput, NDataTable } from 'naive-ui';
 import type { DataTableColumns } from 'naive-ui'
 import { taxonomy } from '@/taxonomy';
-import { useRoute, onBeforeRouteUpdate } from 'vue-router';
-import { useCoCoStore, static_properties, dynamic_properties } from '@/stores/coco';
-import { ref } from 'vue';
 
-const route = useRoute();
-const type = ref(useCoCoStore().state.types.get(route.params.id as string));
-const static_props = ref<Map<string, taxonomy.Property>>(type.value ? static_properties(type.value) : new Map());
-const dynamic_props = ref<Map<string, taxonomy.Property>>(type.value ? dynamic_properties(type.value) : new Map());
-
-onBeforeRouteUpdate((to, from) => {
-  type.value = useCoCoStore().state.types.get(to.params.id as string);
-  static_props.value = type.value ? static_properties(type.value) : new Map();
-  dynamic_props.value = type.value ? dynamic_properties(type.value) : new Map();
-});
+const props = defineProps<{ type: taxonomy.Type; }>();
+const static_props = taxonomy.static_properties(props.type);
+const dynamic_props = taxonomy.dynamic_properties(props.type);
 
 interface PropertyRow {
   name: string;
@@ -72,6 +66,4 @@ const columns: DataTableColumns<PropertyRow> = [
     }
   }
 ];
-
-defineProps<{ type: taxonomy.Type; }>();
 </script>

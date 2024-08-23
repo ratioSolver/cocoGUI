@@ -9,11 +9,11 @@ import { NSelect } from 'naive-ui';
 import { taxonomy } from '@/taxonomy';
 import { ref, watch } from 'vue';
 
-const props = withDefaults(defineProps<{ par: taxonomy.ItemProperty; value: taxonomy.Item | taxonomy.Item[]; disabled: boolean; }>(), { disabled: false });
-const emit = defineEmits<{ (event: 'update', value: taxonomy.Item | taxonomy.Item[]): void; }>();
+const props = withDefaults(defineProps<{ par: taxonomy.ItemProperty; value: taxonomy.Item | taxonomy.Item[] | undefined; disabled: boolean; }>(), { disabled: false });
+const emit = defineEmits<{ (event: 'update', value: taxonomy.Item | taxonomy.Item[] | undefined): void; }>();
 
 const values = new Map<string, taxonomy.Item>(Array.from(props.par.type.instances).map((v) => [v.id, v]));
-const value = ref(props.par.multiple ? (props.value as taxonomy.Item[]).map((v) => v.id) : (props.value as taxonomy.Item).id);
+const value = ref<string | string[] | undefined>(props.value ? (props.par.multiple ? (props.value as taxonomy.Item[]).map((v) => v.id) : (props.value as taxonomy.Item).id) : undefined);
 
 watch(() => props.value, (new_value) => value.value = props.par.multiple ? (new_value as taxonomy.Item[]).map((v) => v.id) : (new_value as taxonomy.Item).id);
 watch(value, (new_value) => emit('update', props.par.multiple ? (new_value as string[]).map((v) => values.get(v)!) : values.get(new_value as string)!));

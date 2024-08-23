@@ -13,10 +13,10 @@ import ItemProperty from './components/properties/ItemProperty.vue';
 
 import ReactiveRule from './components/taxonomy/ReactiveRule.vue';
 import DeliberativeRule from './components/taxonomy/DeliberativeRule.vue';
+import Item from './components/taxonomy/Item.vue';
 import ItemListItem from './components/taxonomy/ItemListItem.vue';
 import ItemChart from './components/taxonomy/ItemChart.vue';
 import ItemPublisher from './components/taxonomy/ItemPublisher.vue';
-import Item from './components/taxonomy/Item.vue';
 import TypeListItem from './components/taxonomy/TypeListItem.vue';
 import Type from './components/taxonomy/Type.vue';
 import TaxonomyGraph from './components/taxonomy/TaxonomyGraph.vue';
@@ -28,10 +28,9 @@ import SolverTimelines from './components/solver/SolverTimelines.vue';
 
 export * from './utils';
 export { coco } from './coco';
-export { useCoCoStore } from './stores/coco';
 export { CoCoApp, FrameComponent, Chat, LogInDialog, Map };
 export { BooleanProperty, IntegerProperty, RealProperty, StringProperty, SymbolProperty, ItemProperty };
-export { ReactiveRule, DeliberativeRule, ItemListItem, ItemChart, ItemPublisher, Item, TypeListItem, Type, TaxonomyGraph };
+export { ReactiveRule, DeliberativeRule, Item, ItemListItem, ItemChart, ItemPublisher, TypeListItem, Type, TaxonomyGraph };
 export { Solver, SolverListItem, SolverGraph, SolverTimelines };
 
 import cytoscape from 'cytoscape';

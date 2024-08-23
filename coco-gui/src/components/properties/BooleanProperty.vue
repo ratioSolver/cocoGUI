@@ -7,7 +7,7 @@ import { NCheckbox } from 'naive-ui';
 import { taxonomy } from '@/taxonomy';
 import { ref, watch } from 'vue';
 
-const props = withDefaults(defineProps<{ par: taxonomy.BooleanProperty; value: boolean; disabled: boolean; }>(), { disabled: false });
+const props = withDefaults(defineProps<{ par: taxonomy.BooleanProperty; value: boolean | undefined; disabled: boolean; }>(), { disabled: false });
 const emit = defineEmits<{ (event: 'update', value: boolean): void; }>();
 
 const value = ref(props.value);

@@ -8,8 +8,8 @@ import { NInputNumber } from 'naive-ui';
 import { taxonomy } from '@/taxonomy';
 import { ref, watch } from 'vue';
 
-const props = withDefaults(defineProps<{ par: taxonomy.IntegerProperty; value: number; disabled: boolean; }>(), { disabled: false });
-const emit = defineEmits<{ (event: 'update', value: number): void; }>();
+const props = withDefaults(defineProps<{ par: taxonomy.IntegerProperty; value: number | undefined; disabled: boolean; }>(), { disabled: false });
+const emit = defineEmits<{ (event: 'update', value: number | undefined): void; }>();
 
 const value = ref(props.value);
 

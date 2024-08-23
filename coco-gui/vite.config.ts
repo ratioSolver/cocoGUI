@@ -15,7 +15,7 @@ export default defineConfig({
       name: "coco-gui",
     },
     rollupOptions: {
-      external: ['vue', 'chroma-js', 'cytoscape', 'cytoscape-dagre', 'cytoscape-popper', 'leaflet', 'naive-ui', 'plotly.js-dist-min', 'highlight.js', 'tippy.js', 'pinia', 'vue-router'],
+      external: ['vue', 'chroma-js', 'cytoscape', 'cytoscape-dagre', 'cytoscape-popper', 'leaflet', 'naive-ui', 'plotly.js-dist-min', 'highlight.js', 'tippy.js'],
       output: {
         globals: {
           vue: "Vue",
@@ -27,9 +27,7 @@ export default defineConfig({
           "naive-ui": "naive-ui",
           "plotly.js-dist-min": "Plotly",
           "highlight.js": "hljs",
-          "tippy.js": "tippy",
-          pinia: "Pinia",
-          "vue-router": "VueRouter"
+          "tippy.js": "tippy"
         },
       },
     },

@@ -9,7 +9,7 @@ import { onMounted, onUnmounted } from 'vue';
 import cytoscape from 'cytoscape';
 import tippy, { Instance } from 'tippy.js';
 
-const props = defineProps<{ graph_id: string, state: coco.State; }>();
+const props = defineProps<{ graph_id: string, state: coco.KnowledgeBase; }>();
 
 let listener: TypeListener | null = null;
 
@@ -31,7 +31,7 @@ class TypeListener extends coco.StateListener {
   };
   tippys: Map<string, Instance> = new Map();
 
-  constructor(knowledge: coco.State) {
+  constructor(knowledge: coco.KnowledgeBase) {
     super();
 
     this.cy = cytoscape({

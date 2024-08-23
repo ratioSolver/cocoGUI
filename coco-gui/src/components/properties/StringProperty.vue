@@ -7,8 +7,8 @@ import { NInput } from 'naive-ui';
 import { taxonomy } from '@/taxonomy';
 import { ref, watch } from 'vue';
 
-const props = withDefaults(defineProps<{ par: taxonomy.StringProperty; value: string; disabled: boolean; }>(), { disabled: false });
-const emit = defineEmits<{ (event: 'update', value: string): void; }>();
+const props = withDefaults(defineProps<{ par: taxonomy.StringProperty; value: string | undefined; disabled: boolean; }>(), { disabled: false });
+const emit = defineEmits<{ (event: 'update', value: string | undefined): void; }>();
 
 const value = ref(props.value);
 

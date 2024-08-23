@@ -1,5 +1,3 @@
-import { coco } from './coco';
-
 export namespace taxonomy {
 
     /**
@@ -201,25 +199,42 @@ export namespace taxonomy {
         }
     }
 
-    export function create_property(kb: coco.State, name: string, property: any): Property {
-        switch (property.type) {
-            case "boolean":
-                return new BooleanProperty(name, property.default_value);
-            case "integer":
-                return new IntegerProperty(name, property.min, property.max, property.default_value);
-            case "real":
-                return new RealProperty(name, property.min, property.max, property.default_value);
-            case "string":
-                return new StringProperty(name, property.default_value);
-            case "symbol":
-                return new SymbolProperty(name, property.values, property.multiple, property.default_value);
-            case "item":
-                return new ItemProperty(name, kb.types.get(property.type_id)!, property.multiple, property.default_value);
-            case "json":
-                return new JSONProperty(name, property.schema, property.default_value);
-            default:
-                throw new Error(`Unknown property type: ${property.type}`);
+    /**
+     * Retrieves all static properties of a given type and its parent types.
+     * 
+     * @param type - The type to retrieve static properties from.
+     * @returns A map of static property names to their corresponding Property objects.
+     */
+    export function static_properties(type: taxonomy.Type): Map<string, taxonomy.Property> {
+        const props = new Map<string, taxonomy.Property>();
+        const q = [type];
+        while (q.length > 0) {
+            const t = q.shift()!;
+            for (const [name, property] of t.static_properties)
+                props.set(name, property);
+            for (const parent of t.parents.values())
+                q.push(parent);
         }
+        return props;
+    }
+
+    /**
+     * Retrieves all dynamic properties of a given type and its parent types.
+     * 
+     * @param type - The type to retrieve dynamic properties from.
+     * @returns A map of dynamic properties, where the key is the property name and the value is the property object.
+     */
+    export function dynamic_properties(type: taxonomy.Type): Map<string, taxonomy.Property> {
+        const props = new Map<string, taxonomy.Property>();
+        const q = [type];
+        while (q.length > 0) {
+            const t = q.shift()!;
+            for (const [name, property] of t.dynamic_properties)
+                props.set(name, property);
+            for (const parent of t.parents.values())
+                q.push(parent);
+        }
+        return props;
     }
 
     /**

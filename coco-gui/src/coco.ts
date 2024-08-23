@@ -1,7 +1,6 @@
 import { taxonomy } from "./taxonomy"
 import { rule } from "./rule"
 import { solver } from "./solver"
-import { static_properties, dynamic_properties } from "./stores/coco";
 
 export namespace coco {
 
@@ -38,7 +37,7 @@ export namespace coco {
   /**
    * Represents the CoCo knowledge base.
    */
-  export class State {
+  export class KnowledgeBase {
 
     types: Map<string, taxonomy.Type>;
     items: Map<string, taxonomy.Item>;
@@ -46,17 +45,29 @@ export namespace coco {
     deliberative_rules: Map<string, rule.DeliberativeRule>;
     solvers: Map<number, solver.Solver>;
     listeners: Set<StateListener>;
+    static #instance: KnowledgeBase;
 
     /**
      * Creates a new Knowledge instance.
      */
-    constructor() {
+    private constructor() {
       this.types = new Map();
       this.items = new Map();
       this.reactive_rules = new Map();
       this.deliberative_rules = new Map();
       this.solvers = new Map();
       this.listeners = new Set();
+    }
+
+    /**
+     * Returns the singleton instance of the KnowledgeBase.
+     * 
+     * @returns The singleton instance of the KnowledgeBase.
+     */
+    static getInstance(): KnowledgeBase {
+      if (!KnowledgeBase.#instance)
+        KnowledgeBase.#instance = new KnowledgeBase();
+      return KnowledgeBase.#instance;
     }
 
     update_knowledge(message: any): boolean {
@@ -211,10 +222,10 @@ export namespace coco {
             type.parents.set(parent_id, this.types.get(parent_id)!);
         if (type_message.static_properties)
           for (const [prop_name, prop_type] of Object.entries(type_message.static_properties))
-            type.static_properties.set(prop_name, taxonomy.create_property(this, prop_name, prop_type));
+            type.static_properties.set(prop_name, create_property(this, prop_name, prop_type));
         if (type_message.dynamic_properties)
           for (const [prop_name, prop_type] of Object.entries(type_message.dynamic_properties))
-            type.dynamic_properties.set(prop_name, taxonomy.create_property(this, prop_name, prop_type));
+            type.dynamic_properties.set(prop_name, create_property(this, prop_name, prop_type));
       }
       this.listeners.forEach(listener => listener.types(Array.from(this.types.values())));
     }
@@ -230,11 +241,11 @@ export namespace coco {
       const static_properties = new Map<string, taxonomy.Property>();
       if (new_type.static_properties)
         for (const [prop_name, prop_type] of Object.entries(new_type.static_properties))
-          static_properties.set(prop_name, taxonomy.create_property(this, prop_name, prop_type));
+          static_properties.set(prop_name, create_property(this, prop_name, prop_type));
       const dynamic_properties = new Map<string, taxonomy.Property>();
       if (new_type.dynamic_properties)
         for (const [prop_name, prop_type] of Object.entries(new_type.dynamic_properties))
-          dynamic_properties.set(prop_name, taxonomy.create_property(this, prop_name, prop_type));
+          dynamic_properties.set(prop_name, create_property(this, prop_name, prop_type));
       const type = new taxonomy.Type(new_type.id, new_type.name, new_type.description, parents, static_properties, dynamic_properties);
       this.types.set(type.id, type);
       this.listeners.forEach(listener => listener.type_added(type));
@@ -256,13 +267,13 @@ export namespace coco {
       if (updated_type.static_properties) {
         const static_properties = new Map<string, taxonomy.Property>();
         for (const [prop_name, prop_type] of Object.entries(updated_type.dynamic_properties))
-          static_properties.set(prop_name, taxonomy.create_property(this, prop_name, prop_type));
+          static_properties.set(prop_name, create_property(this, prop_name, prop_type));
         type.static_properties = static_properties;
       }
       if (updated_type.dynamic_properties) {
         const dynamic_properties = new Map<string, taxonomy.Property>();
         for (const [prop_name, prop_type] of Object.entries(updated_type.dynamic_properties))
-          dynamic_properties.set(prop_name, taxonomy.create_property(this, prop_name, prop_type));
+          dynamic_properties.set(prop_name, create_property(this, prop_name, prop_type));
         type.dynamic_properties = dynamic_properties;
       }
       this.listeners.forEach(listener => listener.type_updated(type));
@@ -284,7 +295,7 @@ export namespace coco {
         this.items.set(item.id, item);
       }
       for (const item of this.items.values()) {
-        const props = static_properties(item.type);
+        const props = taxonomy.static_properties(item.type);
         for (const [name, prop] of props)
           if (item.properties[name] && prop instanceof taxonomy.ItemProperty)
             item.properties[name] = this.items.get(item.properties[name] as string);
@@ -296,7 +307,7 @@ export namespace coco {
       const new_item = created_item_message.new_item;
       const type = this.types.get(new_item.type)!;
       const item = new taxonomy.Item(new_item.id, type, new_item.name, new_item.description, new_item.properties);
-      const props = static_properties(item.type);
+      const props = taxonomy.static_properties(item.type);
       for (const [name, prop] of props)
         if (item.properties[name] && prop instanceof taxonomy.ItemProperty)
           item.properties[name] = this.items.get(item.properties[name] as string);
@@ -325,7 +336,7 @@ export namespace coco {
 
     protected set_data(item: taxonomy.Item, data_message: any): void {
       const data: taxonomy.Data[] = [];
-      const dynamic_props = dynamic_properties(item.type);
+      const dynamic_props = taxonomy.dynamic_properties(item.type);
       for (const i in data_message) {
         for (const [k, v] of Object.entries(data_message[i].data))
           if (dynamic_props.get(k) instanceof taxonomy.ItemProperty)
@@ -341,7 +352,7 @@ export namespace coco {
 
     private add_data(new_data_message: any): void {
       const item = this.items.get(new_data_message.item_id)!;
-      const dynamic_props = dynamic_properties(item.type);
+      const dynamic_props = taxonomy.dynamic_properties(item.type);
       for (const [k, v] of Object.entries(new_data_message.data))
         if (dynamic_props.get(k) instanceof taxonomy.ItemProperty)
           new_data_message.data[k] = this.items.get(v as string);
@@ -461,6 +472,36 @@ export namespace coco {
      */
     remove_listener(listener: StateListener): void {
       this.listeners.delete(listener);
+    }
+  }
+
+  /**
+   * Creates a property based on the given knowledge base, name, and property object.
+   * 
+   * @param kb - The knowledge base.
+   * @param name - The name of the property.
+   * @param property - The property object.
+   * @returns The created property.
+   * @throws Error if the property type is unknown.
+   */
+  function create_property(kb: KnowledgeBase, name: string, property: any): taxonomy.Property {
+    switch (property.type) {
+      case "boolean":
+        return new taxonomy.BooleanProperty(name, property.default_value);
+      case "integer":
+        return new taxonomy.IntegerProperty(name, property.min, property.max, property.default_value);
+      case "real":
+        return new taxonomy.RealProperty(name, property.min, property.max, property.default_value);
+      case "string":
+        return new taxonomy.StringProperty(name, property.default_value);
+      case "symbol":
+        return new taxonomy.SymbolProperty(name, property.values, property.multiple, property.default_value);
+      case "item":
+        return new taxonomy.ItemProperty(name, kb.types.get(property.type_id)!, property.multiple, property.default_value);
+      case "json":
+        return new taxonomy.JSONProperty(name, property.schema, property.default_value);
+      default:
+        throw new Error(`Unknown property type: ${property.type}`);
     }
   }
 }

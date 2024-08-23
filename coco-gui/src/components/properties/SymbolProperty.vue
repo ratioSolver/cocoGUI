@@ -9,8 +9,8 @@ import { NSelect } from 'naive-ui';
 import { taxonomy } from '@/taxonomy';
 import { ref, watch } from 'vue';
 
-const props = withDefaults(defineProps<{ par: taxonomy.SymbolProperty; value: string | string[]; disabled: boolean; }>(), { disabled: false });
-const emit = defineEmits<{ (event: 'update', value: string | string[]): void; }>();
+const props = withDefaults(defineProps<{ par: taxonomy.SymbolProperty; value: string | string[] | undefined; disabled: boolean; }>(), { disabled: false });
+const emit = defineEmits<{ (event: 'update', value: string | string[] | undefined): void; }>();
 const value = ref(props.value);
 
 watch(() => props.value, (new_value) => value.value = new_value);
