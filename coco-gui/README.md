@@ -22,8 +22,8 @@ npm create vue@latest
 Install the required packages.
 
 ```bash
-npm install naive-ui
-npm install @vicons/fluent
+npm install -D naive-ui
+npm install -D @vicons/fluent
 ```
 
 Then, install the `coco-gui` package.
@@ -69,7 +69,6 @@ You can now use the store in your Vue components. For example, you can use the `
 import { NGrid, NGridItem } from 'naive-ui';
 import { FrameComponent, TaxonomyGraph } from 'coco-gui';
 import { useCoCoStore } from '@/stores/coco';
-</script>
 </script>
 ```
 
