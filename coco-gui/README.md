@@ -58,9 +58,9 @@ You can now use the store in your Vue components. For example, you can use the `
 <template>
   <n-grid x-gap="12" y-gap="12" :cols="2">
     <n-grid-item>
-      <frame-component title="Taxonomy">
+      <coco-frame title="Taxonomy">
         <taxonomy-graph graph_id="taxonomy-graph" :state="useCoCoStore().kb" style="min-height: 400px;"></taxonomy-graph>
-      </frame-component>
+      </coco-frame>
     </n-grid-item>
   </n-grid>
 </template>
@@ -176,7 +176,7 @@ You can now create a CoCo GUI by using the components you need in your Vue proje
 
 ```javascript
 <template>
-  <CoCoApp>
+  <coco-app>
     <template #header>
       <router-link to="/">
         <h1>CoCo</h1>
@@ -186,14 +186,14 @@ You can now create a CoCo GUI by using the components you need in your Vue proje
       <n-menu v-model:value="active_key" :options="menu" accordion />
     </template>
     <router-view />
-  </CoCoApp>
+  </coco-app>
 </template>
 
 <script setup lang="ts">
 import 'coco-gui/dist/style.css';
 import { Box20Regular, Circle20Regular, BrainCircuit20Regular, PauseCircle20Regular, PlayCircle20Regular, CheckmarkCircle20Regular, ErrorCircle20Regular } from '@vicons/fluent';
 import { NMenu, type MenuOption } from 'naive-ui';
-import { CoCoApp, taxonomy, rule, solver } from 'coco-gui';
+import { coco-app, taxonomy, rule, solver } from 'coco-gui';
 import { computed, h, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useCoCoStore } from './stores/coco';
@@ -268,6 +268,41 @@ function solvers_menu_options(solvers: Map<number, solver.Solver>): MenuOption[]
       icon: () => h(icn.value)
     }
   });
+}
+</script>
+```
+
+## Maps
+
+Maps can be used to display geo-referenced information. The `CocoMap` component can be used to display a map. The `CocoMap` component requires a `map_id` prop to specify the id of the map. Once the map is created, the `created` event is emitted. The returned map object, based on the [Leaflet](https://leafletjs.com/) library, can be used to add layers to the map.
+
+Install the required packages.
+
+```bash
+npm install -D leaflet
+npm install -D @types/leaflet
+```
+
+```javascript
+<template>
+  <coco-frame title="Map">
+    <coco-map map_id="map" @created="created" style="min-height: 400px;" />
+  </coco-frame>
+</template>
+
+<script setup lang="ts">
+import { CocoMap } from 'coco-gui';
+import 'leaflet/dist/leaflet.css';
+import L from "leaflet";
+
+let map: L.Map | null = null;
+
+function created(m: L.Map) {
+  map = m;
+  map.setView([41.902782, 12.496366], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
 }
 </script>
 ```

@@ -1,8 +1,8 @@
-import CoCoApp from './components/CoCoApp.vue';
-import FrameComponent from './components/FrameComponent.vue';
-import Chat from './components/Chat.vue';
-import LogInDialog from './components/LogInDialog.vue';
-import Map from './components/Map.vue';
+import CocoApp from './components/CocoApp.vue';
+import CocoChat from './components/CocoChat.vue';
+import CocoFrame from './components/CocoFrame.vue';
+import CocoLogin from './components/CocoLogin.vue';
+import CocoMap from './components/CocoMap.vue';
 
 import BooleanProperty from '@/components/properties/BooleanProperty.vue';
 import IntegerProperty from './components/properties/IntegerProperty.vue';
@@ -31,7 +31,7 @@ export { coco } from './coco';
 export { taxonomy } from './taxonomy';
 export { solver } from './solver';
 export { rule } from './rule';
-export { CoCoApp, FrameComponent, Chat, LogInDialog, Map };
+export { CocoApp, CocoChat, CocoFrame, CocoLogin, CocoMap };
 export { BooleanProperty, IntegerProperty, RealProperty, StringProperty, SymbolProperty, ItemProperty };
 export { ReactiveRule, DeliberativeRule, Item, ItemListItem, ItemChart, ItemPublisher, TypeListItem, Type, TaxonomyGraph };
 export { Solver, SolverListItem, SolverGraph, SolverTimelines };

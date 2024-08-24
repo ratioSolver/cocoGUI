@@ -1,5 +1,5 @@
 <template>
-  <CoCoApp>
+  <coco-app>
     <template #header>
       <router-link to="/">
         <h1>CoCo</h1>
@@ -9,14 +9,14 @@
       <n-menu v-model:value="active_key" :options="menu" accordion />
     </template>
     <router-view />
-  </CoCoApp>
+  </coco-app>
 </template>
 
 <script setup lang="ts">
 import 'coco-gui/dist/style.css';
 import { Box20Regular, Circle20Regular, BrainCircuit20Regular, PauseCircle20Regular, PlayCircle20Regular, CheckmarkCircle20Regular, ErrorCircle20Regular } from '@vicons/fluent';
 import { NMenu, type MenuOption } from 'naive-ui';
-import { CoCoApp, taxonomy, rule, solver } from 'coco-gui';
+import { CocoApp, taxonomy, rule, solver } from 'coco-gui';
 import { computed, h, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useCoCoStore } from './stores/coco';

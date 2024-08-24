@@ -1,5 +1,5 @@
 <template>
-  <div :id="props.map_id"></div>
+  <div :id="props.map_id" class="map-container"></div>
 </template>
 
 <script setup lang="ts">
@@ -25,3 +25,10 @@ onUnmounted(() => {
   ro.disconnect();
 });
 </script>
+
+<style scoped>
+.map-container {
+  height: 100%;
+  width: 100%;
+}
+</style>
