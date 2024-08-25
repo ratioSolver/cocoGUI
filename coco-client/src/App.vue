@@ -7,6 +7,7 @@
     </template>
     <template #drawer>
       <n-menu v-model:value="active_key" :options="menu" accordion />
+      <n-tree-select v-model:value="store.layers" :options="types_tree(store.kb.types)" multiple cascade checkable />
     </template>
     <router-view />
   </coco-app>
@@ -15,7 +16,7 @@
 <script setup lang="ts">
 import 'coco-gui/dist/style.css';
 import { Box20Regular, Circle20Regular, BrainCircuit20Regular, PauseCircle20Regular, PlayCircle20Regular, CheckmarkCircle20Regular, ErrorCircle20Regular } from '@vicons/fluent';
-import { NMenu, type MenuOption } from 'naive-ui';
+import { NMenu, NTreeSelect, type MenuOption, type TreeSelectOption } from 'naive-ui';
 import { CocoApp, taxonomy, rule, solver } from 'coco-gui';
 import { computed, h, ref } from 'vue';
 import { RouterLink } from 'vue-router';
@@ -41,6 +42,31 @@ function types_menu_options(types: Map<string, taxonomy.Type>): MenuOption[] {
       icon: () => h(Box20Regular),
     }
   });
+}
+
+function types_tree(types: Map<string, taxonomy.Type>): TreeSelectOption[] {
+  const tree: TreeSelectOption[] = [];
+  const map = new Map<taxonomy.Type, TreeSelectOption>();
+  for (const type of types.values())
+    map.set(type, {
+      label: type.name,
+      key: type.id,
+      icon: () => h(Box20Regular),
+      children: []
+    });
+  for (const [type, node] of map)
+    if (type.parents.size > 0)
+      for (const [_, parent] of type.parents)
+        map.get(parent)!.children!.push(node);
+    else
+      tree.push(node);
+  tree.sort((a, b) => a.label!.localeCompare(b.label!));
+  for (const node of tree)
+    if (node.children!.length == 0)
+      delete node.children;
+    else
+      node.children!.sort((a, b) => a.label!.localeCompare(b.label!));
+  return tree;
 }
 
 function items_menu_options(items: Map<string, taxonomy.Item>): MenuOption[] {
