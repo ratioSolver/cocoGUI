@@ -11,8 +11,8 @@ import { ref, watch } from 'vue';
 const props = withDefaults(defineProps<{ par: taxonomy.IntegerProperty; value: number | undefined; disabled: boolean; }>(), { disabled: false });
 const emit = defineEmits<{ (event: 'update', value: number | undefined): void; }>();
 
-const value = ref(props.value);
+const value = ref<number | undefined>(props.value);
 
-watch(() => props.value, (new_value) => value.value = new_value);
-watch(value, (new_value) => emit('update', new_value));
+watch(() => props.value, (new_value: number | undefined) => value.value = new_value);
+watch(value, (new_value: number | undefined) => emit('update', new_value));
 </script>

@@ -39,12 +39,12 @@ Now, you can import the components you need in your Vue project.
 To use the `KnowledgeBase` class in a Vue project, you can create a Pinia store and import the `KnowledgeBase` class from the `coco-gui` package.
 
 ```javascript
-import { ref } from 'vue'
+import { reactive } from 'vue'
 import { defineStore } from 'pinia'
 import { coco } from 'coco-gui'
 
 export const useCoCoStore = defineStore('CoCo', () => {
-  const kb = ref(coco.KnowledgeBase.getInstance())
+  const kb = reactive(coco.KnowledgeBase.getInstance())
 
   return { kb }
 })
@@ -201,14 +201,14 @@ import { useCoCoStore } from './stores/coco';
 const store = useCoCoStore();
 
 const active_key = ref<string | null>(null);
-const menu: MenuOption[] = [
+const menu = computed<MenuOption[]>(() => [
   { key: 'home', label: () => h(RouterLink, { to: '/' }, { default: () => 'Home' }) },
-  { key: 'types', label: 'Types', children: types_menu_options(store.kb.types) as MenuOption[] },
-  { key: 'items', label: 'Items', children: items_menu_options(store.kb.items) as MenuOption[] },
-  { key: 'reactive_rules', label: 'Reactive Rules', children: reactive_rules_menu_options(store.kb.reactive_rules) as MenuOption[] },
-  { key: 'deliberative_rules', label: 'Deliberative Rules', children: deliberative_rules_menu_options(store.kb.deliberative_rules) as MenuOption[] },
-  { key: 'solvers', label: 'Solvers', children: solvers_menu_options(store.kb.solvers) as MenuOption[] }
-];
+  { key: 'types', label: 'Types', children: types_menu_options(store.kb.types) },
+  { key: 'items', label: 'Items', children: items_menu_options(store.kb.items) },
+  { key: 'reactive_rules', label: 'Reactive Rules', children: reactive_rules_menu_options(store.kb.reactive_rules) },
+  { key: 'deliberative_rules', label: 'Deliberative Rules', children: deliberative_rules_menu_options(store.kb.deliberative_rules) },
+  { key: 'solvers', label: 'Solvers', children: solvers_menu_options(store.kb.solvers) }
+]);
 
 function types_menu_options(types: Map<string, taxonomy.Type>): MenuOption[] {
   return Array.from(types.values()).map(type => {

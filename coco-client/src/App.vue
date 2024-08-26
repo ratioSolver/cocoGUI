@@ -7,7 +7,7 @@
     </template>
     <template #drawer>
       <n-menu v-model:value="active_key" :options="menu" accordion />
-      <n-tree-select v-model:value="store.layers" :options="types_tree(store.kb.types)" multiple cascade checkable />
+      <n-tree-select v-model:value="store.layers" :options="tree" multiple cascade checkable />
     </template>
     <router-view />
   </coco-app>
@@ -23,16 +23,18 @@ import { RouterLink } from 'vue-router';
 import { useCoCoStore } from './stores/coco';
 
 const store = useCoCoStore();
+store.connect();
 
 const active_key = ref<string | null>(null);
-const menu: MenuOption[] = [
+const menu = computed<MenuOption[]>(() => [
   { key: 'home', label: () => h(RouterLink, { to: '/' }, { default: () => 'Home' }) },
-  { key: 'types', label: 'Types', children: types_menu_options(store.kb.types) as MenuOption[] },
-  { key: 'items', label: 'Items', children: items_menu_options(store.kb.items) as MenuOption[] },
-  { key: 'reactive_rules', label: 'Reactive Rules', children: reactive_rules_menu_options(store.kb.reactive_rules) as MenuOption[] },
-  { key: 'deliberative_rules', label: 'Deliberative Rules', children: deliberative_rules_menu_options(store.kb.deliberative_rules) as MenuOption[] },
-  { key: 'solvers', label: 'Solvers', children: solvers_menu_options(store.kb.solvers) as MenuOption[] }
-];
+  { key: 'types', label: 'Types', children: types_menu_options(store.kb.types) },
+  { key: 'items', label: 'Items', children: items_menu_options(store.kb.items) },
+  { key: 'reactive_rules', label: 'Reactive Rules', children: reactive_rules_menu_options(store.kb.reactive_rules) },
+  { key: 'deliberative_rules', label: 'Deliberative Rules', children: deliberative_rules_menu_options(store.kb.deliberative_rules) },
+  { key: 'solvers', label: 'Solvers', children: solvers_menu_options(store.kb.solvers) }
+]);
+const tree = computed<TreeSelectOption[]>(() => types_tree(store.kb.types));
 
 function types_menu_options(types: Map<string, taxonomy.Type>): MenuOption[] {
   return Array.from(types.values()).map(type => {
@@ -51,7 +53,6 @@ function types_tree(types: Map<string, taxonomy.Type>): TreeSelectOption[] {
     map.set(type, {
       label: type.name,
       key: type.id,
-      icon: () => h(Box20Regular),
       children: []
     });
   for (const [type, node] of map)
@@ -62,11 +63,18 @@ function types_tree(types: Map<string, taxonomy.Type>): TreeSelectOption[] {
       tree.push(node);
   tree.sort((a, b) => a.label!.localeCompare(b.label!));
   for (const node of tree)
-    if (node.children!.length == 0)
-      delete node.children;
-    else
-      node.children!.sort((a, b) => a.label!.localeCompare(b.label!));
+    clear_children(node);
   return tree;
+}
+
+function clear_children(node: TreeSelectOption) {
+  if (node.children!.length == 0)
+    delete node.children;
+  else {
+    node.children!.sort((a, b) => a.label!.localeCompare(b.label!));
+    for (const child of node.children!)
+      clear_children(child);
+  }
 }
 
 function items_menu_options(items: Map<string, taxonomy.Item>): MenuOption[] {

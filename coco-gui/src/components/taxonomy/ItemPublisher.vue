@@ -39,7 +39,7 @@ const columns: DataTableColumns<PropertyRow> = [
     key: 'property',
     width: '40%',
     render(row) {
-      return property_h(row.property, value[row.name]);
+      return property_h(row.property, value);
     }
   }
 ];
@@ -57,14 +57,8 @@ function updated_values(values: taxonomy.Data[]) {
 
 function publish() {
   const data: Record<string, any> = {};
-  for (const [name, prop] of dynamic_props)
-    if (prop instanceof taxonomy.ItemProperty)
-      if (prop.multiple)
-        data[name] = value[name].map((item: taxonomy.Item) => item.id);
-      else
-        data[name] = value[name].id;
-    else
-      data[name] = value[name];
+  for (const [name, _] of dynamic_props)
+    data[name] = value[name];
   coco.KnowledgeBase.getInstance().publish(props.item, data);
 }
 </script>

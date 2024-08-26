@@ -1,6 +1,8 @@
 <template>
   <n-grid v-if="type" x-gap="12" y-gap="12" :cols="3" style="padding: 12px;">
-    <n-grid-item>{{ type.id }}</n-grid-item>
+    <n-grid-item>
+      <n-input v-model:value="type.id" label="ID" disabled />
+    </n-grid-item>
     <n-grid-item>
       <n-input v-model:value="type.name" label="Name" required />
     </n-grid-item>
