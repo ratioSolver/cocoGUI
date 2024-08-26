@@ -189,6 +189,7 @@ export namespace coco {
     }
 
     publish(item: taxonomy.Item, data: Record<string, any>) {
+      console.log('Publishing', item.name, data);
       fetch('http://' + location.host + '/data/' + item.id, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

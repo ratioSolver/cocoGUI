@@ -1,7 +1,7 @@
 <template>
   <n-select v-model:value="value" :placeholder="props.par.name" :multiple="props.par.multiple"
-    :options="Array.from(props.par.symbols).map((v) => ({ value: v, label: v }))" :disabled="props.disabled"
-    clearable />
+    :options="Array.from(props.par.symbols).map((v) => ({ value: v, label: v }))" :disabled="props.disabled" clearable
+    @update:value="(v: string | string[] | null) => emit('update', v)" />
 </template>
 
 <script setup lang="ts">
@@ -10,9 +10,8 @@ import { taxonomy } from '@/taxonomy';
 import { ref, watch } from 'vue';
 
 const props = withDefaults(defineProps<{ par: taxonomy.SymbolProperty; value: string | string[] | undefined; disabled: boolean; }>(), { disabled: false });
-const emit = defineEmits<{ (event: 'update', value: string | string[] | undefined): void; }>();
+const emit = defineEmits<{ (event: 'update', value: string | string[] | null): void; }>();
 const value = ref<string | string[] | undefined>(props.value);
 
 watch(() => props.value, (new_value: string | string[] | undefined) => value.value = new_value);
-watch(value, (new_value: string | string[] | undefined) => emit('update', new_value));
 </script>
