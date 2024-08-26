@@ -1,5 +1,5 @@
 <template>
-  <n-input-number v-model.value="value" :placeholder="props.par.name" :disabled="props.disabled" :min="props.par.min"
+  <n-input-number v-model:value="value" :placeholder="props.par.name" :disabled="props.disabled" :min="props.par.min"
     :max="props.par.max" @update:value="(v: number | null) => emit('update', v)" />
 </template>
 
