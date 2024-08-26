@@ -6,7 +6,7 @@
         @confirm="coco.KnowledgeBase.getInstance().load_data(item, range[0], range[1])" />
     </n-grid-item>
     <n-grid-item>
-      <div :id="get_data_id(props.item)"></div>
+      <div :id="get_data_id(props.item)" :style="{ height: dynamic_props.size * 200 + 'px' }"></div>
     </n-grid-item>
   </n-grid>
 </template>
@@ -118,24 +118,7 @@ class ItemChart extends taxonomy.ItemListener {
           if (j > 0) // Update the end of the previous trace
             this.traces.get(par_name)![this.traces.get(par_name)!.length - 1].x[1] = this.vals_xs[j];
           const c_val = this.vals_ys.get(par_name)![j];
-          let trace = { x: [this.vals_xs[j], this.vals_xs[j]], y: [1, 1], name: undefined as string | undefined, type: 'scatter', opacity: 0.7, mode: 'lines', line: { width: 30, color: undefined as string | undefined }, yaxis: this.y_axes.get(par_name) };
-          if (par instanceof taxonomy.BooleanProperty || par instanceof taxonomy.StringProperty || par instanceof taxonomy.SymbolProperty) {
-            trace.name = c_val;
-            if (c_colors.has(c_val))
-              trace.line.color = c_colors.get(c_val);
-            if (!trace.name) {
-              trace.name = '';
-              trace.line.color = 'rgba(0, 0, 0, 0)';
-            }
-          } else if (par instanceof taxonomy.ItemProperty) {
-            trace.name = c_val.name;
-            trace.line.color = c_colors.get(c_val.id);
-            if (!trace.name) {
-              trace.name = '';
-              trace.line.color = 'rgba(0, 0, 0, 0)';
-            }
-          }
-          this.traces.get(par_name)!.push(trace);
+          this.traces.get(par_name)!.push({ x: [this.vals_xs[j], this.vals_xs[j]], y: [1, 1], name: get_name(c_val, par), type: 'scatter', opacity: 0.7, mode: 'lines', line: { width: 30, color: get_color(c_val, par, c_colors) }, yaxis: this.y_axes.get(par_name) });
         }
       }
 
@@ -161,16 +144,7 @@ class ItemChart extends taxonomy.ItemListener {
       else if (par instanceof taxonomy.BooleanProperty || par instanceof taxonomy.StringProperty || par instanceof taxonomy.SymbolProperty || par instanceof taxonomy.ItemProperty) {
         if (this.traces.get(par_name)!.length > 0) // Update the end of the previous trace
           this.traces.get(par_name)![this.traces.get(par_name)!.length - 1].x[1] = value.timestamp;
-        let trace = { x: [value.timestamp, value.timestamp], y: [1, 1], name: undefined as string | undefined, type: 'scatter', opacity: 0.7, mode: 'lines', line: { width: 30, color: undefined as string | undefined }, yaxis: this.y_axes.get(par_name) };
-        if (par instanceof taxonomy.BooleanProperty || par instanceof taxonomy.StringProperty || par instanceof taxonomy.SymbolProperty) {
-          trace.name = c_value;
-          if (this.colors.get(par_name)!.has(c_value))
-            trace.line.color = this.colors.get(par_name)!.get(c_value);
-        } else if (par instanceof taxonomy.ItemProperty) {
-          trace.name = c_value.name;
-          trace.line.color = this.colors.get(par_name)!.get(c_value.id);
-        }
-        this.traces.get(par_name)!.push(trace);
+        this.traces.get(par_name)!.push({ x: [value.timestamp, value.timestamp], y: [1, 1], name: get_name(c_value, par), type: 'scatter', opacity: 0.7, mode: 'lines', line: { width: 30, color: get_color(c_value, par, this.colors.get(par_name)!) }, yaxis: this.y_axes.get(par_name) });
       }
     }
     this.layout.datarevision = value.timestamp;
@@ -189,4 +163,28 @@ onUnmounted(() => {
   if (item_chart)
     props.item.remove_listener(item_chart);
 });
+</script>
+
+<script lang="ts">
+function get_name(val: any, prop: taxonomy.Property): string {
+  if (val)
+    if (prop instanceof taxonomy.SymbolProperty)
+      return prop.multiple ? val.join(', ') : val;
+    else if (prop instanceof taxonomy.ItemProperty)
+      return prop.multiple ? val.map((c: string) => coco.KnowledgeBase.getInstance().items.get(c)!.name).join(', ') : coco.KnowledgeBase.getInstance().items.get(val)!.name;
+    else
+      return val;
+  else
+    return '';
+}
+
+function get_color(val: any, prop: taxonomy.Property, colors: Map<string, string>): string | undefined {
+  if (val)
+    if (prop instanceof taxonomy.SymbolProperty || prop instanceof taxonomy.ItemProperty)
+      return prop.multiple ? undefined : colors.get(val);
+    else
+      return colors.get(val);
+  else
+    return 'rgba(0, 0, 0, 0)';
+}
 </script>
