@@ -2,7 +2,7 @@
   <coco-app>
     <template #header>
       <router-link to="/">
-        <h1>CoCo</h1>
+        <h1>{{ name }}</h1>
       </router-link>
     </template>
     <template #drawer>
@@ -22,6 +22,7 @@ import { computed, h, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useCoCoStore } from './stores/coco';
 
+const name = import.meta.env.VITE_NAME as string;
 const store = useCoCoStore();
 store.connect();
 
