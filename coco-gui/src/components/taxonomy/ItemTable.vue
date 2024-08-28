@@ -68,7 +68,8 @@ const type = computed<taxonomy.Type | undefined>(() => {
           width: `${100 / (static_props.size + dynamic_props.size + 1)}%`, // Distribute width evenly
           render(row) {
             return property_v(prop, row[name]);
-          }
+          },
+          className: 'dynamic'
         });
       }
       return t;
@@ -92,3 +93,9 @@ const items = computed(() => {
   return items;
 });
 </script>
+
+<style scoped>
+:deep(.dynamic) {
+  color: #6c6c6c !important;
+}
+</style>
