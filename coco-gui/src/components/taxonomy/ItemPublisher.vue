@@ -44,15 +44,12 @@ const columns: DataTableColumns<PropertyRow> = [
   }
 ];
 
-updated_values(props.item.values);
-watch(() => props.item.values, (values) => updated_values(values));
+updated_value(props.item.value);
+watch(() => props.item.value, (val: taxonomy.Data) => updated_value(val));
 
-function updated_values(values: taxonomy.Data[]) {
+function updated_value(val: taxonomy.Data) {
   for (const [name, prop] of dynamic_props)
-    if (values.length && values[values.length - 1].data[name])
-      value[name] = values[values.length - 1].data[name];
-    else
-      value[name] = prop.default_value;
+    value[name] = val.data[name] ? val.data[name] : prop.default_value;
 }
 
 function publish() {

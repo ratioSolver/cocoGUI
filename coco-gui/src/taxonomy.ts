@@ -270,6 +270,15 @@ export namespace taxonomy {
             this.instances = new Set();
         }
 
+        is_instance_of(type: Type): boolean {
+            if (this === type)
+                return true;
+            for (const parent of this.parents.values())
+                if (parent.is_instance_of(type))
+                    return true;
+            return false;
+        }
+
         /**
          * Returns the tooltip for a given Type.
          * 
@@ -318,21 +327,10 @@ export namespace taxonomy {
     /**
      * Represents a data object with a timestamp and a data payload.
      */
-    export class Data {
+    export type Data = {
 
-        timestamp: Date;
-        data: Record<string, any>;
-
-        /**
-         * Creates a new Data instance.
-         *
-         * @param timestamp The timestamp of the data.
-         * @param data The data payload.
-         */
-        constructor(timestamp: Date, data: Record<string, any>) {
-            this.timestamp = timestamp;
-            this.data = data;
-        }
+        timestamp: Date; // The timestamp of the data.
+        data: Record<string, any>; // The data payload.
     }
 
     /**
@@ -344,8 +342,9 @@ export namespace taxonomy {
         type: Type;
         name: string;
         description: string;
-        properties: Record<string, any>;
-        values: Data[];
+        properties: Record<string, any>; // The static properties of the item.
+        values: Data[]; // The historical dynamic properties of the item.
+        value: Data; // The dynamic properties of the item.
         listeners: Set<ItemListener>;
 
         /**
@@ -356,8 +355,9 @@ export namespace taxonomy {
          * @param name The name of the item.
          * @param description The description of the item.
          * @param properties The properties of the item.
+         * @param value The value of the item.
          */
-        constructor(id: string, type: Type, name: string, description: string, properties: Record<string, any>) {
+        constructor(id: string, type: Type, name: string, description: string, properties: Record<string, any>, value: Data) {
             this.id = id;
             this.type = type;
             this.name = name;
@@ -365,6 +365,7 @@ export namespace taxonomy {
             this.properties = properties;
             this.values = [];
             this.listeners = new Set();
+            this.value = value;
 
             const q = [type];
             while (q.length > 0) {
@@ -373,6 +374,15 @@ export namespace taxonomy {
                 for (const parent of t.parents.values())
                     q.push(parent);
             }
+        }
+
+        /**
+         * Sets the value of the item.
+         * 
+         * @param value - The new value for the item.
+         */
+        set_value(value: Data) {
+            this.value = value;
         }
 
         /**

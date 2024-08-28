@@ -16,6 +16,7 @@ import DeliberativeRule from './components/taxonomy/DeliberativeRule.vue';
 import Item from './components/taxonomy/Item.vue';
 import ItemListItem from './components/taxonomy/ItemListItem.vue';
 import ItemChart from './components/taxonomy/ItemChart.vue';
+import ItemTable from './components/taxonomy/ItemTable.vue';
 import ItemPublisher from './components/taxonomy/ItemPublisher.vue';
 import TypeListItem from './components/taxonomy/TypeListItem.vue';
 import Type from './components/taxonomy/Type.vue';
@@ -33,7 +34,7 @@ export { solver } from './solver';
 export { rule } from './rule';
 export { CocoApp, CocoChat, CocoFrame, CocoLogin, CocoMap };
 export { BooleanProperty, IntegerProperty, RealProperty, StringProperty, SymbolProperty, ItemProperty };
-export { ReactiveRule, DeliberativeRule, Item, ItemListItem, ItemChart, ItemPublisher, TypeListItem, Type, TaxonomyGraph };
+export { ReactiveRule, DeliberativeRule, Item, ItemListItem, ItemChart, ItemPublisher, ItemTable, TypeListItem, Type, TaxonomyGraph };
 export { Solver, SolverListItem, SolverGraph, SolverTimelines };
 
 import cytoscape from 'cytoscape';

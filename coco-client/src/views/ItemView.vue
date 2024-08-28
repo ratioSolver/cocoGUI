@@ -3,11 +3,10 @@
 </template>
 
 <script setup lang="ts">
-import { Item } from 'coco-gui';
+import { Item, coco } from 'coco-gui';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
-import { useCoCoStore } from '@/stores/coco';
 
 const route = useRoute();
-let itm = useCoCoStore().kb.items.get(route.params.id as string);
-onBeforeRouteUpdate((to, from) => { itm = useCoCoStore().kb.items.get(to.params.id as string); });
+let itm = coco.KnowledgeBase.getInstance().items.get(route.params.id as string);
+onBeforeRouteUpdate((to, from) => { itm = coco.KnowledgeBase.getInstance().items.get(to.params.id as string); });
 </script>

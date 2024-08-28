@@ -1,10 +1,12 @@
 import { taxonomy } from "./taxonomy"
 import { rule } from "./rule"
 import { solver } from "./solver"
+import { reactive } from "vue";
+import { Reactive } from "vue";
 
 export namespace coco {
 
-  export class StateListener {
+  export class KnowledgeListener {
 
     constructor() {
     }
@@ -44,8 +46,9 @@ export namespace coco {
     reactive_rules: Map<string, rule.ReactiveRule>;
     deliberative_rules: Map<string, rule.DeliberativeRule>;
     solvers: Map<number, solver.Solver>;
-    listeners: Set<StateListener>;
-    static #instance: KnowledgeBase;
+    listeners: Set<KnowledgeListener>;
+    static #instance: Reactive<KnowledgeBase>;
+    socket: WebSocket | null = null;
 
     /**
      * Creates a new Knowledge instance.
@@ -64,13 +67,13 @@ export namespace coco {
      * 
      * @returns The singleton instance of the KnowledgeBase.
      */
-    static getInstance(): KnowledgeBase {
+    static getInstance(): Reactive<KnowledgeBase> {
       if (!KnowledgeBase.#instance)
-        KnowledgeBase.#instance = new KnowledgeBase();
+        KnowledgeBase.#instance = reactive<KnowledgeBase>(new KnowledgeBase());
       return KnowledgeBase.#instance;
     }
 
-    update_knowledge(message: any): boolean {
+    private update_knowledge(message: any): boolean {
       switch (message.type) {
         case 'types':
           this.set_types(message);
@@ -93,11 +96,14 @@ export namespace coco {
         case 'updated_item':
           this.update_item(message);
           return true;
-        case 'new_data':
-          this.add_data(message);
+        case 'new_value':
+          this.new_value(message);
           return true;
         case 'deleted_item':
           this.remove_item(message);
+          return true;
+        case 'new_data':
+          this.add_data(message);
           return true;
         case 'reactive_rules':
           this.set_reactive_rules(message);
@@ -189,7 +195,7 @@ export namespace coco {
     }
 
     publish(item: taxonomy.Item, data: Record<string, any>) {
-      console.log('Publishing', item.name, data);
+      console.debug('Publishing', item.name, data);
       fetch('http://' + location.host + '/data/' + item.id, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -198,6 +204,22 @@ export namespace coco {
         if (!res.ok)
           res.json().then(data => alert(data.message)).catch(err => console.error(err));
       });
+    }
+
+    connect(timeout = 5000) {
+      this.socket = new WebSocket('ws://' + location.host + '/coco');
+      this.socket.onopen = () => {
+        console.debug('Connected to CoCo server');
+      };
+      this.socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.debug('Received:', data);
+        this.update_knowledge(data);
+      };
+      this.socket.onclose = () => {
+        console.debug('Connection to CoCo server closed');
+        setTimeout(() => this.connect(timeout), timeout);
+      };
     }
 
     load_data(item: taxonomy.Item, from = Date.now() - 1000 * 60 * 60 * 24 * 14, to = Date.now()) {
@@ -292,7 +314,7 @@ export namespace coco {
       this.items.clear();
       for (const item_message of items) {
         const type = this.types.get(item_message.type)!;
-        const item = new taxonomy.Item(item_message.id, type, item_message.name, item_message.description, item_message.properties);
+        const item = new taxonomy.Item(item_message.id, type, item_message.name, item_message.description, item_message.properties, { timestamp: item_message.value.timestamp, data: item_message.value.data });
         this.items.set(item.id, item);
       }
       this.listeners.forEach(listener => listener.items(Array.from(this.items.values())));
@@ -301,7 +323,7 @@ export namespace coco {
     private add_item(created_item_message: any): void {
       const new_item = created_item_message.new_item;
       const type = this.types.get(new_item.type)!;
-      const item = new taxonomy.Item(new_item.id, type, new_item.name, new_item.description, new_item.properties);
+      const item = new taxonomy.Item(new_item.id, type, new_item.name, new_item.description, new_item.properties, { timestamp: new_item.value.timestamp, data: new_item.value.data });
       this.items.set(item.id, item);
       this.listeners.forEach(listener => listener.item_added(item));
     }
@@ -318,6 +340,11 @@ export namespace coco {
       this.listeners.forEach(listener => listener.item_updated(item));
     }
 
+    private new_value(new_data_message: any): void {
+      const item = this.items.get(new_data_message.item_id)!;
+      item.set_value({ timestamp: new Date(new_data_message.value.timestamp), data: new_data_message.value.data });
+    }
+
     private remove_item(removed_item_message: any): void {
       const removed_item_id = removed_item_message.id;
       if (!this.items.delete(removed_item_id))
@@ -332,18 +359,18 @@ export namespace coco {
         if (data.length > 0 && timestamp.getTime() == data[data.length - 1].timestamp.getTime())
           data[data.length - 1].data = { ...data[data.length - 1].data, ...data_message[i].data };
         else
-          data.push(new taxonomy.Data(timestamp, data_message[i].data));
+          data.push({ timestamp: timestamp, data: data_message[i].data });
       }
       item.set_values(data);
     }
 
-    private add_data(new_data_message: any): void {
-      const item = this.items.get(new_data_message.item_id)!;
-      const timestamp = new Date(new_data_message.timestamp);
+    private add_data(add_data_message: any): void {
+      const item = this.items.get(add_data_message.item_id)!;
+      const timestamp = new Date(add_data_message.timestamp);
       if (item.values.length > 0 && timestamp.getTime() == item.values[item.values.length - 1].timestamp.getTime())
-        item.values[item.values.length - 1].data = { ...item.values[item.values.length - 1].data, ...new_data_message.data };
+        item.values[item.values.length - 1].data = { ...item.values[item.values.length - 1].data, ...add_data_message.data };
       else
-        item.add_value(new taxonomy.Data(timestamp, new_data_message.data));
+        item.add_value({ timestamp: timestamp, data: add_data_message.data });
     }
 
     private set_reactive_rules(reactive_rules_message: any): void {
@@ -439,7 +466,7 @@ export namespace coco {
      * 
      * @param listener - The listener to be added.
      */
-    add_listener(listener: StateListener): void {
+    add_listener(listener: KnowledgeListener): void {
       this.listeners.add(listener);
       listener.types(Array.from(this.types.values()));
       listener.items(Array.from(this.items.values()));
@@ -453,7 +480,7 @@ export namespace coco {
      * 
      * @param listener - The listener to be removed.
      */
-    remove_listener(listener: StateListener): void {
+    remove_listener(listener: KnowledgeListener): void {
       this.listeners.delete(listener);
     }
   }

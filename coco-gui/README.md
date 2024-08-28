@@ -13,7 +13,7 @@ npm install coco-gui
 
 ## Usage
 
-To get started, create a new Vue project, if you don't have one yet.
+To get started, if you don't have one yet, create a new Vue project.
 
 ```bash
 npm create vue@latest
@@ -34,43 +34,17 @@ npm install coco-gui
 
 Now, you can import the components you need in your Vue project.
 
-### Create a Pinia store
+## Get Access to the CoCo Knowledge Base
 
-To use the `KnowledgeBase` class in a Vue project, you can create a Pinia store and import the `KnowledgeBase` class from the `coco-gui` package.
-
-```javascript
-import { reactive } from 'vue'
-import { defineStore } from 'pinia'
-import { coco } from 'coco-gui'
-
-export const useCoCoStore = defineStore('CoCo', () => {
-  const kb = reactive(coco.KnowledgeBase.getInstance())
-
-  return { kb }
-})
-```
-
-### Use the `KnowledgeBase` class
-
-You can now use the store in your Vue components. For example, you can use the `KnowledgeBase` to visualize a taxonomy graph in a frame component.
+The `KnowledgeBase` class is a singleton class that provides access to the CoCo knowledge base.
 
 ```javascript
-<template>
-  <n-grid x-gap="12" y-gap="12" :cols="2">
-    <n-grid-item>
-      <coco-frame title="Taxonomy">
-        <taxonomy-graph graph_id="taxonomy-graph" :state="useCoCoStore().kb" style="min-height: 400px;"></taxonomy-graph>
-      </coco-frame>
-    </n-grid-item>
-  </n-grid>
-</template>
+import { coco } from 'coco-gui';
 
-<script setup lang="ts">
-import { NGrid, NGridItem } from 'naive-ui';
-import { FrameComponent, TaxonomyGraph } from 'coco-gui';
-import { useCoCoStore } from '@/stores/coco';
-</script>
+const kb = coco.KnowledgeBase.getInstance();
 ```
+
+Notice that the returned `KnowledgeBase` object is reactive. This means that you can use it in Vue components to visualize the types, the items, the rules and the solvers.
 
 ### Visualize the types, the items and the solvers
 
@@ -86,13 +60,12 @@ Create a `TypeView.vue` file.
 </template>
 
 <script setup lang="ts">
-import { Type } from 'coco-gui';
+import { Type, coco } from 'coco-gui';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
-import { useCoCoStore } from '@/stores/coco';
 
 const route = useRoute();
-let tp = useCoCoStore().kb.types.get(route.params.id as string);
-onBeforeRouteUpdate((to, from) => { tp = useCoCoStore().kb.types.get(to.params.id as string); });
+let tp = coco.KnowledgeBase.getInstance().types.get(route.params.id as string);
+onBeforeRouteUpdate((to, from) => { tp = coco.KnowledgeBase.getInstance().types.get(to.params.id as string); });
 </script>
 ```
 
@@ -104,13 +77,12 @@ Create an `ItemView.vue` file.
 </template>
 
 <script setup lang="ts">
-import { Item } from 'coco-gui';
+import { Item, coco } from 'coco-gui';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
-import { useCoCoStore } from '@/stores/coco';
 
 const route = useRoute();
-let itm = useCoCoStore().kb.items.get(route.params.id as string);
-onBeforeRouteUpdate((to, from) => { itm = useCoCoStore().kb.items.get(to.params.id as string); });
+let itm = coco.KnowledgeBase.getInstance().items.get(route.params.id as string);
+onBeforeRouteUpdate((to, from) => { itm = coco.KnowledgeBase.getInstance().items.get(to.params.id as string); });
 </script>
 ```
 
@@ -122,13 +94,12 @@ Create a `SolverView.vue` file.
 </template>
 
 <script setup lang="ts">
-import { Solver } from 'coco-gui';
+import { Solver, coco } from 'coco-gui';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
-import { useCoCoStore } from '@/stores/coco';
 
 const route = useRoute();
-let slv = useCoCoStore().kb.solvers.get(parseInt(route.params.id as string));
-onBeforeRouteUpdate((to, from) => { slv = useCoCoStore().kb.solvers.get(parseInt(to.params.id as string)); });
+let slv = coco.KnowledgeBase.getInstance().solvers.get(parseInt(route.params.id as string));
+onBeforeRouteUpdate((to, from) => { slv = coco.KnowledgeBase.getInstance().solvers.get(parseInt(to.params.id as string)); });
 </script>
 ```
 
@@ -193,21 +164,22 @@ You can now create a CoCo GUI by using the components you need in your Vue proje
 import 'coco-gui/dist/style.css';
 import { Box20Regular, Circle20Regular, BrainCircuit20Regular, PauseCircle20Regular, PlayCircle20Regular, CheckmarkCircle20Regular, ErrorCircle20Regular } from '@vicons/fluent';
 import { NMenu, type MenuOption } from 'naive-ui';
-import { coco-app, taxonomy, rule, solver } from 'coco-gui';
+import { coco-app, taxonomy, rule, solver, coco } from 'coco-gui';
 import { computed, h, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useCoCoStore } from './stores/coco';
 
 const store = useCoCoStore();
+coco.KnowledgeBase.getInstance().connect();
 
 const active_key = ref<string | null>(null);
 const menu = computed<MenuOption[]>(() => [
   { key: 'home', label: () => h(RouterLink, { to: '/' }, { default: () => 'Home' }) },
-  { key: 'types', label: 'Types', children: types_menu_options(store.kb.types) },
-  { key: 'items', label: 'Items', children: items_menu_options(store.kb.items) },
-  { key: 'reactive_rules', label: 'Reactive Rules', children: reactive_rules_menu_options(store.kb.reactive_rules) },
-  { key: 'deliberative_rules', label: 'Deliberative Rules', children: deliberative_rules_menu_options(store.kb.deliberative_rules) },
-  { key: 'solvers', label: 'Solvers', children: solvers_menu_options(store.kb.solvers) }
+  { key: 'types', label: 'Types', children: types_menu_options(coco.KnowledgeBase.getInstance().types) },
+  { key: 'items', label: 'Items', children: items_menu_options(coco.KnowledgeBase.getInstance().items) },
+  { key: 'reactive_rules', label: 'Reactive Rules', children: reactive_rules_menu_options(coco.KnowledgeBase.getInstance().reactive_rules) },
+  { key: 'deliberative_rules', label: 'Deliberative Rules', children: deliberative_rules_menu_options(coco.KnowledgeBase.getInstance().deliberative_rules) },
+  { key: 'solvers', label: 'Solvers', children: solvers_menu_options(coco.KnowledgeBase.getInstance().solvers) }
 ]);
 
 function types_menu_options(types: Map<string, taxonomy.Type>): MenuOption[] {
@@ -272,7 +244,44 @@ function solvers_menu_options(solvers: Map<number, solver.Solver>): MenuOption[]
 </script>
 ```
 
-## Maps
+## Widgets
+
+Widgets can be used to display information in a graphical user interface. The `CocoFrame` component can be used to display a frame with a title. The `CocoFrame` component requires a `title` prop to specify the title of the frame.
+
+```javascript
+<template>
+  <coco-frame title="Frame">
+    <p>Content</p>
+  </coco-frame>
+</template>
+
+<script setup lang="ts">
+import { CocoFrame } from 'coco-gui';
+</script>
+```
+
+### Visualize the Taxonomy Graph
+
+The `TaxonomyGraph` component can be used to visualize the taxonomy graph. The `TaxonomyGraph` component requires a `graph_id` prop to specify the id of the graph. The `TaxonomyGraph` component uses the [Cytoscape](https://js.cytoscape.org/) library to render the graph.
+
+```javascript
+<template>
+  <n-grid x-gap="12" y-gap="12" :cols="2">
+    <n-grid-item>
+      <coco-frame title="Taxonomy">
+        <taxonomy-graph graph_id="taxonomy-graph" style="min-height: 400px;"></taxonomy-graph>
+      </coco-frame>
+    </n-grid-item>
+  </n-grid>
+</template>
+
+<script setup lang="ts">
+import { NGrid, NGridItem } from 'naive-ui';
+import { FrameComponent, TaxonomyGraph } from 'coco-gui';
+</script>
+```
+
+### Visualize Maps
 
 Maps can be used to display geo-referenced information. The `CocoMap` component can be used to display a map. The `CocoMap` component requires a `map_id` prop to specify the id of the map. Once the map is created, the `created` event is emitted. The returned map object, based on the [Leaflet](https://leafletjs.com/) library, can be used to add layers to the map.
 

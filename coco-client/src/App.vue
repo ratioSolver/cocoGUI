@@ -7,7 +7,7 @@
     </template>
     <template #drawer>
       <n-menu v-model:value="active_key" :options="menu" accordion />
-      <n-tree-select v-model:value="store.layers" :options="tree" multiple cascade checkable />
+      <n-tree-select v-model:value="useCoCoStore().layers" :options="tree" multiple cascade checkable />
     </template>
     <router-view />
   </coco-app>
@@ -17,25 +17,24 @@
 import 'coco-gui/dist/style.css';
 import { Box20Regular, Circle20Regular, BrainCircuit20Regular, PauseCircle20Regular, PlayCircle20Regular, CheckmarkCircle20Regular, ErrorCircle20Regular } from '@vicons/fluent';
 import { NMenu, NTreeSelect, type MenuOption, type TreeSelectOption } from 'naive-ui';
-import { CocoApp, taxonomy, rule, solver } from 'coco-gui';
+import { CocoApp, taxonomy, rule, solver, coco } from 'coco-gui';
 import { computed, h, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useCoCoStore } from './stores/coco';
 
 const name = import.meta.env.VITE_NAME as string;
-const store = useCoCoStore();
-store.connect();
+coco.KnowledgeBase.getInstance().connect();
 
 const active_key = ref<string | null>(null);
 const menu = computed<MenuOption[]>(() => [
   { key: 'home', label: () => h(RouterLink, { to: '/' }, { default: () => 'Home' }) },
-  { key: 'types', label: 'Types', children: types_menu_options(store.kb.types) },
-  { key: 'items', label: 'Items', children: items_menu_options(store.kb.items) },
-  { key: 'reactive_rules', label: 'Reactive Rules', children: reactive_rules_menu_options(store.kb.reactive_rules) },
-  { key: 'deliberative_rules', label: 'Deliberative Rules', children: deliberative_rules_menu_options(store.kb.deliberative_rules) },
-  { key: 'solvers', label: 'Solvers', children: solvers_menu_options(store.kb.solvers) }
+  { key: 'types', label: 'Types', children: types_menu_options(coco.KnowledgeBase.getInstance().types) },
+  { key: 'items', label: 'Items', children: items_menu_options(coco.KnowledgeBase.getInstance().items) },
+  { key: 'reactive_rules', label: 'Reactive Rules', children: reactive_rules_menu_options(coco.KnowledgeBase.getInstance().reactive_rules) },
+  { key: 'deliberative_rules', label: 'Deliberative Rules', children: deliberative_rules_menu_options(coco.KnowledgeBase.getInstance().deliberative_rules) },
+  { key: 'solvers', label: 'Solvers', children: solvers_menu_options(coco.KnowledgeBase.getInstance().solvers) }
 ]);
-const tree = computed<TreeSelectOption[]>(() => types_tree(store.kb.types));
+const tree = computed<TreeSelectOption[]>(() => types_tree(coco.KnowledgeBase.getInstance().types));
 
 function types_menu_options(types: Map<string, taxonomy.Type>): MenuOption[] {
   return Array.from(types.values()).map(type => {

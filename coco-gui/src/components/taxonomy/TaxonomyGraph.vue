@@ -9,7 +9,7 @@ import { onMounted, onUnmounted } from 'vue';
 import cytoscape from 'cytoscape';
 import tippy, { Instance } from 'tippy.js';
 
-const props = defineProps<{ graph_id: string, state: coco.KnowledgeBase; }>();
+const props = defineProps<{ graph_id: string }>();
 
 let listener: TypeListener | null = null;
 
@@ -20,7 +20,7 @@ tippy.setDefaultProps({
   placement: 'bottom'
 });
 
-class TypeListener extends coco.StateListener {
+class TypeListener extends coco.KnowledgeListener {
 
   cy: cytoscape.Core;
   layout = {
@@ -31,7 +31,7 @@ class TypeListener extends coco.StateListener {
   };
   tippys: Map<string, Instance> = new Map();
 
-  constructor(knowledge: coco.KnowledgeBase) {
+  constructor() {
     super();
 
     this.cy = cytoscape({
@@ -85,7 +85,7 @@ class TypeListener extends coco.StateListener {
       ]
     });
 
-    knowledge.add_listener(this);
+    coco.KnowledgeBase.getInstance().add_listener(this);
   }
 
   types(types: taxonomy.Type[]) {
@@ -147,11 +147,11 @@ class TypeListener extends coco.StateListener {
 }
 
 onMounted(() => {
-  listener = new TypeListener(props.state);
+  listener = new TypeListener();
 });
 
 onUnmounted(() => {
-  props.state.remove_listener(listener!);
+  coco.KnowledgeBase.getInstance().remove_listener(listener!);
   listener!.cy.destroy();
   listener = null;
 });

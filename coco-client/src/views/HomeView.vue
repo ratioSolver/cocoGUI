@@ -2,7 +2,8 @@
   <n-grid x-gap="12" y-gap="12" :cols="2">
     <n-grid-item>
       <coco-frame title="Taxonomy">
-        <taxonomy-graph graph_id="taxonomy-graph" :state="useCoCoStore().kb" style="min-height: 400px;" />
+        <taxonomy-graph graph_id="taxonomy-graph" :state="coco.KnowledgeBase.getInstance()"
+          style="min-height: 400px;" />
       </coco-frame>
     </n-grid-item>
     <n-grid-item>
@@ -10,13 +11,17 @@
         <coco-map map_id="map" @created="created" style="min-height: 400px;" />
       </coco-frame>
     </n-grid-item>
+    <n-grid-item>
+      <coco-frame title="Users">
+        <item-table type_name="User" />
+      </coco-frame>
+    </n-grid-item>
   </n-grid>
 </template>
 
 <script setup lang="ts">
 import { NGrid, NGridItem } from 'naive-ui';
-import { CocoFrame, TaxonomyGraph, CocoMap } from 'coco-gui';
-import { useCoCoStore } from '@/stores/coco';
+import { CocoFrame, TaxonomyGraph, CocoMap, ItemTable, coco } from 'coco-gui';
 import L from "leaflet";
 
 let map: L.Map | null = null;
