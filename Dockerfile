@@ -2,7 +2,7 @@
 FROM ubuntu:latest
 
 # Install the necessary dependencies
-RUN apt update && apt install -y build-essential cmake libboost-all-dev libssl-dev unzip wget
+RUN apt update && apt install -y build-essential cmake libssl-dev unzip wget
 
 # Compile and install CLIPS
 RUN wget -O /tmp/clips.zip https://sourceforge.net/projects/clipsrules/files/CLIPS/6.4.1/clips_core_source_641.zip/download
