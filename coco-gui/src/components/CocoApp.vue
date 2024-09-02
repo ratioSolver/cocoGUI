@@ -1,27 +1,29 @@
 <template>
-  <n-layout class="coco-app">
-    <n-layout-header bordered style="background-color: lightgray;">
-      <n-flex justify="space-between" style="align-items: center; height: 64px;">
-        <n-flex style="align-items: center;">
-          <n-button quaternary size="large">
-            <n-icon size="36" :component="LineHorizontal320Regular" @click="drawer = !drawer" />
-          </n-button>
-          <slot name="header">
+  <n-config-provider :themeOverrides="themeOverrides">
+    <n-layout class="coco-app">
+      <n-layout-header bordered style="background-color: lightgray;">
+        <n-flex justify="space-between" style="align-items: center; height: 64px;">
+          <n-flex style="align-items: center;">
+            <n-button quaternary size="large">
+              <n-icon size="36" :component="LineHorizontal320Regular" @click="drawer = !drawer" />
+            </n-button>
+            <slot name="header">
+            </slot>
+          </n-flex>
+          <slot name="header-extra">
           </slot>
         </n-flex>
-        <slot name="header-extra">
+      </n-layout-header>
+      <n-layout-content style="height: calc(100vh - 65px); overflow: auto;">
+        <n-drawer v-model:show="drawer" placement="left" size="30%">
+          <slot name="drawer">
+          </slot>
+        </n-drawer>
+        <slot>
         </slot>
-      </n-flex>
-    </n-layout-header>
-    <n-layout-content style="height: calc(100vh - 65px); overflow: auto;">
-      <n-drawer v-model:show="drawer" placement="left" size="30%">
-        <slot name="drawer">
-        </slot>
-      </n-drawer>
-      <slot>
-      </slot>
-    </n-layout-content>
-  </n-layout>
+      </n-layout-content>
+    </n-layout>
+  </n-config-provider>
 </template>
 
 <script setup lang="ts">
@@ -30,6 +32,19 @@ import { LineHorizontal320Regular } from '@vicons/fluent'
 import { ref } from 'vue'
 
 const drawer = ref(false);
+</script>
+
+<script lang="ts">
+import { NConfigProvider, GlobalThemeOverrides } from 'naive-ui'
+
+const themeOverrides: GlobalThemeOverrides = {
+  common: {
+    primaryColor: '#FF8C00',          // Dark Orange for primary elements
+    primaryColorHover: '#FF7F24',     // Slightly darker orange for hover
+    primaryColorPressed: '#FF6A00',   // Even darker for pressed state
+    primaryColorSuppl: '#FFA500',     // Lighter orange for supplementary elements
+  }
+}
 </script>
 
 <style scoped>
