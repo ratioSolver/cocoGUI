@@ -312,8 +312,8 @@ export namespace solver {
         }
 
         add_causal_link(causal_link_added_message: any): void {
-            const flaw = this.flaws.get(causal_link_added_message.flaw)!;
-            const resolver = this.resolvers.get(causal_link_added_message.resolver)!;
+            const flaw = this.flaws.get(causal_link_added_message.flaw_id)!;
+            const resolver = this.resolvers.get(causal_link_added_message.resolver_id)!;
             flaw.causes.push(resolver);
             resolver.preconditions.push(flaw);
             this.listeners.forEach(listener => listener.causal_link_added(flaw, resolver));

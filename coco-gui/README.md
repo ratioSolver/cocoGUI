@@ -164,7 +164,7 @@ You can now create a CoCo GUI by using the components you need in your Vue proje
 import 'coco-gui/dist/style.css';
 import { Box20Regular, Circle20Regular, BrainCircuit20Regular, PauseCircle20Regular, PlayCircle20Regular, CheckmarkCircle20Regular, ErrorCircle20Regular } from '@vicons/fluent';
 import { NMenu, type MenuOption } from 'naive-ui';
-import { coco-app, taxonomy, rule, solver, coco } from 'coco-gui';
+import { CocoApp, taxonomy, rule, solver, coco } from 'coco-gui';
 import { computed, h, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useCoCoStore } from './stores/coco';
@@ -277,7 +277,7 @@ The `TaxonomyGraph` component can be used to visualize the taxonomy graph. The `
 
 <script setup lang="ts">
 import { NGrid, NGridItem } from 'naive-ui';
-import { FrameComponent, TaxonomyGraph } from 'coco-gui';
+import { CocoFrame, TaxonomyGraph } from 'coco-gui';
 </script>
 ```
 

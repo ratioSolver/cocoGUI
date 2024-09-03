@@ -138,15 +138,15 @@ export namespace timelines {
 
     export function get_timeline(timeline: any, atoms: Map<string, values.Atom>): Timeline<TimelineValue> {
         switch (timeline.type) {
-            case "solver":
+            case "Solver":
                 return new SolverTimeline(timeline.id, timeline.name, timeline.values.map((value: any) => { if (value.at) return { at: values.get_inf_rational(value.at), ...atoms.get(value.atom) }; else return { from: values.get_inf_rational(value.from), to: values.get_inf_rational(value.to), ...atoms.get(value.atom) }; }));
-            case "agent":
+            case "Agent":
                 return new AgentTimeline(timeline.id, timeline.name, timeline.values.map((value: any) => { if (value.at) return { at: values.get_inf_rational(value.at), ...atoms.get(value.atom) }; else return { from: values.get_inf_rational(value.from), to: values.get_inf_rational(value.to), ...atoms.get(value.atom) }; }));
-            case "state_variable":
+            case "StateVariable":
                 return new StateVariableTimeline(timeline.id, timeline.name, timeline.values.map((value: any) => { return { from: values.get_inf_rational(value.from), to: values.get_inf_rational(value.to), atoms: value.atoms.map((atom: any) => atoms.get(atom)) }; }));
-            case "reusable_resource":
+            case "ReusableResource":
                 return new ReusableResourceTimeline(timeline.id, timeline.name, values.get_inf_rational(timeline.capacity), timeline.values.map((value: any) => { return { from: values.get_inf_rational(value.from), to: values.get_inf_rational(value.to), atoms: value.atoms.map((atom: any) => atoms.get(atom)), usage: values.get_inf_rational(value.usage) }; }));
-            case "consumable_resource":
+            case "ConsumableResource":
                 return new ConsumableResourceTimeline(timeline.id, timeline.name, values.get_inf_rational(timeline.capacity), values.get_inf_rational(timeline.initial_amount), timeline.values.map((value: any) => { return { from: values.get_inf_rational(value.from), to: values.get_inf_rational(value.to), atoms: value.atoms.map((atom: any) => atoms.get(atom)), start: values.get_inf_rational(value.start), end: values.get_inf_rational(value.end) }; }));
             default:
                 throw new Error(`Unknown timeline type: ${timeline.type}`);
