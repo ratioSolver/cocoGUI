@@ -6,12 +6,13 @@ def init_db(url):
     # We initialize the knowledge base with the following types and rules:
     #
     # - User type with static properties
-    # - Kit type with dynamic properties
+    # - Chat type with dynamic properties
     # - Sensor type with dynamic properties
     # - rPPG Sensor type with dynamic properties
     # - WWS Sensor type with dynamic properties
     # - SWF Sensor type with dynamic properties
     # - Garmin Sensor type with dynamic properties
+    # - Tablet type with dynamic properties
     # - rPPG reactive rules
     # - WWS reactive rules
     # - SWF reactive rules
@@ -28,7 +29,9 @@ def init_db(url):
                                                                           'SpO2': {'type': 'integer', 'min': 0, 'max': 100},
                                                                           'Movement': {'type': 'symbol', 'values': ['Basso', 'Medio', 'Alto']},
                                                                           'SleepAwake': {'type': 'symbol', 'values': ['Awake', 'Sleep']},
-                                                                          'Fall': {'type': 'integer', 'min': 0, 'max': 1}}})
+                                                                          'Fall': {'type': 'integer', 'min': 0, 'max': 1},
+                                                                          'me': {'type': 'boolean'},
+                                                                          'text': {'type': 'string'}}})
     user_type = response.json()
     print(user_type)
 
@@ -76,6 +79,12 @@ def init_db(url):
     garmin_sensor_type = response.json()
     print(garmin_sensor_type)
 
+    # Create the Tablet type
+    response = requests.post(url + '/type', json={'name': 'Tablet', 'description': 'Tablet type',
+                                                  'static_properties': {'kit': {'type': 'item', 'type_id': kit_type['id']}},
+                                                  'dynamic_properties': {'me': {'type': 'boolean'},
+                                                                         'text': {'type': 'string'}}})
+
     # Create some reactive rules
     response = requests.post(url + '/reactive_rule', json={'name': 'rppg_rule_hr', 'content': '(defrule rppg_rule_hr (rPPG_has_HR (item_id ?item_id) (HR ?hr) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ HR) (create$ ?hr) ?timestamp))'})
     rppg_rule = response.json()
@@ -113,6 +122,12 @@ def init_db(url):
     response = requests.post(url + '/reactive_rule', json={'name': 'garmin_rule_movement', 'content': '(defrule garmin_rule_movement (Garmin_has_Movement (item_id ?item_id) (Movement ?movement) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ Movement) (create$ ?movement) ?timestamp))'})
     garmin_rule = response.json()
     print(garmin_rule)
+    response = requests.post(url + '/reactive_rule', json={'name': 'tablet_rule_me', 'content': '(defrule tablet_rule_me (Tablet_has_me (item_id ?item_id) (me ?me) (timestamp ?timestamp)) (Tablet_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ me) (create$ ?me) ?timestamp))'})
+    tablet_rule = response.json()
+    print(tablet_rule)
+    response = requests.post(url + '/reactive_rule', json={'name': 'tablet_rule_text', 'content': '(defrule tablet_rule_text (Tablet_has_text (item_id ?item_id) (text ?text) (timestamp ?timestamp)) (Tablet_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ text) (create$ ?text) ?timestamp))'})
+    tablet_rule = response.json()
+    print(tablet_rule)
 
     ####################################################################################################################
     #

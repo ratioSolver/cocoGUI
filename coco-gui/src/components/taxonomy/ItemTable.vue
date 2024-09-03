@@ -79,7 +79,7 @@ const type = computed<taxonomy.Type | undefined>(() => {
 
 const items = computed(() => {
   const items: PropertyRow[] = [];
-  if (type.value) {
+  if (type.value)
     for (const item of coco.KnowledgeBase.getInstance().items.values())
       if (item.type.is_instance_of(type.value)) {
         const row: PropertyRow = { 'item-name': item.name };
@@ -89,7 +89,6 @@ const items = computed(() => {
           row[prop] = item.value.data[prop];
         items.push(row);
       }
-  }
   return items;
 });
 </script>

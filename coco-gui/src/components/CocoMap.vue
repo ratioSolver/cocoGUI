@@ -7,7 +7,8 @@ import { onMounted, onUnmounted } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-const props = defineProps<{ map_id: string; }>();
+const props = withDefaults(defineProps<{ map_id: string; }>(), { map_id: 'map' });
+
 const emit = defineEmits<{ (event: 'created', value: L.Map): void; }>();
 
 let map: L.Map;

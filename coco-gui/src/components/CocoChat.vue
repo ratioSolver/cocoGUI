@@ -1,9 +1,11 @@
 <template>
   <n-card>
-    <n-list id="chat-list" style="max-height: calc(100vh - 190px);">
-      <n-list-item v-for="msg in props.messages" :key="msg.timestamp.getDate()"
-        :class="Object.hasOwn(msg.data, 'me') ? 'text-right' : 'text-left'">
-        <n-tag :type="Object.hasOwn(msg.data, 'me') ? 'primary' : 'default'">{{ msg.data.content }}</n-tag>
+    <n-list :id="props.chat_id" style="max-height: calc(100vh - 190px);">
+      <n-list-item v-for="msg in messages(props.item)" :key="msg.timestamp.getTime()"
+        :class="msg.me ? 'text-right' : 'text-left'">
+        <n-tag v-if="msg.text" :type="msg.me ? 'primary' : 'default'" round>
+          {{ msg.text }}
+        </n-tag>
       </n-list-item>
     </n-list>
     <template #action>
@@ -16,19 +18,35 @@
 <script setup lang="ts">
 import { NCard, NList, NListItem, NTag, NInput, NButton } from 'naive-ui';
 import { taxonomy } from '@/taxonomy';
-import { ref, nextTick } from 'vue';
+import { coco } from '@/coco';
+import { ref, watch } from 'vue';
 
-const props = defineProps<{ messages: taxonomy.Data[]; }>();
-const emit = defineEmits<{ (event: 'send', message: string): void; }>();
+const props = withDefaults(defineProps<{ item: taxonomy.Item; chat_id: string; }>(), { chat_id: 'chat' });
+
+const chat = ref(null)
 
 const message = ref('');
 
 const send_message = () => {
-  emit('send', message.value);
+  const data: Record<string, any> = {};
+  data.me = true;
+  data.text = message.value;
+  coco.KnowledgeBase.getInstance().publish(props.item, data);
+
   message.value = '';
-  nextTick(() => {
-    const chat_list = document.getElementById('chat-list')! as HTMLDivElement;
-    chat_list.scrollTop = chat_list.scrollHeight;
-  });
 };
+
+watch(() => props.item.values, () => (chat.value! as HTMLDivElement).scrollTop = (chat.value! as HTMLDivElement).scrollHeight);
+</script>
+
+<script lang="ts">
+function messages(item: taxonomy.Item) {
+  return item.values.filter((v: taxonomy.Data) => Object.keys(v.data).includes('text')).map((v: taxonomy.Data) => {
+    return {
+      timestamp: new Date(v.timestamp),
+      me: v.data.me,
+      text: v.data.text
+    };
+  });
+}
 </script>

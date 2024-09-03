@@ -2,9 +2,10 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import TypeView from '../views/TypeView.vue'
 import ItemView from '../views/ItemView.vue'
-import SolverView from '../views/SolverView.vue'
 import ReactiveRuleView from '../views/ReactiveRuleView.vue'
 import DeliberativeRuleView from '@/views/DeliberativeRuleView.vue'
+import SolverView from '../views/SolverView.vue'
+import ChatView from '@/views/ChatView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -25,11 +26,6 @@ const router = createRouter({
       component: ItemView
     },
     {
-      path: '/solver/:id',
-      name: 'solver',
-      component: SolverView
-    },
-    {
       path: '/reactive_rule/:id',
       name: 'reactive_rule',
       component: ReactiveRuleView
@@ -38,6 +34,16 @@ const router = createRouter({
       path: '/deliberative_rule/:id',
       name: 'deliberative_rule',
       component: DeliberativeRuleView
+    },
+    {
+      path: '/solver/:id',
+      name: 'solver',
+      component: SolverView
+    },
+    {
+      path: '/chat/:id',
+      name: 'chat',
+      component: ChatView
     }
   ]
 })
