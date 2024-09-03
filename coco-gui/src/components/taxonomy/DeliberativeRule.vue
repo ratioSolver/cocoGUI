@@ -1,13 +1,29 @@
 <template>
-  <n-card v-if="rule" :title="props.rule.name">
-    <pre v-html="hljs.highlight(props.rule.content, { language: 'riddle' })"></pre>
-  </n-card>
+  <n-grid v-if="rule" x-gap="12" y-gap="12" :cols="1" style="padding: 12px;">
+    <n-grid-item>
+      <n-input v-model:value="name" label="Name" required />
+    </n-grid-item>
+    <n-grid-item>
+      <pre v-html="formatted_content"></pre>
+    </n-grid-item>
+    <n-grid-item>
+      <n-input type="textarea" v-model:value="content" label="Content" placeholder="Enter rule content" round
+        clearable />
+    </n-grid-item>
+  </n-grid>
 </template>
 
 <script setup lang="ts">
 import { rule } from '@/rule';
+import { ref, watch } from 'vue';
+import { NGrid, NGridItem, NInput } from 'naive-ui';
 
 const props = defineProps<{ rule: rule.DeliberativeRule; }>();
+
+const name = ref<string>(props.rule.name);
+const content = ref<string>(props.rule.content);
+const formatted_content = ref<string>(hljs.highlight(content.value, { language: 'riddle' }).value);
+watch(content, () => formatted_content.value = hljs.highlight(content.value, { language: 'riddle' }).value);
 </script>
 
 <script lang="ts">

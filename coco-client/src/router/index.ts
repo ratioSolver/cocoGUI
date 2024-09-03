@@ -3,6 +3,8 @@ import HomeView from '../views/HomeView.vue'
 import TypeView from '../views/TypeView.vue'
 import ItemView from '../views/ItemView.vue'
 import SolverView from '../views/SolverView.vue'
+import ReactiveRuleView from '../views/ReactiveRuleView.vue'
+import DeliberativeRuleView from '@/views/DeliberativeRuleView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,6 +28,16 @@ const router = createRouter({
       path: '/solver/:id',
       name: 'solver',
       component: SolverView
+    },
+    {
+      path: '/reactive_rule/:id',
+      name: 'reactive_rule',
+      component: ReactiveRuleView
+    },
+    {
+      path: '/deliberative_rule/:id',
+      name: 'deliberative_rule',
+      component: DeliberativeRuleView
     }
   ]
 })

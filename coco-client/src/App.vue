@@ -90,7 +90,7 @@ function items_menu_options(items: Map<string, taxonomy.Item>): MenuOption[] {
 function reactive_rules_menu_options(rules: Map<string, rule.ReactiveRule>): MenuOption[] {
   return Array.from(rules.values()).map(rule => {
     return {
-      label: () => h(RouterLink, { to: { name: 'rule', params: { id: rule.id } } }, { default: () => rule.name }),
+      label: () => h(RouterLink, { to: { name: 'reactive_rule', params: { id: rule.id } } }, { default: () => rule.name }),
       key: rule.id,
       icon: () => h(Box20Regular),
     }
@@ -100,7 +100,7 @@ function reactive_rules_menu_options(rules: Map<string, rule.ReactiveRule>): Men
 function deliberative_rules_menu_options(rules: Map<string, rule.DeliberativeRule>): MenuOption[] {
   return Array.from(rules.values()).map(rule => {
     return {
-      label: () => h(RouterLink, { to: { name: 'rule', params: { id: rule.id } } }, { default: () => rule.name }),
+      label: () => h(RouterLink, { to: { name: 'deliberative_rule', params: { id: rule.id } } }, { default: () => rule.name }),
       key: rule.id,
       icon: () => h(Box20Regular),
     }
