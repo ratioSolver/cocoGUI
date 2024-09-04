@@ -17,6 +17,7 @@ def init_db(url):
     # - WWS reactive rules
     # - SWF reactive rules
     # - Garmin reactive rules
+    # - Tablet reactive rules
     #
     ####################################################################################################################
 
@@ -86,52 +87,31 @@ def init_db(url):
                                                                          'text': {'type': 'string'}}})
 
     # Create some reactive rules
-    response = requests.post(url + '/reactive_rule', json={'name': 'rppg_rule_hr', 'content': '(defrule rppg_rule_hr (rPPG_has_HR (item_id ?item_id) (HR ?hr) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ HR) (create$ ?hr) ?timestamp))'})
+    response = requests.post(url + '/reactive_rule', json={'name': 'rppg_rule', 'content': '(defrule rppg_rule (rPPG_has_HR (item_id ?rppg) (HR ?hr) (timestamp ?timestamp)) (rPPG_has_BR (item_id ?rppg) (BR ?br) (timestamp ?timestamp)) (rPPG_has_SpO2 (item_id ?rppg) (SpO2 ?spo2) (timestamp ?timestamp)) (Sensor_kit (item_id ?rppg) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ HR BR SpO2) (create$ ?hr ?br ?spo2) ?timestamp))'})
     rppg_rule = response.json()
     print(rppg_rule)
-    response = requests.post(url + '/reactive_rule', json={'name': 'rppg_rule_br', 'content': '(defrule rppg_rule_br (rPPG_has_BR (item_id ?item_id) (BR ?br) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ BR) (create$ ?br) ?timestamp))'})
-    rppg_rule = response.json()
-    print(rppg_rule)
-    response = requests.post(url + '/reactive_rule', json={'name': 'rppg_rule_spo2', 'content': '(defrule rppg_rule_spo2 (rPPG_has_SpO2 (item_id ?item_id) (SpO2 ?spo2) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ SpO2) (create$ ?spo2) ?timestamp))'})
-    rppg_rule = response.json()
-    print(rppg_rule)
-    response = requests.post(url + '/reactive_rule', json={'name': 'wws_rule_hr', 'content': '(defrule wws_rule_hr (WWS_has_HR (item_id ?item_id) (HR ?hr) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ HR) (create$ ?hr) ?timestamp))'})
+    response = requests.post(url + '/reactive_rule', json={'name': 'wws_rule', 'content': '(defrule wws_rule_hr (WWS_has_HR (item_id ?wws) (HR ?hr) (timestamp ?timestamp)) (WWS_has_BR (item_id ?wws) (BR ?br) (timestamp ?timestamp)) (WWS_has_Movement (item_id ?wws) (Movement ?movement) (timestamp ?timestamp)) (WWS_has_SleepAwake (item_id ?wws) (SleepAwake ?sleep_awake) (timestamp ?timestamp)) (WWS_has_Fall (item_id ?wws) (Fall ?fall) (timestamp ?timestamp)) (Sensor_kit (item_id ?wws) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ HR BR Movement SleepAwake Fall) (create$ ?hr ?br ?movement ?sleep_awake ?fall) ?timestamp))'})
     wws_rule = response.json()
     print(wws_rule)
-    response = requests.post(url + '/reactive_rule', json={'name': 'wws_rule_br', 'content': '(defrule wws_rule_br (WWS_has_BR (item_id ?item_id) (BR ?br) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ BR) (create$ ?br) ?timestamp))'})
-    wws_rule = response.json()
-    print(wws_rule)
-    response = requests.post(url + '/reactive_rule', json={'name': 'wws_rule_movement', 'content': '(defrule wws_rule_movement (WWS_has_Movement (item_id ?item_id) (Movement ?movement) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ Movement) (create$ ?movement) ?timestamp))'})
-    wws_rule = response.json()
-    print(wws_rule)
-    response = requests.post(url + '/reactive_rule', json={'name': 'wws_rule_sleep_awake', 'content': '(defrule wws_rule_sleep_awake (WWS_has_SleepAwake (item_id ?item_id) (SleepAwake ?sleep_awake) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ SleepAwake) (create$ ?sleep_awake) ?timestamp))'})
-    wws_rule = response.json()
-    print(wws_rule)
-    response = requests.post(url + '/reactive_rule', json={'name': 'wws_rule_fall', 'content': '(defrule wws_rule_fall (WWS_has_Fall (item_id ?item_id) (Fall ?fall) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ Fall) (create$ ?fall) ?timestamp))'})
-    wws_rule = response.json()
-    print(wws_rule)
-    response = requests.post(url + '/reactive_rule', json={'name': 'swf_rule_fall', 'content': '(defrule swf_rule_fall (SWF_has_Fall (item_id ?item_id) (Fall ?fall) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ Fall) (create$ ?fall) ?timestamp))'})
+    response = requests.post(url + '/reactive_rule', json={'name': 'swf_rule', 'content': '(defrule swf_rule (SWF_has_Fall (item_id ?swf) (Fall ?fall) (timestamp ?timestamp)) (Sensor_kit (item_id ?swf) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ Fall) (create$ ?fall) ?timestamp))'})
     swf_rule = response.json()
     print(swf_rule)
-    response = requests.post(url + '/reactive_rule', json={'name': 'garmin_rule_hr', 'content': '(defrule garmin_rule_hr (Garmin_has_HR (item_id ?item_id) (HR ?hr) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ HR) (create$ ?hr) ?timestamp))'})
+    response = requests.post(url + '/reactive_rule', json={'name': 'garmin_rule', 'content': '(defrule garmin_rule (Garmin_has_HR (item_id ?garmin) (HR ?hr) (timestamp ?timestamp)) (Garmin_has_BR (item_id ?garmin) (BR ?br) (timestamp ?timestamp)) (Garmin_has_Movement (item_id ?garmin) (Movement ?movement) (timestamp ?timestamp)) (Sensor_kit (item_id ?garmin) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ HR BR Movement) (create$ ?hr ?br ?movement) ?timestamp))'})
     garmin_rule = response.json()
     print(garmin_rule)
-    response = requests.post(url + '/reactive_rule', json={'name': 'garmin_rule_br', 'content': '(defrule garmin_rule_br (Garmin_has_BR (item_id ?item_id) (BR ?br) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ BR) (create$ ?br) ?timestamp))'})
-    garmin_rule = response.json()
-    print(garmin_rule)
-    response = requests.post(url + '/reactive_rule', json={'name': 'garmin_rule_movement', 'content': '(defrule garmin_rule_movement (Garmin_has_Movement (item_id ?item_id) (Movement ?movement) (timestamp ?timestamp)) (Sensor_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ Movement) (create$ ?movement) ?timestamp))'})
-    garmin_rule = response.json()
-    print(garmin_rule)
-    response = requests.post(url + '/reactive_rule', json={'name': 'tablet_rule_me', 'content': '(defrule tablet_rule_me (Tablet_has_me (item_id ?item_id) (me ?me) (timestamp ?timestamp)) (Tablet_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ me) (create$ ?me) ?timestamp))'})
+    response = requests.post(url + '/reactive_rule', json={'name': 'tablet_rule', 'content': '(defrule tablet_rule (Tablet_has_me (item_id ?tablet) (me TRUE) (timestamp ?timestamp)) (Tablet_has_text (item_id ?tablet) (text ?text) (timestamp ?timestamp)) (Tablet_kit (item_id ?tablet) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ me text) (create$ TRUE ?text) ?timestamp))'})
     tablet_rule = response.json()
     print(tablet_rule)
-    response = requests.post(url + '/reactive_rule', json={'name': 'tablet_rule_text', 'content': '(defrule tablet_rule_text (Tablet_has_text (item_id ?item_id) (text ?text) (timestamp ?timestamp)) (Tablet_kit (item_id ?item_id) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ text) (create$ ?text) ?timestamp))'})
-    tablet_rule = response.json()
-    print(tablet_rule)
+    response = requests.post(url + '/reactive_rule', json={'name': 'user_rule_true', 'content': '(defrule user_rule_true (User_has_me (item_id ?user) (me TRUE) (timestamp ?timestamp)) (User_has_text (item_id ?user) (text ?text) (timestamp ?timestamp)) => (compute_response ?user ?text))'})
+    user_rule = response.json()
+    print(user_rule)
+    response = requests.post(url + '/reactive_rule', json={'name': 'user_rule_false', 'content': '(defrule user_rule_false (User_has_me (item_id ?user) (me FALSE) (timestamp ?timestamp)) (User_has_text (item_id ?user) (text ?text) (timestamp ?timestamp)) (Tablet_kit (item_id ?tablet) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?tablet (create$ me text) (create$ FALSE ?text) ?timestamp))'})
+    user_rule = response.json()
+    print(user_rule)
 
     ####################################################################################################################
     #
-    # We create some users, kits and sensors
+    # We create some users, kits, sensors and tablets
     #
     ####################################################################################################################
 
@@ -165,7 +145,11 @@ def init_db(url):
     garmin1 = response.json()
     print(garmin1)
 
+    # Create some tablets
+    response = requests.post(url + '/item', json={'type': 'Tablet', 'name': 'tablet1', 'properties': {'kit': kit1['id']}})
+    tablet1 = response.json()
+    print(tablet1)
 
 if __name__ == '__main__':
-    url = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8080'
+    url = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8081'
     init_db(url)

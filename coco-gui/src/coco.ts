@@ -198,7 +198,7 @@ export namespace coco {
       console.debug('Publishing', item.name, data);
       fetch('http://' + location.host + '/data/' + item.id, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'content-type': 'application/json' },
         body: JSON.stringify(data)
       }).then(res => {
         if (!res.ok)
@@ -225,7 +225,7 @@ export namespace coco {
     load_data(item: taxonomy.Item, from = Date.now() - 1000 * 60 * 60 * 24 * 14, to = Date.now()) {
       fetch('http://' + location.host + '/data/' + item.id + '?' + new URLSearchParams({ from: from.toString(), to: to.toString() }), {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'content-type': 'application/json' }
       }).then(res => {
         if (res.ok)
           res.json().then(data => this.set_data(item, data));
