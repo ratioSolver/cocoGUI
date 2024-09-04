@@ -118,7 +118,7 @@ class ItemChart extends taxonomy.ItemListener {
           if (j > 0) // Update the end of the previous trace
             this.traces.get(par_name)![this.traces.get(par_name)!.length - 1].x[1] = this.vals_xs[j];
           const c_val = this.vals_ys.get(par_name)![j];
-          this.traces.get(par_name)!.push({ x: [this.vals_xs[j], this.vals_xs[j]], y: [1, 1], name: get_name(c_val, par), type: 'scatter', opacity: 0.7, mode: 'lines', line: { width: 30, color: get_color(c_val, par, c_colors) }, yaxis: this.y_axes.get(par_name) });
+          this.traces.get(par_name)!.push({ x: [this.vals_xs[j], this.vals_xs[j]], y: [1, 1], name: get_name(c_val, par), type: 'scatter', opacity: 0.7, mode: 'lines', line: { width: 30, color: par instanceof taxonomy.StringProperty ? undefined : get_color(c_val, par, c_colors) }, yaxis: this.y_axes.get(par_name) });
         }
       }
 
@@ -144,7 +144,7 @@ class ItemChart extends taxonomy.ItemListener {
       else if (par instanceof taxonomy.BooleanProperty || par instanceof taxonomy.StringProperty || par instanceof taxonomy.SymbolProperty || par instanceof taxonomy.ItemProperty) {
         if (this.traces.get(par_name)!.length > 0) // Update the end of the previous trace
           this.traces.get(par_name)![this.traces.get(par_name)!.length - 1].x[1] = value.timestamp;
-        this.traces.get(par_name)!.push({ x: [value.timestamp, value.timestamp], y: [1, 1], name: get_name(c_value, par), type: 'scatter', opacity: 0.7, mode: 'lines', line: { width: 30, color: get_color(c_value, par, this.colors.get(par_name)!) }, yaxis: this.y_axes.get(par_name) });
+        this.traces.get(par_name)!.push({ x: [value.timestamp, value.timestamp], y: [1, 1], name: get_name(c_value, par), type: 'scatter', opacity: 0.7, mode: 'lines', line: { width: 30, color: par instanceof taxonomy.StringProperty ? undefined : get_color(c_value, par, this.colors.get(par_name)!) }, yaxis: this.y_axes.get(par_name) });
       }
     }
     this.layout.datarevision = value.timestamp;
@@ -167,8 +167,10 @@ onUnmounted(() => {
 
 <script lang="ts">
 function get_name(val: any, prop: taxonomy.Property): string {
-  if (val)
-    if (prop instanceof taxonomy.SymbolProperty)
+  if (val !== null)
+    if (prop instanceof taxonomy.BooleanProperty)
+      return val ? 'true' : 'false';
+    else if (prop instanceof taxonomy.SymbolProperty)
       return prop.multiple ? val.join(', ') : val;
     else if (prop instanceof taxonomy.ItemProperty)
       return prop.multiple ? val.map((c: string) => coco.KnowledgeBase.getInstance().items.get(c)!.name).join(', ') : coco.KnowledgeBase.getInstance().items.get(val)!.name;
@@ -179,8 +181,10 @@ function get_name(val: any, prop: taxonomy.Property): string {
 }
 
 function get_color(val: any, prop: taxonomy.Property, colors: Map<string, string>): string | undefined {
-  if (val)
-    if (prop instanceof taxonomy.SymbolProperty || prop instanceof taxonomy.ItemProperty)
+  if (val !== null)
+    if (prop instanceof taxonomy.BooleanProperty)
+      return colors.get(val ? 'true' : 'false');
+    else if (prop instanceof taxonomy.SymbolProperty || prop instanceof taxonomy.ItemProperty)
       return prop.multiple ? undefined : colors.get(val);
     else
       return colors.get(val);

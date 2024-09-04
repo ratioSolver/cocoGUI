@@ -85,6 +85,8 @@ def init_db(url):
                                                   'static_properties': {'kit': {'type': 'item', 'type_id': kit_type['id']}},
                                                   'dynamic_properties': {'me': {'type': 'boolean'},
                                                                          'text': {'type': 'string'}}})
+    tablet_type = response.json()
+    print(tablet_type)
 
     # Create some reactive rules
     response = requests.post(url + '/reactive_rule', json={'name': 'rppg_rule', 'content': '(defrule rppg_rule (rPPG_has_HR (item_id ?rppg) (HR ?hr) (timestamp ?timestamp)) (rPPG_has_BR (item_id ?rppg) (BR ?br) (timestamp ?timestamp)) (rPPG_has_SpO2 (item_id ?rppg) (SpO2 ?spo2) (timestamp ?timestamp)) (Sensor_kit (item_id ?rppg) (kit ?kit)) (Kit_has_user (item_id ?kit) (user ?user)) => (add_data ?user (create$ HR BR SpO2) (create$ ?hr ?br ?spo2) ?timestamp))'})
@@ -146,7 +148,7 @@ def init_db(url):
     print(garmin1)
 
     # Create some tablets
-    response = requests.post(url + '/item', json={'type': 'Tablet', 'name': 'tablet1', 'properties': {'kit': kit1['id']}})
+    response = requests.post(url + '/item', json={'type': tablet_type['id'], 'name': 'tablet1', 'properties': {'kit': kit1['id']}})
     tablet1 = response.json()
     print(tablet1)
 
