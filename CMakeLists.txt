@@ -11,8 +11,6 @@ set(ENABLE_API ON CACHE BOOL "Enable CoCo API" FORCE)
 add_subdirectory(extern/coco)
 
 configure_file(.env.in ${CLIENT_DIR}/.env.local @ONLY)
-execute_process(COMMAND npm install WORKING_DIRECTORY ${CLIENT_DIR})
-execute_process(COMMAND npm run build WORKING_DIRECTORY ${CLIENT_DIR})
 
 add_executable(CoCoGUI src/coco_main.cpp)
 add_dependencies(CoCoGUI CoCo ratioNet)
