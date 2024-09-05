@@ -1,6 +1,6 @@
 <template>
   <n-card size="small" :title="props.title" :class="{ 'full-screen': maximized }"
-    header-style="background-color: #f0f2f5;" hoverable>
+    header-style="background-color: #fff5e6;" hoverable>
     <template #header-extra>
       <n-button size="small" icon-only @click="maximized = !maximized">
         <n-icon size="small" :component="maximized ? FullScreenMinimize24Regular : FullScreenMaximize20Regular" />

@@ -2,7 +2,7 @@
   <n-card>
     <n-list :id="props.chat_id" style="max-height: calc(100vh - 190px);">
       <n-list-item v-for="msg in messages(props.item)" :key="msg.timestamp.getTime()"
-        :class="msg.me ? 'text-right' : 'text-left'">
+        :align="msg.me ? 'right' : 'left'">
         <n-tag v-if="msg.text" :type="msg.me ? 'primary' : 'default'" round>
           {{ msg.text }}
         </n-tag>
@@ -10,7 +10,7 @@
     </n-list>
     <template #action>
       <n-input v-model:value="message" @keyup.enter="send_message" />
-      <n-button @click="send_message">Send</n-button>
+      <n-button type="primary" @click="send_message">Send</n-button>
     </template>
   </n-card>
 </template>
@@ -47,6 +47,6 @@ function messages(item: taxonomy.Item) {
       me: v.data.me,
       text: v.data.text
     };
-  });
+  }).reverse();
 }
 </script>

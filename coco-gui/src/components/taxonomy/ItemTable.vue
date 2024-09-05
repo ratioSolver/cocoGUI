@@ -16,7 +16,7 @@ import { computed, reactive } from 'vue';
 
 type PropertyRow = { [key: string]: any };
 
-const props = defineProps<{ type_name: string; }>();
+const props = defineProps<{ type_name: string; columns?: string[] }>();
 
 const columns = reactive<DataTableColumns<PropertyRow>>([]);
 const static_props = reactive<Map<string, taxonomy.Property>>(new Map());
@@ -29,10 +29,10 @@ const type = computed<taxonomy.Type | undefined>(() => {
       static_props.clear();
       dynamic_props.clear();
       for (const [name, prop] of taxonomy.static_properties(t))
-        if (!(prop instanceof taxonomy.JSONProperty))
+        if (!(prop instanceof taxonomy.JSONProperty) && (!props.columns || props.columns.includes(name)))
           static_props.set(name, prop);
       for (const [name, prop] of taxonomy.dynamic_properties(t))
-        if (!(prop instanceof taxonomy.JSONProperty))
+        if (!(prop instanceof taxonomy.JSONProperty) && (!props.columns || props.columns.includes(name)))
           dynamic_props.set(name, prop);
 
       if (dynamic_props.has('online')) {

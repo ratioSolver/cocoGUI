@@ -1,7 +1,7 @@
 <template>
   <n-config-provider :themeOverrides="themeOverrides">
     <n-layout class="coco-app">
-      <n-layout-header bordered style="background-color: lightgray;">
+      <n-layout-header bordered>
         <n-flex justify="space-between" style="align-items: center; height: 64px;">
           <n-flex style="align-items: center;">
             <n-button quaternary size="large">
@@ -43,6 +43,9 @@ const themeOverrides: GlobalThemeOverrides = {
     primaryColorHover: '#FF7F24',     // Slightly darker orange for hover
     primaryColorPressed: '#FF6A00',   // Even darker for pressed state
     primaryColorSuppl: '#FFA500',     // Lighter orange for supplementary elements
+  },
+  Layout: {
+    headerColor: '#F4E1D2',
   }
 }
 </script>

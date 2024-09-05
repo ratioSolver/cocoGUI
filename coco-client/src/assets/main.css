@@ -15,12 +15,6 @@ a,
   padding: 3px;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: #FF7F24;
-  }
-}
-
 @media (min-width: 1024px) {
   body {
     display: flex;
