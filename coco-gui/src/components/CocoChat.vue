@@ -1,7 +1,7 @@
 <template>
   <n-card>
     <n-list :id="props.chat_id" style="max-height: calc(100vh - 190px);">
-      <n-list-item v-for="msg in messages(props.item)" :key="msg.timestamp.getTime()"
+      <n-list-item v-for="msg in messages(props.item.values)" :key="msg.timestamp.getTime()"
         :align="msg.me ? 'right' : 'left'">
         <n-tag v-if="msg.text" :type="msg.me ? 'primary' : 'default'" round>
           {{ msg.text }}
@@ -21,7 +21,11 @@ import { taxonomy } from '@/taxonomy';
 import { coco } from '@/coco';
 import { ref, watch } from 'vue';
 
+const range = ref<[number, number]>([new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).getTime(), new Date().getTime()]);
+
 const props = withDefaults(defineProps<{ item: taxonomy.Item; chat_id: string; }>(), { chat_id: 'chat' });
+if (!props.item.values.length)
+  coco.KnowledgeBase.getInstance().load_data(props.item, range.value[0], range.value[1]);
 
 const chat = ref(null)
 
@@ -40,13 +44,13 @@ watch(() => props.item.values, () => (chat.value! as HTMLDivElement).scrollTop =
 </script>
 
 <script lang="ts">
-function messages(item: taxonomy.Item) {
-  return item.values.filter((v: taxonomy.Data) => Object.keys(v.data).includes('text')).map((v: taxonomy.Data) => {
+function messages(data: taxonomy.Data[]) {
+  return data.filter((v: taxonomy.Data) => Object.keys(v.data).includes('text')).map((v: taxonomy.Data) => {
     return {
       timestamp: new Date(v.timestamp),
       me: v.data.me,
       text: v.data.text
     };
-  }).reverse();
+  });
 }
 </script>

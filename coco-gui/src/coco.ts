@@ -96,9 +96,6 @@ export namespace coco {
         case 'updated_item':
           this.update_item(message);
           return true;
-        case 'new_value':
-          this.new_value(message);
-          return true;
         case 'deleted_item':
           this.remove_item(message);
           return true;
@@ -340,11 +337,6 @@ export namespace coco {
       this.listeners.forEach(listener => listener.item_updated(item));
     }
 
-    private new_value(new_data_message: any): void {
-      const item = this.items.get(new_data_message.item_id)!;
-      item.set_value({ timestamp: new Date(new_data_message.value.timestamp), data: new_data_message.value.data });
-    }
-
     private remove_item(removed_item_message: any): void {
       const removed_item_id = removed_item_message.id;
       if (!this.items.delete(removed_item_id))
@@ -366,11 +358,11 @@ export namespace coco {
 
     private add_data(add_data_message: any): void {
       const item = this.items.get(add_data_message.item_id)!;
-      const timestamp = new Date(add_data_message.timestamp);
+      const timestamp = new Date(add_data_message.value.timestamp);
       if (item.values.length > 0 && timestamp.getTime() == item.values[item.values.length - 1].timestamp.getTime())
-        item.values[item.values.length - 1].data = { ...item.values[item.values.length - 1].data, ...add_data_message.data };
+        item.values[item.values.length - 1].data = { ...item.values[item.values.length - 1].data, ...add_data_message.value.data };
       else
-        item.add_value({ timestamp: timestamp, data: add_data_message.data });
+        item.add_value({ timestamp: timestamp, data: add_data_message.value.data });
     }
 
     private set_reactive_rules(reactive_rules_message: any): void {
