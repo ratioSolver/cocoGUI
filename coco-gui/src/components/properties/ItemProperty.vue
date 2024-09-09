@@ -1,6 +1,6 @@
 <template>
   <n-select v-model:value="value" :placeholder="props.par.name" :multiple="props.par.multiple"
-    :options="Array.from(props.par.type.instances).map((v) => ({ value: v.id, label: v.name }))"
+    :options="Array.from(props.par.type.instances).map((v) => ({ value: v.id, label: v.get_name() }))"
     :disabled="props.disabled" clearable @update:value="(v: string | string[] | null) => emit('update', v)" />
 </template>
 

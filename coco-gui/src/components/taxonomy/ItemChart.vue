@@ -173,7 +173,7 @@ function get_name(val: any, prop: taxonomy.Property): string {
     else if (prop instanceof taxonomy.SymbolProperty)
       return prop.multiple ? val.join(', ') : val;
     else if (prop instanceof taxonomy.ItemProperty)
-      return prop.multiple ? val.map((c: string) => coco.KnowledgeBase.getInstance().items.get(c)!.name).join(', ') : coco.KnowledgeBase.getInstance().items.get(val)!.name;
+      return prop.multiple ? val.map((c: string) => coco.KnowledgeBase.getInstance().items.get(c)!.get_name()).join(', ') : coco.KnowledgeBase.getInstance().items.get(val)!.get_name();
     else
       return val;
   else

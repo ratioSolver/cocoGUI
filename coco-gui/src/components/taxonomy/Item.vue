@@ -1,25 +1,19 @@
 <template>
-  <n-grid v-if="item" x-gap="12" y-gap="12" :cols="3" style="padding: 12px;">
+  <n-grid v-if="item" x-gap="12" y-gap="12" style="padding: 12px;">
     <n-grid-item>
       <n-input v-model:value="item.id" label="ID" disabled />
     </n-grid-item>
-    <n-grid-item>
-      <n-input v-model:value="item.name" label="Name" required />
-    </n-grid-item>
-    <n-grid-item>
-      <n-input v-model:value="item.description" label="Description" required />
-    </n-grid-item>
-    <n-grid-item v-if="static_props.size" span="3">
+    <n-grid-item v-if="static_props.size">
       <h3>Properties</h3>
     </n-grid-item>
-    <n-grid-item v-if="static_props.size" span="3">
+    <n-grid-item v-if="static_props.size">
       <n-data-table :columns="columns"
         :data="Array.from(static_props).map(([name, prop]) => ({ name, property: prop }))" />
     </n-grid-item>
-    <n-grid-item span="3">
+    <n-grid-item>
       <item-chart :item="item" :key="item.id" />
     </n-grid-item>
-    <n-grid-item span="3">
+    <n-grid-item>
       <item-publisher :item="item" :key="item.id" />
     </n-grid-item>
   </n-grid>

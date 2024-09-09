@@ -4,7 +4,7 @@
       <template #prefix>
         <n-icon size="medium" :component="Circle20Regular" />
       </template>
-      <n-thing :title="item.name" :description="item.description" />
+      <n-thing :title="item.get_name()" />
     </n-list-item>
   </router-link>
 </template>

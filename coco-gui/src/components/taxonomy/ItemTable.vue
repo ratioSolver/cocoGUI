@@ -82,7 +82,7 @@ const items = computed(() => {
   if (type.value)
     for (const item of coco.KnowledgeBase.getInstance().items.values())
       if (item.type.is_instance_of(type.value)) {
-        const row: PropertyRow = { 'item-name': item.name };
+        const row: PropertyRow = {};
         for (const prop of static_props.keys())
           row[prop] = item.properties[prop];
         for (const prop of dynamic_props.keys())

@@ -106,7 +106,7 @@ export function property_v(prop: taxonomy.Property, value: any) {
       return '';
   } else if (prop instanceof taxonomy.ItemProperty) {
     if (value)
-      return prop.multiple ? value.map((v: string) => coco.KnowledgeBase.getInstance().items.get(v)?.name).join(', ') : coco.KnowledgeBase.getInstance().items.get(value)?.name;
+      return prop.multiple ? value.map((v: string) => coco.KnowledgeBase.getInstance().items.get(v)?.get_name()).join(', ') : coco.KnowledgeBase.getInstance().items.get(value)?.get_name();
     else
       return '';
   } else {

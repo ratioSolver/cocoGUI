@@ -192,7 +192,7 @@ export namespace coco {
     }
 
     publish(item: taxonomy.Item, data: Record<string, any>) {
-      console.debug('Publishing', item.name, data);
+      console.debug('Publishing', item.id, data);
       fetch('http://' + location.host + '/data/' + item.id, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -311,7 +311,7 @@ export namespace coco {
       this.items.clear();
       for (const item_message of items) {
         const type = this.types.get(item_message.type)!;
-        const item = new taxonomy.Item(item_message.id, type, item_message.name, item_message.description, item_message.properties, { timestamp: item_message.value.timestamp, data: item_message.value.data });
+        const item = new taxonomy.Item(item_message.id, type, item_message.properties, { timestamp: item_message.value.timestamp, data: item_message.value.data });
         this.items.set(item.id, item);
       }
       this.listeners.forEach(listener => listener.items(Array.from(this.items.values())));
@@ -320,7 +320,7 @@ export namespace coco {
     private add_item(created_item_message: any): void {
       const new_item = created_item_message.new_item;
       const type = this.types.get(new_item.type)!;
-      const item = new taxonomy.Item(new_item.id, type, new_item.name, new_item.description, new_item.properties, { timestamp: new_item.value.timestamp, data: new_item.value.data });
+      const item = new taxonomy.Item(new_item.id, type, new_item.properties, { timestamp: new_item.value.timestamp, data: new_item.value.data });
       this.items.set(item.id, item);
       this.listeners.forEach(listener => listener.item_added(item));
     }
@@ -328,10 +328,6 @@ export namespace coco {
     private update_item(updated_item_message: any): void {
       const updated_item = updated_item_message.updated_item;
       const item = this.items.get(updated_item.id)!;
-      if (updated_item.name)
-        item.name = updated_item.name;
-      if (updated_item.description)
-        item.description = updated_item.description;
       if (updated_item.properties)
         item.properties = updated_item.properties;
       this.listeners.forEach(listener => listener.item_updated(item));

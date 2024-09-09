@@ -340,8 +340,6 @@ export namespace taxonomy {
 
         id: string;
         type: Type;
-        name: string;
-        description: string;
         properties: Record<string, any>; // The static properties of the item.
         values: Data[]; // The historical dynamic properties of the item.
         value: Data; // The dynamic properties of the item.
@@ -352,16 +350,12 @@ export namespace taxonomy {
          *
          * @param id The ID of the item.
          * @param type The type of the item.
-         * @param name The name of the item.
-         * @param description The description of the item.
          * @param properties The properties of the item.
          * @param value The value of the item.
          */
-        constructor(id: string, type: Type, name: string, description: string, properties: Record<string, any>, value: Data) {
+        constructor(id: string, type: Type, properties: Record<string, any>, value: Data) {
             this.id = id;
             this.type = type;
-            this.name = name;
-            this.description = description;
             this.properties = properties;
             this.values = [];
             this.listeners = new Set();
@@ -374,6 +368,17 @@ export namespace taxonomy {
                 for (const parent of t.parents.values())
                     q.push(parent);
             }
+        }
+
+        /**
+         * Retrieves the name of the item.
+         * If the "name" property is defined, it returns the value of the property.
+         * Otherwise, it returns the ID of the item.
+         * 
+         * @returns The name of the item.
+         */
+        get_name(): string {
+            return this.properties["name"] || this.id;
         }
 
         /**
