@@ -118,37 +118,37 @@ def init_db(url):
     ####################################################################################################################
 
     # Create some users
-    response = requests.post(url + '/item', json={'type': user_type['id'], 'name': 'alice@ageit.it', 'properties': {'name': 'Alice', 'gender': 'F'}})
+    response = requests.post(url + '/item', json={'type': user_type['id'], 'properties': {'name': 'Alice', 'gender': 'F'}})
     alice = response.json()
     print(alice)
-    response = requests.post(url + '/item', json={'type': user_type['id'], 'name': 'bob@ageit.it', 'properties': {'name': 'Bob', 'gender': 'M'}})
+    response = requests.post(url + '/item', json={'type': user_type['id'], 'properties': {'name': 'Bob', 'gender': 'M'}})
     bob = response.json()
     print(bob)
 
     # Create some kits
-    response = requests.post(url + '/item', json={'type': kit_type['id'], 'name': 'kit1'})
+    response = requests.post(url + '/item', json={'type': kit_type['id'], 'properties': {'name': 'kit1'}})
     kit1 = response.json()
     print(kit1)
-    response = requests.post(url + '/item', json={'type': kit_type['id'], 'name': 'kit2'})
+    response = requests.post(url + '/item', json={'type': kit_type['id'], 'properties': {'name': 'kit2'}})
     kit2 = response.json()
     print(kit2)
 
     # Create some sensors
-    response = requests.post(url + '/item', json={'type': rppg_sensor_type['id'], 'name': 'rppg1', 'properties': {'kit': kit1['id']}})
+    response = requests.post(url + '/item', json={'type': rppg_sensor_type['id'], 'properties': {'name': 'rppg1', 'kit': kit1['id']}})
     rppg1 = response.json()
     print(rppg1)
-    response = requests.post(url + '/item', json={'type': wws_sensor_type['id'], 'name': 'wws1', 'properties': {'kit': kit1['id']}})
+    response = requests.post(url + '/item', json={'type': wws_sensor_type['id'], 'properties': {'name': 'wws1', 'kit': kit1['id']}})
     wws1 = response.json()
     print(wws1)
-    response = requests.post(url + '/item', json={'type': swf_sensor_type['id'], 'name': 'swf1', 'properties': {'kit': kit2['id']}})
+    response = requests.post(url + '/item', json={'type': swf_sensor_type['id'], 'properties': {'name': 'swf1', 'kit': kit2['id']}})
     swf1 = response.json()
     print(swf1)
-    response = requests.post(url + '/item', json={'type': garmin_sensor_type['id'], 'name': 'garmin1', 'properties': {'kit': kit2['id']}})
+    response = requests.post(url + '/item', json={'type': garmin_sensor_type['id'], 'properties': {'name': 'garmin1', 'kit': kit2['id']}})
     garmin1 = response.json()
     print(garmin1)
 
     # Create some tablets
-    response = requests.post(url + '/item', json={'type': tablet_type['id'], 'name': 'tablet1', 'properties': {'kit': kit1['id']}})
+    response = requests.post(url + '/item', json={'type': tablet_type['id'], 'properties': {'name': 'tablet1', 'kit': kit1['id']}})
     tablet1 = response.json()
     print(tablet1)
 
