@@ -1,6 +1,6 @@
 <template>
   <n-card>
-    <n-list :id="props.chat_id" style="max-height: calc(100vh - 190px);">
+    <n-list :id="props.chat_id" style="max-height: calc(100vh - 190px);" ref="chat" :show-divider="false">
       <n-list-item v-for="msg in messages(props.item.values)" :key="msg.timestamp.getTime()"
         :align="msg.me ? 'right' : 'left'">
         <n-tag v-if="msg.text" :type="msg.me ? 'primary' : 'default'" round>
