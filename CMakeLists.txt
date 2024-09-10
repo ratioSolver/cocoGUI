@@ -7,6 +7,7 @@ enable_testing()
 
 set(CLIENT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/coco-client CACHE STRING "Client directory" FORCE)
 set(ENABLE_API ON CACHE BOOL "Enable CoCo API" FORCE)
+set(ENABLE_TRANSFORMER ON CACHE BOOL "Enable CoCo transformer" FORCE)
 
 add_subdirectory(extern/coco)
 

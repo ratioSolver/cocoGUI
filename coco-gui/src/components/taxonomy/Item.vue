@@ -1,5 +1,5 @@
 <template>
-  <n-grid v-if="item" x-gap="12" y-gap="12" style="padding: 12px;">
+  <n-grid v-if="item" y-gap="12" :cols="1" style="padding: 12px;">
     <n-grid-item>
       <n-input v-model:value="item.id" label="ID" disabled />
     </n-grid-item>

@@ -38,13 +38,15 @@ def init_db(url):
 
     # Create the Kit type
     response = requests.post(url + '/type', json={'name': 'Kit', 'description': 'Kit type',
+                                                  'static_properties': {'name': {'type': 'string'}},
                                                   'dynamic_properties': {'user': {'type': 'item', 'type_id': user_type['id']}}})
     kit_type = response.json()
     print(kit_type)
 
     # Create the Sensor type
     response = requests.post(url + '/type', json={'name': 'Sensor', 'description': 'Sensor type',
-                                                  'static_properties': {'kit': {'type': 'item', 'type_id': kit_type['id']}}})
+                                                  'static_properties': {'name': {'type': 'string'},
+                                                                        'kit': {'type': 'item', 'type_id': kit_type['id']}}})
     sensor_type = response.json()
     print(sensor_type)
 
@@ -82,7 +84,8 @@ def init_db(url):
 
     # Create the Tablet type
     response = requests.post(url + '/type', json={'name': 'Tablet', 'description': 'Tablet type',
-                                                  'static_properties': {'kit': {'type': 'item', 'type_id': kit_type['id']}},
+                                                  'static_properties': {'name': {'type': 'string'},
+                                                                        'kit': {'type': 'item', 'type_id': kit_type['id']}},
                                                   'dynamic_properties': {'me': {'type': 'boolean'},
                                                                          'text': {'type': 'string'}}})
     tablet_type = response.json()
