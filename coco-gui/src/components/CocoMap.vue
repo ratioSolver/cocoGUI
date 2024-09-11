@@ -1,9 +1,17 @@
 <template>
-  <div :id="props.map_id" class="map-container"></div>
+  <n-grid y-gap="12" :cols="1" class="map-container" style="grid-template-rows: 1fr auto;">
+    <n-grid-item>
+      <div :id="props.map_id" class="map-container"></div>
+    </n-grid-item>
+    <n-grid-item v-if="show_slider" style="grid-row-end: -1;">
+      <n-slider v-model:value="time" />
+    </n-grid-item>
+  </n-grid>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from 'vue';
+import { NGrid, NGridItem, NSlider } from 'naive-ui';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { taxonomy } from '@/taxonomy';
@@ -16,6 +24,8 @@ const emit = defineEmits<{ (event: 'created', value: L.Map): void; }>();
 let map: L.Map;
 let ro: ResizeObserver;
 const layers: Map<taxonomy.Type, L.Layer> = new Map();
+const show_slider = ref(false);
+const time = ref(0);
 
 onMounted(() => {
   map = L.map(props.map_id);
@@ -39,10 +49,38 @@ watch(() => props.layers, (new_layers, old_layers) => {
   for (const l of new_layers)
     if (!old_layers.includes(l)) {
       console.debug('Adding layer', l);
+      const options: L.GeoJSONOptions = {
+        style: (feature) => {
+          const style: L.PathOptions = {};
+          if (l.static_properties.has('color') || l.dynamic_properties.has('color'))
+            style.color = feature?.properties['color'];
+          if (l.static_properties.has('fillColor') || l.dynamic_properties.has('fillColor'))
+            style.fillColor = feature?.properties['fillColor'];
+          if (l.static_properties.has('weight') || l.dynamic_properties.has('weight'))
+            style.weight = feature?.properties['weight'];
+          return style;
+        },
+        onEachFeature: (feature, layer) => {
+          let content = '';
+          for (const [key, value] of Object.entries(feature.properties))
+            content += `<b>${key}</b>: ${value}<br>`;
+          layer.bindPopup(content);
+        },
+        pointToLayer: (feature, latlng) => {
+          const options: L.CircleMarkerOptions = { radius: 5 };
+          if (l.static_properties.has('radius') || l.dynamic_properties.has('radius'))
+            options.radius = feature?.properties['radius'];
+          if (l.static_properties.has('color') || l.dynamic_properties.has('color'))
+            options.color = feature?.properties['color'];
+          if (l.static_properties.has('fillColor') || l.dynamic_properties.has('fillColor'))
+            options.fillColor = feature?.properties['fillColor'];
+          return L.circle(latlng, options);
+        }
+      };
       coco.KnowledgeBase.getInstance().get_items(l).then(items => {
-        const geo_json: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
-        for (const item of items)
-          if (item.properties.hasOwnProperty('geometry')) {
+        if (l.static_properties.has('geometry')) {
+          const geo_json: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
+          for (const item of items) {
             const feature: GeoJSON.Feature = {
               type: 'Feature',
               geometry: item.properties.geometry,
@@ -53,39 +91,9 @@ watch(() => props.layers, (new_layers, old_layers) => {
                 feature.properties![key] = value;
             geo_json.features.push(feature);
           }
-        const options: L.GeoJSONOptions = {
-          style: (feature) => {
-            const style: L.PathOptions = {};
-            if (l.static_properties.hasOwnProperty('color'))
-              style.color = feature?.properties['color'];
-            if (l.static_properties.hasOwnProperty('fillColor'))
-              style.fillColor = feature?.properties['fillColor'];
-            if (l.static_properties.hasOwnProperty('fillOpacity'))
-              style.fillOpacity = feature?.properties['fillOpacity'];
-            if (l.static_properties.hasOwnProperty('weight'))
-              style.weight = feature?.properties['weight'];
-            return style;
-          },
-          onEachFeature: (feature, layer) => {
-            let content = '';
-            for (const [key, value] of Object.entries(feature.properties))
-              content += `<b>${key}</b>: ${value}<br>`;
-            layer.bindPopup(content);
-          },
-          pointToLayer: (feature, latlng) => {
-            const options: L.CircleMarkerOptions = { radius: 5 };
-            if (l.static_properties.hasOwnProperty('radius'))
-              options.radius = feature?.properties['radius'];
-            if (l.static_properties.hasOwnProperty('color'))
-              options.color = feature?.properties['color'];
-            if (l.static_properties.hasOwnProperty('fillColor'))
-              options.fillColor = feature?.properties['fillColor'];
-            if (l.static_properties.hasOwnProperty('fillOpacity'))
-              options.fillOpacity = feature?.properties['fillOpacity'];
-            return L.circle(latlng, options);
-          }
-        };
-        layers.set(l, L.geoJSON(geo_json, options).addTo(map));
+          layers.set(l, L.geoJSON(geo_json, options).addTo(map));
+        } else if (l.dynamic_properties.has('geometry')) {
+        }
       });
     }
 });
