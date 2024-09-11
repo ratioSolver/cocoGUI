@@ -21,9 +21,28 @@ const props = withDefaults(defineProps<{ map_id: string; layers: taxonomy.Type[]
 
 const emit = defineEmits<{ (event: 'created', value: L.Map): void; }>();
 
+class MapItemListener extends taxonomy.ItemListener {
+
+  layers: { timestamp: number, data: GeoJSON.Feature }[] = [];
+
+  constructor(private readonly item: taxonomy.Item) {
+    super();
+  }
+
+  values(values: taxonomy.Data[]): void {
+    for (const val of values)
+      this.layers.push({ timestamp: val.timestamp.getTime(), data: create_feature(val.data) });
+  }
+
+  new_value(value: taxonomy.Data): void {
+    this.layers.push({ timestamp: value.timestamp.getTime(), data: create_feature(value.data) });
+  }
+}
+
 let map: L.Map;
 let ro: ResizeObserver;
 const layers: Map<taxonomy.Type, L.Layer> = new Map();
+const listeners: Map<taxonomy.Item, MapItemListener> = new Map();
 const show_slider = ref(false);
 const time = ref(0);
 
@@ -80,23 +99,28 @@ watch(() => props.layers, (new_layers, old_layers) => {
       coco.KnowledgeBase.getInstance().get_items(l).then(items => {
         if (l.static_properties.has('geometry')) {
           const geo_json: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
-          for (const item of items) {
-            const feature: GeoJSON.Feature = {
-              type: 'Feature',
-              geometry: item.properties.geometry,
-              properties: {}
-            };
-            for (const [key, value] of Object.entries(item.properties))
-              if (key !== 'geometry' && key !== 'color' && key !== 'fillColor' && key !== 'fillOpacity' && key !== 'weight')
-                feature.properties![key] = value;
-            geo_json.features.push(feature);
-          }
+          for (const item of items)
+            geo_json.features.push(create_feature(item.properties));
           layers.set(l, L.geoJSON(geo_json, options).addTo(map));
         } else if (l.dynamic_properties.has('geometry')) {
+          show_slider.value = true;
+          for (const item of items) {
+            const listener = new MapItemListener(item);
+            listeners.set(item, listener);
+            item.add_listener(listener);
+          }
         }
       });
     }
 });
+
+function create_feature(data: Record<string, any>): GeoJSON.Feature {
+  const feature: GeoJSON.Feature = { type: 'Feature', geometry: data.geometry, properties: {} };
+  for (const [key, value] of Object.entries(data))
+    if (key !== 'geometry' && key !== 'color' && key !== 'fillColor' && key !== 'fillOpacity' && key !== 'weight')
+      feature.properties![key] = value;
+  return feature;
+}
 </script>
 
 <style scoped>
