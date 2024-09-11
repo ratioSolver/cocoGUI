@@ -16,7 +16,7 @@ import { computed, reactive } from 'vue';
 
 type PropertyRow = { [key: string]: any };
 
-const props = defineProps<{ type_name: string; columns?: string[] }>();
+const props = defineProps<{ type_name: string; columns?: Map<string, string> }>();
 
 const columns = reactive<DataTableColumns<PropertyRow>>([]);
 const static_props = reactive<Map<string, taxonomy.Property>>(new Map());
@@ -29,15 +29,15 @@ const type = computed<taxonomy.Type | undefined>(() => {
       static_props.clear();
       dynamic_props.clear();
       for (const [name, prop] of taxonomy.static_properties(t))
-        if (!(prop instanceof taxonomy.JSONProperty) && (!props.columns || props.columns.includes(name)))
+        if (!(prop instanceof taxonomy.JSONProperty) && (!props.columns || props.columns.has(name)))
           static_props.set(name, prop);
       for (const [name, prop] of taxonomy.dynamic_properties(t))
-        if (!(prop instanceof taxonomy.JSONProperty) && (!props.columns || props.columns.includes(name)))
+        if (!(prop instanceof taxonomy.JSONProperty) && (!props.columns || props.columns.has(name)))
           dynamic_props.set(name, prop);
 
       if (dynamic_props.has('online')) {
         columns.push({
-          title: 'Online',
+          title: props.columns ? props.columns.get('online')! : 'online',
           key: 'online',
           width: `${100 / (static_props.size + dynamic_props.size + 1)}%`, // Distribute width evenly
           render(row) {
@@ -46,14 +46,9 @@ const type = computed<taxonomy.Type | undefined>(() => {
         });
         dynamic_props.delete('online');
       }
-      columns.push({
-        title: 'Name',
-        key: 'item-name',
-        width: `${100 / (static_props.size + dynamic_props.size + 1)}%`, // Distribute width evenly
-      });
       for (const [name, prop] of static_props) {
         columns.push({
-          title: name,
+          title: props.columns ? props.columns.get(name)! : name,
           key: name,
           width: `${100 / (static_props.size + dynamic_props.size + 1)}%`, // Distribute width evenly
           render(row) {
@@ -63,7 +58,7 @@ const type = computed<taxonomy.Type | undefined>(() => {
       }
       for (const [name, prop] of dynamic_props) {
         columns.push({
-          title: name,
+          title: props.columns ? props.columns.get(name)! : name,
           key: name,
           width: `${100 / (static_props.size + dynamic_props.size + 1)}%`, // Distribute width evenly
           render(row) {

@@ -64,7 +64,7 @@ class ItemChart extends taxonomy.ItemListener {
         else if (this.vals_ys.get(par_name)!.length > 0)
           this.vals_ys.get(par_name)!.push(this.vals_ys.get(par_name)![this.vals_ys.get(par_name)!.length - 1]);
         else
-          this.vals_ys.get(par_name)!.push(par.default_value);
+          this.vals_ys.get(par_name)!.push(undefined);
     }
 
     let i = 1;
@@ -118,7 +118,7 @@ class ItemChart extends taxonomy.ItemListener {
           if (j > 0) // Update the end of the previous trace
             this.traces.get(par_name)![this.traces.get(par_name)!.length - 1].x[1] = this.vals_xs[j];
           const c_val = this.vals_ys.get(par_name)![j];
-          this.traces.get(par_name)!.push({ x: [this.vals_xs[j], this.vals_xs[j]], y: [1, 1], name: get_name(c_val, par), type: 'scatter', opacity: 0.7, mode: 'lines', line: { width: 30, color: par instanceof taxonomy.StringProperty ? undefined : get_color(c_val, par, c_colors) }, yaxis: this.y_axes.get(par_name) });
+          this.traces.get(par_name)!.push({ x: [this.vals_xs[j], this.vals_xs[j]], y: [1, 1], name: get_name(c_val, par), type: 'scatter', opacity: 0.7, mode: 'lines', line: { width: 30, color: get_color(c_val, par, c_colors) }, yaxis: this.y_axes.get(par_name) });
         }
       }
 
@@ -138,13 +138,13 @@ class ItemChart extends taxonomy.ItemListener {
       else if (this.vals_ys.get(par_name)!.length > 0)
         c_value = this.vals_ys.get(par_name)![this.vals_ys.get(par_name)!.length - 1];
       else
-        c_value = par.default_value;
+        c_value = undefined;
       if (par instanceof taxonomy.RealProperty || par instanceof taxonomy.IntegerProperty)
         this.traces.get(par_name)![0].y.push(c_value);
       else if (par instanceof taxonomy.BooleanProperty || par instanceof taxonomy.StringProperty || par instanceof taxonomy.SymbolProperty || par instanceof taxonomy.ItemProperty) {
         if (this.traces.get(par_name)!.length > 0) // Update the end of the previous trace
           this.traces.get(par_name)![this.traces.get(par_name)!.length - 1].x[1] = value.timestamp;
-        this.traces.get(par_name)!.push({ x: [value.timestamp, value.timestamp], y: [1, 1], name: get_name(c_value, par), type: 'scatter', opacity: 0.7, mode: 'lines', line: { width: 30, color: par instanceof taxonomy.StringProperty ? undefined : get_color(c_value, par, this.colors.get(par_name)!) }, yaxis: this.y_axes.get(par_name) });
+        this.traces.get(par_name)!.push({ x: [value.timestamp, value.timestamp], y: [1, 1], name: get_name(c_value, par), type: 'scatter', opacity: 0.7, mode: 'lines', line: { width: 30, color: get_color(c_value, par, this.colors.get(par_name)!) }, yaxis: this.y_axes.get(par_name) });
       }
     }
     this.layout.datarevision = value.timestamp;
@@ -167,7 +167,7 @@ onUnmounted(() => {
 
 <script lang="ts">
 function get_name(val: any, prop: taxonomy.Property): string {
-  if (val !== null)
+  if (val)
     if (prop instanceof taxonomy.BooleanProperty)
       return val ? 'true' : 'false';
     else if (prop instanceof taxonomy.SymbolProperty)
@@ -181,11 +181,13 @@ function get_name(val: any, prop: taxonomy.Property): string {
 }
 
 function get_color(val: any, prop: taxonomy.Property, colors: Map<string, string>): string | undefined {
-  if (val !== null)
+  if (val)
     if (prop instanceof taxonomy.BooleanProperty)
       return colors.get(val ? 'true' : 'false');
     else if (prop instanceof taxonomy.SymbolProperty || prop instanceof taxonomy.ItemProperty)
       return prop.multiple ? undefined : colors.get(val);
+    else if (prop instanceof taxonomy.StringProperty)
+      return val.length ? undefined : 'rgba(0, 0, 0, 0)';
     else
       return colors.get(val);
   else

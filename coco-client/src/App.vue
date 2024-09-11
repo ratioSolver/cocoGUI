@@ -41,7 +41,7 @@ function types_menu_options(types: Map<string, taxonomy.Type>): MenuOption[] {
   return Array.from(types.values()).map(type => {
     return {
       label: () => h(RouterLink, { to: { name: 'type', params: { id: type.id } } }, { default: () => type.name }),
-      key: type.id,
+      key: 'tp-' + type.id,
       icon: () => h(Box20Regular),
     }
   });
@@ -82,7 +82,7 @@ function items_menu_options(items: Map<string, taxonomy.Item>): MenuOption[] {
   return Array.from(items.values()).map(item => {
     return {
       label: () => h(RouterLink, { to: { name: 'item', params: { id: item.id } } }, { default: () => item.get_name() }),
-      key: item.id,
+      key: 'itm-' + item.id,
       icon: () => h(Circle20Regular),
     }
   });
@@ -92,7 +92,7 @@ function reactive_rules_menu_options(rules: Map<string, rule.ReactiveRule>): Men
   return Array.from(rules.values()).map(rule => {
     return {
       label: () => h(RouterLink, { to: { name: 'reactive_rule', params: { id: rule.id } } }, { default: () => rule.name }),
-      key: rule.id,
+      key: 'rr-' + rule.id,
       icon: () => h(Box20Regular),
     }
   });
@@ -102,7 +102,7 @@ function deliberative_rules_menu_options(rules: Map<string, rule.DeliberativeRul
   return Array.from(rules.values()).map(rule => {
     return {
       label: () => h(RouterLink, { to: { name: 'deliberative_rule', params: { id: rule.id } } }, { default: () => rule.name }),
-      key: rule.id,
+      key: 'dr-' + rule.id,
       icon: () => h(Box20Regular),
     }
   });
@@ -122,7 +122,7 @@ function solvers_menu_options(solvers: Map<number, solver.Solver>): MenuOption[]
     });
     return {
       label: () => h(RouterLink, { to: { name: 'solver', params: { id: slv.id } } }, { default: () => slv.name }),
-      key: slv.id,
+      key: 'slv-' + slv.id,
       icon: () => h(icn.value)
     }
   });
@@ -132,7 +132,7 @@ function users_menu_options(items: Map<string, taxonomy.Item>): MenuOption[] {
   return Array.from(items.values()).filter(item => item.type.name == 'User').map(item => {
     return {
       label: () => h(RouterLink, { to: { name: 'chat', params: { id: item.id } } }, { default: () => item.get_name() }),
-      key: item.id,
+      key: 'chat-' + item.id,
       icon: () => h(Circle20Regular),
     }
   });
