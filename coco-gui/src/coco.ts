@@ -191,6 +191,12 @@ export namespace coco {
       }
     }
 
+    /**
+     * Publishes an item with the provided data.
+     * 
+     * @param item - The item to be published.
+     * @param data - The data to be published.
+     */
     publish(item: taxonomy.Item, data: Record<string, any>) {
       console.debug('Publishing', item.id, data);
       fetch('http://' + location.host + '/data/' + item.id, {
@@ -203,6 +209,11 @@ export namespace coco {
       });
     }
 
+    /**
+     * Connects to the CoCo server using WebSocket.
+     * 
+     * @param timeout The timeout value in milliseconds for reconnecting to the server if the connection is closed. Default is 5000.
+     */
     connect(timeout = 5000) {
       this.socket = new WebSocket('ws://' + location.host + '/coco');
       this.socket.onopen = () => {
@@ -219,6 +230,13 @@ export namespace coco {
       };
     }
 
+    /**
+     * Loads data for the specified item within a given time range.
+     * 
+     * @param item - The item for which to load data.
+     * @param from - The start time of the data range in milliseconds. Defaults to 14 days ago.
+     * @param to - The end time of the data range in milliseconds. Defaults to the current time.
+     */
     load_data(item: taxonomy.Item, from = Date.now() - 1000 * 60 * 60 * 24 * 14, to = Date.now()) {
       fetch('http://' + location.host + '/data/' + item.id + '?' + new URLSearchParams({ from: from.toString(), to: to.toString() }), {
         method: 'GET',
@@ -229,6 +247,31 @@ export namespace coco {
         else
           res.json().then(data => alert(data.message)).catch(err => console.error(err));
       });
+    }
+
+    /**
+     * Retrieves items of a specific type from the server.
+     * 
+     * @param type - The type of items to retrieve.
+     * @returns A promise that resolves to an array of taxonomy items.
+     * @throws An error if the server response is not successful.
+     */
+    async get_items(type: taxonomy.Type): Promise<taxonomy.Item[]> {
+      const response = await fetch('http://' + location.host + '/items?type_id=' + type.id, {
+        method: 'GET',
+        headers: { 'content-type': 'application/json' }
+      });
+      if (response.ok) {
+        const items = await response.json();
+        return items.map((item: any) => {
+          const type = this.types.get(item.type)!;
+          return new taxonomy.Item(item.id, type, item.properties, { timestamp: item.value.timestamp, data: item.value.data });
+        });
+      }
+      else {
+        const data = await response.json();
+        throw new Error(data.message);
+      }
     }
 
     private set_types(types_message: any): void {

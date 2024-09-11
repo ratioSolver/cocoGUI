@@ -8,7 +8,7 @@
     </n-grid-item>
     <n-grid-item>
       <coco-frame title="Map">
-        <coco-map map_id="map" @created="created" style="min-height: 400px;" />
+        <coco-map map_id="map" @created="created" :layers="layers" style="min-height: 400px;" />
       </coco-frame>
     </n-grid-item>
     <n-grid-item>
@@ -21,10 +21,13 @@
 
 <script setup lang="ts">
 import { NGrid, NGridItem } from 'naive-ui';
-import { CocoFrame, TaxonomyGraph, CocoMap, ItemTable, coco } from 'coco-gui';
+import { CocoFrame, TaxonomyGraph, CocoMap, ItemTable, coco, taxonomy } from 'coco-gui';
+import { useCoCoStore } from '../stores/coco';
 import L from "leaflet";
+import { computed } from 'vue';
 
 let map: L.Map | null = null;
+const layers = computed(() =>useCoCoStore().layers.map(id => coco.KnowledgeBase.getInstance().types.get(id)!));
 
 function created(m: L.Map) {
   map = m;
