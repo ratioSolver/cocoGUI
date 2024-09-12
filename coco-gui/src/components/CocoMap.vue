@@ -25,7 +25,7 @@ let map: L.Map;
 let ro: ResizeObserver;
 const static_layers: Map<taxonomy.Type, L.Layer> = new Map();
 const dynamic_layers: Map<number, Map<taxonomy.Type, L.Layer>> = new Map();
-const listeners: Map<taxonomy.Type, Map<taxonomy.Item, MapItemListener>> = new Map();
+const type_items: Map<taxonomy.Type, Map<taxonomy.Item, MapItemListener>> = new Map();
 const show_slider = ref(false);
 const min = ref(0);
 const max = ref(100);
@@ -34,6 +34,7 @@ const marks = ref<{ [key: number]: string }>({});
 
 class MapItemListener extends taxonomy.ItemListener {
 
+  processed = false;
   item: taxonomy.Item;
   layers: { timestamp: number, data: GeoJSON.Feature }[] = [];
 
@@ -47,12 +48,13 @@ class MapItemListener extends taxonomy.ItemListener {
     console.debug('Received', values.length, 'values');
     for (const val of values)
       this.layers.push({ timestamp: val.timestamp.getTime(), data: create_feature(this.item, val.data) });
-    compute_dynamic_layers();
+    this.processed = true;
+    if (all_processed())
+      compute_dynamic_layers();
   }
 
   new_value(value: taxonomy.Data): void {
     this.layers.push({ timestamp: value.timestamp.getTime(), data: create_feature(this.item, value.data) });
-    compute_dynamic_layers();
   }
 }
 
@@ -77,10 +79,10 @@ watch(() => props.layers, (new_layers, old_layers) => {
       static_layers.get(l)?.remove();
       static_layers.delete(l);
 
-      if (listeners.has(l))
-        for (const [item, listener] of listeners.get(l)!)
+      if (type_items.has(l))
+        for (const [item, listener] of type_items.get(l)!)
           item.remove_listener(listener);
-      listeners.delete(l);
+      type_items.delete(l);
       for (const [timestamp, layers] of dynamic_layers)
         if (layers.has(l)) {
           layers.get(l)?.remove();
@@ -92,27 +94,30 @@ watch(() => props.layers, (new_layers, old_layers) => {
         }
     }
 
-  show_slider.value = false;
-  for (const l of new_layers)
+  let ss = false;
+  for (const l of new_layers) {
+    if (taxonomy.dynamic_properties(l).has('geometry'))
+      ss = true;
+
     if (!old_layers.has(l)) {
       console.debug('Adding layer', l);
       const options = create_options(l);
       coco.KnowledgeBase.getInstance().get_items(l).then(items => {
-        if (l.static_properties.has('geometry')) {
+        if (taxonomy.static_properties(l).has('geometry')) {
           const geo_json: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
           for (const item of items)
             geo_json.features.push(create_feature(item, {}));
           static_layers.set(l, L.geoJSON(geo_json, options).addTo(map));
-        } else if (l.dynamic_properties.has('geometry')) {
+        } else if (taxonomy.dynamic_properties(l).has('geometry')) {
           console.debug('Adding data for', items.length, 'items');
           show_slider.value = true;
-          if (!listeners.has(l))
-            listeners.set(l, new Map());
+          if (!type_items.has(l))
+            type_items.set(l, new Map());
 
           // Load data for all items and add listeners
           for (const item of items) {
             const listener = new MapItemListener(item);
-            listeners.get(l)!.set(item, listener);
+            type_items.get(l)!.set(item, listener);
             item.add_listener(listener);
             if (item.values.length === 0) // Load data if not already loaded
               coco.KnowledgeBase.getInstance().load_data(item);
@@ -120,6 +125,8 @@ watch(() => props.layers, (new_layers, old_layers) => {
         }
       });
     }
+  }
+  show_slider.value = ss;
 });
 
 watch(() => time.value, (new_time, old_time) => {
@@ -131,6 +138,14 @@ watch(() => time.value, (new_time, old_time) => {
         l.remove();
 });
 
+function all_processed(): boolean {
+  for (const [_, itm_ls] of type_items)
+    for (const [_, listener] of itm_ls)
+      if (!listener.processed)
+        return false;
+  return true;
+}
+
 function compute_dynamic_layers(): void {
   console.debug('Computing dynamic layers');
   min.value = Number.MAX_SAFE_INTEGER;
@@ -138,7 +153,7 @@ function compute_dynamic_layers(): void {
 
   // For each type, the layers over time
   const layers = new Map<taxonomy.Type, Map<number, GeoJSON.FeatureCollection>>();
-  for (const [type, itm_ls] of listeners) {
+  for (const [type, itm_ls] of type_items) {
     const tp_layers = new Map<number, GeoJSON.FeatureCollection>();
     for (const [_, listener] of itm_ls)
       for (const layer of listener.layers) {
@@ -157,22 +172,32 @@ function compute_dynamic_layers(): void {
     layers.set(type, tp_layers);
   }
 
+  // Create, for each timestamp, the layers for each type
   for (const [type, tp_layers] of layers)
     for (const [timestamp, data] of tp_layers) {
       const options = create_options(type);
       dynamic_layers.get(timestamp)!.set(type, L.geoJSON(data, options));
     }
+
+  // Fill in missing layers with the previous one if not updated
+  const sorted = Array.from(dynamic_layers.keys()).sort((a, b) => a - b);
+  for (let i = 1; i < sorted.length; i++)
+    for (const type of props.layers)
+      if (!dynamic_layers.get(sorted[i])!.has(type) && dynamic_layers.get(sorted[i - 1])!.has(type))
+        dynamic_layers.get(sorted[i])!.set(type, dynamic_layers.get(sorted[i - 1])!.get(type)!);
+
+  console.debug('Dynamic layers computed', dynamic_layers);
 }
 
 function create_options(type: taxonomy.Type): L.GeoJSONOptions {
   const options: L.GeoJSONOptions = {
     style: (feature) => {
       const style: L.PathOptions = {};
-      if (type.static_properties.has('color') || type.dynamic_properties.has('color'))
+      if (taxonomy.static_properties(type).has('color') || taxonomy.dynamic_properties(type).has('color'))
         style.color = feature?.properties['color'];
-      if (type.static_properties.has('fillColor') || type.dynamic_properties.has('fillColor'))
+      if (taxonomy.static_properties(type).has('fillColor') || taxonomy.dynamic_properties(type).has('fillColor'))
         style.fillColor = feature?.properties['fillColor'];
-      if (type.static_properties.has('weight') || type.dynamic_properties.has('weight'))
+      if (taxonomy.static_properties(type).has('weight') || taxonomy.dynamic_properties(type).has('weight'))
         style.weight = feature?.properties['weight'];
       return style;
     },
@@ -184,11 +209,11 @@ function create_options(type: taxonomy.Type): L.GeoJSONOptions {
     },
     pointToLayer: (feature, latlng) => {
       const options: L.CircleMarkerOptions = { radius: 5 };
-      if (type.static_properties.has('radius') || type.dynamic_properties.has('radius'))
+      if (taxonomy.static_properties(type).has('radius') || taxonomy.dynamic_properties(type).has('radius'))
         options.radius = feature?.properties['radius'];
-      if (type.static_properties.has('color') || type.dynamic_properties.has('color'))
+      if (taxonomy.static_properties(type).has('color') || taxonomy.dynamic_properties(type).has('color'))
         options.color = feature?.properties['color'];
-      if (type.static_properties.has('fillColor') || type.dynamic_properties.has('fillColor'))
+      if (taxonomy.static_properties(type).has('fillColor') || taxonomy.dynamic_properties(type).has('fillColor'))
         options.fillColor = feature?.properties['fillColor'];
       return L.circle(latlng, options);
     }
