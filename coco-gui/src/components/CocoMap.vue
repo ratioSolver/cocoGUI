@@ -4,14 +4,14 @@
       <div :id="props.map_id" class="map-container"></div>
     </n-grid-item>
     <n-grid-item v-if="show_slider" style="grid-row-end: -1;">
-      <n-slider v-model:value="time" :marks="marks" step="mark" :min="min" :max="max" />
+      <n-slider v-model:value="time" :marks="marks" step="mark" :min="min" :max="max" :format-tooltip="tooltip" />
     </n-grid-item>
   </n-grid>
 </template>
 
 <script setup lang="ts">
-import { c, NGrid, NGridItem, NSlider } from 'naive-ui';
-import { h, onMounted, onUnmounted, ref, watch } from 'vue';
+import { NGrid, NGridItem, NSlider } from 'naive-ui';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { taxonomy } from '@/taxonomy';
@@ -270,6 +270,10 @@ function create_options(type: taxonomy.Type): L.GeoJSONOptions {
 
 function is_geometry(prop: taxonomy.Property): boolean {
   return prop instanceof taxonomy.JSONProperty && Object.hasOwn(prop.schema, '$ref') && prop.schema['$ref'] === '#/components/schemas/geometry';
+}
+
+function tooltip(date: number): string {
+  return new Date(date).toLocaleString();
 }
 </script>
 
