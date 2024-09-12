@@ -27,7 +27,7 @@ import L from "leaflet";
 import { computed } from 'vue';
 
 let map: L.Map | null = null;
-const layers = computed(() =>useCoCoStore().layers.map(id => coco.KnowledgeBase.getInstance().types.get(id)!));
+const layers = computed(() => new Set(useCoCoStore().layers.map(id => coco.KnowledgeBase.getInstance().types.get(id)!)));
 
 function created(m: L.Map) {
   map = m;

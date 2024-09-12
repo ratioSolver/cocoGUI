@@ -215,6 +215,7 @@ export namespace coco {
      * @param timeout The timeout value in milliseconds for reconnecting to the server if the connection is closed. Default is 5000.
      */
     connect(timeout = 5000) {
+      console.debug('Connecting to CoCo server (ws://' + location.host + '/coco)');
       this.socket = new WebSocket('ws://' + location.host + '/coco');
       this.socket.onopen = () => {
         console.debug('Connected to CoCo server');
@@ -238,6 +239,7 @@ export namespace coco {
      * @param to - The end time of the data range in milliseconds. Defaults to the current time.
      */
     load_data(item: taxonomy.Item, from = Date.now() - 1000 * 60 * 60 * 24 * 14, to = Date.now()) {
+      console.debug('Loading data for', item.get_name(), 'from', new Date(from), 'to', new Date(to));
       fetch('http://' + location.host + '/data/' + item.id + '?' + new URLSearchParams({ from: from.toString(), to: to.toString() }), {
         method: 'GET',
         headers: { 'content-type': 'application/json' }
@@ -257,6 +259,7 @@ export namespace coco {
      * @throws An error if the server response is not successful.
      */
     async get_items(type: taxonomy.Type): Promise<taxonomy.Item[]> {
+      console.debug('Getting items of type', type.name);
       const response = await fetch('http://' + location.host + '/items?type_id=' + type.id, {
         method: 'GET',
         headers: { 'content-type': 'application/json' }

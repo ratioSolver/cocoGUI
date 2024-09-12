@@ -387,6 +387,7 @@ export namespace taxonomy {
          * @param values The values of the item.
          */
         set_values(values: Data[]) {
+            console.debug("Setting values for item", this.get_name(), values);
             this.values = values;
             this.listeners.forEach(listener => listener.values(values));
         }
@@ -397,6 +398,7 @@ export namespace taxonomy {
          * @param value The value of the item.
          */
         add_value(value: Data) {
+            console.debug("Adding value for item", this.get_name(), value);
             this.value = value;
             this.values.push(value);
             this.listeners.forEach(listener => listener.new_value(value));

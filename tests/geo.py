@@ -4,24 +4,31 @@ import requests
 def init_db(url):
     session = requests.Session()
 
-    # Create the type of the geo data
-    response = session.post(url + '/type', json={'name': 'Geo', 'description': 'A geo data',
+    # Create the infrastructure type 
+    response = session.post(url + '/type', json={'name': 'Infrastructure', 'description': 'A type for infrastructure',
                                                   'static_properties': {'name': {'type': 'string'}, 'geometry': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}}})
-    geo_type = response.json()
-    print(geo_type)
+    infrastructure_type = response.json()
+    print(infrastructure_type)
 
-    # Create the geo data
-    response = session.post(url + '/item', json={'type': geo_type['id'], 'properties': {'name': "Fontana dell'Aquila", 'geometry': {'type': 'Point', 'coordinates': [11.1215698, 46.0677293]}}})
+    # Create the bus type
+    response = session.post(url + '/type', json={'name': 'Bus', 'description': 'A type for buses',
+                                                  'static_properties': {'name': {'type': 'string'}},
+                                                  'dynamic_properties': {'geometry': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}}})
+    bus_type = response.json()
+    print(bus_type)
+
+    # Create some infrastructures
+    response = session.post(url + '/item', json={'type': infrastructure_type['id'], 'properties': {'name': "Fontana dell'Aquila", 'geometry': {'type': 'Point', 'coordinates': [11.1215698, 46.0677293]}}})
     print(response.json())
 
-    response = session.post(url + '/item', json={'type': geo_type['id'], 'properties': {'name': 'Via Rodolfo Belenzani', 'geometry': {'type': 'LineString', 'coordinates': [
+    response = session.post(url + '/item', json={'type': infrastructure_type['id'], 'properties': {'name': 'Via Rodolfo Belenzani', 'geometry': {'type': 'LineString', 'coordinates': [
            [11.1214686,46.0677385],[11.121466,46.0677511],[11.1213806,46.0681452],
            [11.1213548,46.0682642],[11.1213115,46.0684385],[11.1212897,46.0685261],
            [11.1212678,46.0686443]
         ]}}})
     print(response.json())
 
-    response = session.post(url + '/item', json={'type': geo_type['id'], 'properties': {'name': 'Piazza Duomo', 'geometry': {'type': 'Polygon', 'coordinates': [
+    response = session.post(url + '/item', json={'type': infrastructure_type['id'], 'properties': {'name': 'Piazza Duomo', 'geometry': {'type': 'Polygon', 'coordinates': [
           [
             [11.1209262, 46.0676632],[11.1209201, 46.0676444],[11.1209473, 46.0675811],
             [11.1210082, 46.0674396],[11.1209909, 46.0674359],[11.1209669, 46.0674306],
@@ -40,6 +47,13 @@ def init_db(url):
             [11.1209262, 46.0676632]
           ]
         ]}}})
+    print(response.json())
+
+    # Create some buses
+    response = session.post(url + '/item', json={'type': bus_type['id'], 'properties': {'name': 'Bus 1'}})
+    print(response.json())
+
+    response = session.post(url + '/item', json={'type': bus_type['id'], 'properties': {'name': 'Bus 2'}})
     print(response.json())
 
 if __name__ == '__main__':
