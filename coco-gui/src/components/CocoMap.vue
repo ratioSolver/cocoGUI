@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { NGrid, NGridItem, NSlider } from 'naive-ui';
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { h, onMounted, onUnmounted, ref, watch } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { taxonomy } from '@/taxonomy';
@@ -23,12 +23,14 @@ const emit = defineEmits<{ (event: 'created', value: L.Map): void; }>();
 
 let map: L.Map;
 let ro: ResizeObserver;
+const options: Map<taxonomy.Type, L.GeoJSONOptions> = new Map();
 const static_layers: Map<taxonomy.Type, L.Layer> = new Map();
-const dynamic_layers: Map<number, Map<taxonomy.Type, L.Layer>> = new Map();
-const type_items: Map<taxonomy.Type, Map<taxonomy.Item, MapItemListener>> = new Map();
+const dynamic_layers: Map<taxonomy.Type, L.Layer> = new Map();
+const dynamic_features: Map<number, Map<taxonomy.Type, GeoJSON.FeatureCollection>> = new Map();
+const dynamic_items: Map<taxonomy.Type, Map<taxonomy.Item, MapItemListener>> = new Map();
 const show_slider = ref(false);
-const min = ref(0);
-const max = ref(100);
+const min = ref(Number.MAX_SAFE_INTEGER);
+const max = ref(Number.MIN_SAFE_INTEGER);
 const time = ref(0);
 const marks = ref<{ [key: number]: string }>({});
 
@@ -36,7 +38,6 @@ class MapItemListener extends taxonomy.ItemListener {
 
   processed = false;
   item: taxonomy.Item;
-  layers: { timestamp: number, data: GeoJSON.Feature }[] = [];
 
   constructor(item: taxonomy.Item) {
     super();
@@ -45,16 +46,58 @@ class MapItemListener extends taxonomy.ItemListener {
   }
 
   values(values: taxonomy.Data[]): void {
-    console.debug('Received', values.length, 'values');
     for (const val of values)
-      this.layers.push({ timestamp: val.timestamp.getTime(), data: create_feature(this.item, val.data) });
-    this.processed = true;
-    if (all_processed())
-      compute_dynamic_layers();
+      this.add_value(val);
+    this.process();
   }
 
   new_value(value: taxonomy.Data): void {
-    this.layers.push({ timestamp: value.timestamp.getTime(), data: create_feature(this.item, value.data) });
+    this.add_value(value);
+    this.process();
+  }
+
+  private add_value(value: taxonomy.Data): void {
+    if (!dynamic_features.has(value.timestamp.getTime())) {
+      dynamic_features.set(value.timestamp.getTime(), new Map());
+      dynamic_features.get(value.timestamp.getTime())!.set(this.item.type, { type: 'FeatureCollection', features: [] });
+      marks.value[value.timestamp.getTime()] = '';
+      if (value.timestamp.getTime() < min.value)
+        min.value = value.timestamp.getTime();
+      if (value.timestamp.getTime() > max.value)
+        max.value = value.timestamp.getTime();
+    }
+
+    const properties: Record<string, any> = { 'name': this.item.get_name() };
+    for (const [prop_name, prop] of taxonomy.static_properties(this.item.type))
+      if (!(prop instanceof taxonomy.JSONProperty) && prop_name !== 'name' && prop_name !== 'color' && prop_name !== 'fillColor' && prop_name !== 'fillOpacity' && prop_name !== 'weight')
+        properties[prop_name] = this.item.properties[prop_name];
+    for (const [prop_name, prop] of taxonomy.dynamic_properties(this.item.type))
+      if (!(prop instanceof taxonomy.JSONProperty) && prop_name !== 'name' && prop_name !== 'color' && prop_name !== 'fillColor' && prop_name !== 'fillOpacity' && prop_name !== 'weight')
+        properties[prop_name] = value.data[prop_name];
+    for (const [prop_name, prop] of taxonomy.dynamic_properties(this.item.type))
+      if (is_geometry(prop))
+        dynamic_features.get(value.timestamp.getTime())!.get(this.item.type)!.features.push({ type: 'Feature', geometry: value.data[prop_name], properties: properties });
+  }
+
+  private process(): void {
+    this.processed = true;
+    let proc = true;
+    for (const [_, itm_ls] of dynamic_items)
+      for (const [_, listener] of itm_ls)
+        if (!listener.processed) {
+          proc = false;
+          break;
+        }
+
+    if (proc) {
+      show_slider.value = true;
+      // Fill in missing layers with the previous one if not updated
+      const sorted = Array.from(dynamic_features.keys()).sort((a, b) => a - b);
+      for (let i = 1; i < sorted.length; i++)
+        for (const type of props.layers)
+          if (!dynamic_features.get(sorted[i])!.has(type) && dynamic_features.get(sorted[i - 1])!.has(type))
+            dynamic_features.get(sorted[i])!.set(type, dynamic_features.get(sorted[i - 1])!.get(type)!);
+    }
   }
 }
 
@@ -78,117 +121,76 @@ watch(() => props.layers, (new_layers, old_layers) => {
       console.debug('Removing layer', l);
       static_layers.get(l)?.remove();
       static_layers.delete(l);
-
-      if (type_items.has(l))
-        for (const [item, listener] of type_items.get(l)!)
-          item.remove_listener(listener);
-      type_items.delete(l);
-      for (const [timestamp, layers] of dynamic_layers)
-        if (layers.has(l)) {
-          layers.get(l)?.remove();
-          layers.delete(l);
-          if (layers.size === 0) {
-            dynamic_layers.delete(timestamp);
-            delete marks.value[timestamp];
-          }
-        }
+      dynamic_layers.get(l)?.remove();
+      dynamic_layers.delete(l);
     }
 
-  let ss = false;
-  for (const l of new_layers) {
-    if (taxonomy.dynamic_properties(l).has('geometry'))
-      ss = true;
-
+  for (const l of new_layers)
     if (!old_layers.has(l)) {
       console.debug('Adding layer', l);
-      const options = create_options(l);
-      coco.KnowledgeBase.getInstance().get_items(l).then(items => {
-        if (taxonomy.static_properties(l).has('geometry')) {
-          const geo_json: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
-          for (const item of items)
-            geo_json.features.push(create_feature(item, {}));
-          static_layers.set(l, L.geoJSON(geo_json, options).addTo(map));
-        } else if (taxonomy.dynamic_properties(l).has('geometry')) {
-          console.debug('Adding data for', items.length, 'items');
-          show_slider.value = true;
-          if (!type_items.has(l))
-            type_items.set(l, new Map());
 
-          // Load data for all items and add listeners
+      let static_geometry = false;
+      for (const [_, prop] of taxonomy.static_properties(l))
+        if (is_geometry(prop)) {
+          static_geometry = true;
+          break;
+        }
+      let dynamic_geometry = false;
+      for (const [_, prop] of taxonomy.dynamic_properties(l))
+        if (is_geometry(prop)) {
+          dynamic_geometry = true;
+          break;
+        }
+
+      if ((static_geometry || dynamic_geometry) && !options.has(l))
+        options.set(l, create_options(l));
+
+      if (static_geometry)
+        coco.KnowledgeBase.getInstance().get_items(l).then(items => {
+          console.debug('Static geometry', l, items);
+          const geo_json: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
+          for (const item of items) {
+            const properties: Record<string, any> = { 'name': item.get_name() };
+            for (const [prop_name, prop] of taxonomy.static_properties(item.type))
+              if (!(prop instanceof taxonomy.JSONProperty) && prop_name !== 'color' && prop_name !== 'fillColor' && prop_name !== 'fillOpacity' && prop_name !== 'weight')
+                properties[prop_name] = item.properties[prop_name];
+            for (const [prop_name, prop] of taxonomy.static_properties(item.type))
+              if (is_geometry(prop))
+                geo_json.features.push({ type: 'Feature', geometry: item.properties[prop_name], properties: properties });
+          }
+          static_layers.set(l, L.geoJSON(geo_json, options.get(l)!).addTo(map));
+        });
+
+      if (dynamic_geometry) {
+        dynamic_items.set(l, new Map());
+        coco.KnowledgeBase.getInstance().get_items(l).then(items => {
+          console.debug('Dynamic geometry', l, items);
           for (const item of items) {
             const listener = new MapItemListener(item);
-            type_items.get(l)!.set(item, listener);
+            dynamic_items.get(l)!.set(item, listener);
             item.add_listener(listener);
-            if (item.values.length === 0) // Load data if not already loaded
+            if (item.values.length === 0)
               coco.KnowledgeBase.getInstance().load_data(item);
           }
-        }
-      });
+        });
+      }
     }
-  }
-  show_slider.value = ss;
 });
 
 watch(() => time.value, (new_time, old_time) => {
-  for (const [timestamp, layers] of dynamic_layers)
-    for (const [_, l] of layers)
-      if (timestamp === new_time)
-        l.addTo(map);
-      else
-        l.remove();
-});
-
-function all_processed(): boolean {
-  for (const [_, itm_ls] of type_items)
-    for (const [_, listener] of itm_ls)
-      if (!listener.processed)
-        return false;
-  return true;
-}
-
-function compute_dynamic_layers(): void {
-  console.debug('Computing dynamic layers');
-  min.value = Number.MAX_SAFE_INTEGER;
-  max.value = Number.MIN_SAFE_INTEGER;
-
-  // For each type, the layers over time
-  const layers = new Map<taxonomy.Type, Map<number, GeoJSON.FeatureCollection>>();
-  for (const [type, itm_ls] of type_items) {
-    const tp_layers = new Map<number, GeoJSON.FeatureCollection>();
-    for (const [_, listener] of itm_ls)
-      for (const layer of listener.layers) {
-        if (!tp_layers.has(layer.timestamp))
-          tp_layers.set(layer.timestamp, { type: 'FeatureCollection', features: [] });
-        tp_layers.get(layer.timestamp)!.features.push(layer.data);
-        if (!marks.value[layer.timestamp]) {
-          marks.value[layer.timestamp] = '';
-          if (layer.timestamp < min.value)
-            min.value = layer.timestamp;
-          if (layer.timestamp > max.value)
-            max.value = layer.timestamp;
-          dynamic_layers.set(layer.timestamp, new Map());
-        }
-      }
-    layers.set(type, tp_layers);
+  if (old_time !== undefined && dynamic_features.has(old_time)) {
+    for (const [_, layer] of dynamic_layers)
+      layer.remove();
+    dynamic_layers.clear();
   }
 
-  // Create, for each timestamp, the layers for each type
-  for (const [type, tp_layers] of layers)
-    for (const [timestamp, data] of tp_layers) {
-      const options = create_options(type);
-      dynamic_layers.get(timestamp)!.set(type, L.geoJSON(data, options));
-    }
+  if (dynamic_features.has(new_time))
+    for (const [type, features] of dynamic_features.get(new_time)!)
+      dynamic_layers.set(type, L.geoJSON(features, options.get(type)).addTo(map));
+});
+</script>
 
-  // Fill in missing layers with the previous one if not updated
-  const sorted = Array.from(dynamic_layers.keys()).sort((a, b) => a - b);
-  for (let i = 1; i < sorted.length; i++)
-    for (const type of props.layers)
-      if (!dynamic_layers.get(sorted[i])!.has(type) && dynamic_layers.get(sorted[i - 1])!.has(type))
-        dynamic_layers.get(sorted[i])!.set(type, dynamic_layers.get(sorted[i - 1])!.get(type)!);
-
-  console.debug('Dynamic layers computed', dynamic_layers);
-}
-
+<script lang="ts">
 function create_options(type: taxonomy.Type): L.GeoJSONOptions {
   const options: L.GeoJSONOptions = {
     style: (feature) => {
@@ -221,15 +223,8 @@ function create_options(type: taxonomy.Type): L.GeoJSONOptions {
   return options;
 }
 
-function create_feature(item: taxonomy.Item, data: Record<string, any>): GeoJSON.Feature {
-  const feature: GeoJSON.Feature = { type: 'Feature', geometry: data.geometry, properties: {} };
-  for (const [key, value] of Object.entries(item.properties))
-    if (key !== 'geometry' && key !== 'color' && key !== 'fillColor' && key !== 'fillOpacity' && key !== 'weight')
-      feature.properties![key] = value;
-  for (const [key, value] of Object.entries(data))
-    if (key !== 'geometry' && key !== 'color' && key !== 'fillColor' && key !== 'fillOpacity' && key !== 'weight')
-      feature.properties![key] = value;
-  return feature;
+function is_geometry(prop: taxonomy.Property): boolean {
+  return prop instanceof taxonomy.JSONProperty && Object.hasOwn(prop.schema, '$ref') && prop.schema['$ref'] === '#/components/schemas/geometry';
 }
 </script>
 
