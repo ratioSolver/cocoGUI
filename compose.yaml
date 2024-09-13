@@ -1,0 +1,23 @@
+services:
+  coco-db:
+    container_name: coco-db
+    image: mongo
+    restart: always
+    networks:
+      - coco-net
+
+  coco-system:
+    container_name: coco
+    image: pstlab/coco
+    ports:
+      - "8082:8080"
+    networks:
+      - coco-net
+    depends_on:
+      - coco-db
+    restart: always
+    environment:
+      - MONGODB_HOST=coco-db
+
+networks:
+  coco-net:

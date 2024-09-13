@@ -1,54 +1,33 @@
-# Use a base image with Ubuntu
-FROM ubuntu:latest
+FROM pstlab/coco_base
 
-# Install the necessary dependencies
-RUN apt update && apt install -y build-essential cmake libssl-dev unzip wget
+# Expose the port that Age-It uses to run
+EXPOSE 8080
 
-# Compile and install CLIPS
-RUN wget -O /tmp/clips.zip https://sourceforge.net/projects/clipsrules/files/CLIPS/6.4.1/clips_core_source_641.zip/download
-RUN unzip /tmp/clips.zip -d /tmp
-WORKDIR /tmp/clips/clips_core_source_641/core
-RUN make release_cpp
-RUN mkdir -p /usr/local/include/clips
-RUN cp *.h /usr/local/include/clips
-RUN cp libclips.a /usr/local/lib
+# Set the environment variables
+ARG MONGODB_HOST=coco-db
+ARG MONGODB_PORT=27017
+ARG TRANSFORMER_HOST=coco-rasa
+ARG CLIENT_FOLDER=coco-client
 
-# Compile and install the mongo-cxx driver
-WORKDIR /tmp
-RUN curl -OL https://github.com/mongodb/mongo-cxx-driver/releases/download/r3.10.1/mongo-cxx-driver-r3.10.1.tar.gz
-RUN tar -xzf mongo-cxx-driver-r3.10.1.tar.gz
-WORKDIR /tmp/mongo-cxx-driver-r3.10.1/build
-RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DMONGOCXX_OVERRIDE_DEFAULT_INSTALL_PREFIX=OFF
-RUN cmake --build .
-RUN cmake --build . --target install
+# Install NVM and Node.js
+WORKDIR /home
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+SHELL ["/bin/bash", "-c"]
+RUN source ~/.nvm/nvm.sh && nvm install node && nvm alias default node
 
-# Compile and install the CoCo library
-WORKDIR /tmp
-RUN git clone --recursive https://github.com/ratioSolver/cocoGUI
-WORKDIR /tmp/cocoGUI
-RUN mkdir build
-WORKDIR /tmp/cocoGUI/build
-RUN cmake ..
-RUN cmake --build .
-RUN cmake --build . --target install
+# Install Age-It
+WORKDIR /home
+RUN git clone --recursive https://github.com/pstlab/Age-It
 
-# Install Node.js through NVM
-WORKDIR /tmp
-RUN wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-RUN export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-RUN [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-RUN nvm install node
+# Build Age-It Backend
+WORKDIR /home/Age-It
+RUN mkdir build && cd build && cmake -DMONGODB_HOST=${MONGODB_HOST} -DMONGODB_PORT=${MONGODB_PORT} -DTRANSFORMER_HOST=${TRANSFORMER_HOST} -DCLIENT_FOLDER=${CLIENT_FOLDER} .. && make
 
-# Install the CoCo GUI
-WORKDIR /tmp/cocoGUI/client
-RUN npm install
-RUN npm run build
-RUN mkdir -p /usr/local/share/coco
-RUN cp -r build /usr/local/share/coco
+# Build Age-It Frontend
+WORKDIR /home/Age-It/client
+RUN source ~/.nvm/nvm.sh && npm install && npm run build
 
-# Clean up
-WORKDIR /
-RUN rm -rf /tmp
+RUN mkdir /coco
 
-# Set the entrypoint
-ENTRYPOINT ["/usr/local/bin/coco"]
+WORKDIR /home/Age-It
+CMD /home/Age-It/build/AgeIt
