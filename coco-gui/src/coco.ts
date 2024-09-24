@@ -1,3 +1,4 @@
+import { user } from "./user"
 import { taxonomy } from "./taxonomy"
 import { rule } from "./rule"
 import { solver } from "./solver"
@@ -41,6 +42,7 @@ export namespace coco {
    */
   export class KnowledgeBase {
 
+    user: user.User | null = null;
     types: Map<string, taxonomy.Type>;
     items: Map<string, taxonomy.Item>;
     reactive_rules: Map<string, rule.ReactiveRule>;
@@ -191,6 +193,76 @@ export namespace coco {
       }
     }
 
+    async create_user(username: string, password: string, data: Record<string, any>): Promise<user.User> {
+      const response = await fetch('http://' + location.host + '/user', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ username: username, password: password, data: data })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return new user.User(data.id, data.username, new Set(data.roles), data.data);
+      } else {
+        const data = await response.json();
+        this.error(data.message);
+        throw new Error(data.message);
+      }
+    }
+
+    async login(username: string, password: string): Promise<boolean> {
+      this.user = null;
+      const response = await fetch('http://' + location.host + '/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ username: username, password: password })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('token', data.id);
+        this.user = new user.User(data.id, data.username, new Set(data.roles), data.data);
+        return true;
+      } else {
+        const data = await response.json();
+        this.error(data.message);
+        return false;
+      }
+    }
+
+    /**
+     * Logs out the current user.
+     * 
+     * The function removes the token from local storage and sets the user to `null`.
+     */
+    logout(): void {
+      localStorage.removeItem('token');
+      this.user = null;
+    }
+
+    /**
+     * Connects to the CoCo server using WebSocket.
+     * 
+     * @param timeout The timeout value in milliseconds for reconnecting to the server if the connection is closed. Default is 5000.
+     */
+    connect(timeout = 5000) {
+      console.debug('Connecting to CoCo server (ws://' + location.host + '/coco)');
+      this.socket = new WebSocket('ws://' + location.host + '/coco');
+      this.socket.onopen = () => {
+        console.debug('Connected to CoCo server');
+        if (localStorage.getItem('token'))
+          this.socket!.send(JSON.stringify({ type: 'login', token: localStorage.getItem('token') }));
+      };
+      this.socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.debug('Received:', data);
+        this.update_knowledge(data);
+      };
+      this.socket.onclose = () => {
+        console.debug('Connection to CoCo server closed');
+        this.warning('Connection to CoCo server closed');
+        setTimeout(() => this.connect(timeout), timeout);
+      };
+    }
+
     /**
      * Publishes an item with the provided data.
      * 
@@ -205,30 +277,8 @@ export namespace coco {
         body: JSON.stringify(data)
       }).then(res => {
         if (!res.ok)
-          res.json().then(data => alert(data.message)).catch(err => console.error(err));
+          res.json().then(data => this.error(data.message)).catch(err => console.error(err));
       });
-    }
-
-    /**
-     * Connects to the CoCo server using WebSocket.
-     * 
-     * @param timeout The timeout value in milliseconds for reconnecting to the server if the connection is closed. Default is 5000.
-     */
-    connect(timeout = 5000) {
-      console.debug('Connecting to CoCo server (ws://' + location.host + '/coco)');
-      this.socket = new WebSocket('ws://' + location.host + '/coco');
-      this.socket.onopen = () => {
-        console.debug('Connected to CoCo server');
-      };
-      this.socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        console.debug('Received:', data);
-        this.update_knowledge(data);
-      };
-      this.socket.onclose = () => {
-        console.debug('Connection to CoCo server closed');
-        setTimeout(() => this.connect(timeout), timeout);
-      };
     }
 
     /**
@@ -247,7 +297,7 @@ export namespace coco {
         if (res.ok)
           res.json().then(data => this.set_data(item, data));
         else
-          res.json().then(data => alert(data.message)).catch(err => console.error(err));
+          res.json().then(data => this.error(data.message)).catch(err => console.error(err));
       });
     }
 
@@ -273,6 +323,7 @@ export namespace coco {
       }
       else {
         const data = await response.json();
+        this.error(data.message);
         throw new Error(data.message);
       }
     }
@@ -517,6 +568,11 @@ export namespace coco {
     remove_listener(listener: KnowledgeListener): void {
       this.listeners.delete(listener);
     }
+
+    info(message: string) { }
+    error(message: string) { }
+    warning(message: string) { }
+    loading(message: string) { }
   }
 
   /**

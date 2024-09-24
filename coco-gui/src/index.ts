@@ -1,4 +1,5 @@
 import CocoApp from './components/CocoApp.vue';
+import CocoLayout from './components/CocoLayout.vue';
 import CocoChat from './components/CocoChat.vue';
 import CocoFrame from './components/CocoFrame.vue';
 import CocoLogin from './components/CocoLogin.vue';
@@ -32,7 +33,7 @@ export { coco } from './coco';
 export { taxonomy } from './taxonomy';
 export { solver } from './solver';
 export { rule } from './rule';
-export { CocoApp, CocoChat, CocoFrame, CocoLogin, CocoMap };
+export { CocoApp, CocoLayout, CocoChat, CocoFrame, CocoLogin, CocoMap };
 export { BooleanProperty, IntegerProperty, RealProperty, StringProperty, SymbolProperty, ItemProperty };
 export { ReactiveRule, DeliberativeRule, Item, ItemListItem, ItemChart, ItemPublisher, ItemTable, TypeListItem, Type, TaxonomyGraph };
 export { Solver, SolverListItem, SolverGraph, SolverTimelines };

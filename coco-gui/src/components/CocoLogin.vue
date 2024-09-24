@@ -1,12 +1,12 @@
 <template>
   <n-modal v-model:show="local_modal">
-    <n-card title="Log in">
+    <n-card title="Log in" style="width: 400px;">
       <n-form :model="form_value" :rules="rules" ref="form_ref">
         <n-form-item label="Username" prop="username">
-          <n-input v-model="form_value.username" />
+          <n-input v-model="form_value.username" autocomplete="on" />
         </n-form-item>
         <n-form-item label="Password" prop="password">
-          <n-input v-model="form_value.password" type="password" />
+          <n-input v-model="form_value.password" type="password" autocomplete="on" />
         </n-form-item>
         <n-button type="primary" @click="validate">Log in</n-button>
       </n-form>
@@ -16,11 +16,11 @@
 
 <script setup lang="ts">
 import type { FormInst } from 'naive-ui'
-import { useMessage } from 'naive-ui'
-import { NModal, NCard, NForm, NFormItem, NInput, NButton } from 'naive-ui';
+import { NModal, NCard, NForm, NFormItem, NInput, NButton, useMessage } from 'naive-ui';
 import { ref, watch } from 'vue';
+import { coco } from '@/coco';
 
-const props = defineProps<{ modal: boolean; login: (username: string, password: string) => Promise<Error>; }>();
+const props = defineProps<{ modal: boolean; }>();
 const emit = defineEmits<{ (event: 'update:modal', value: boolean): void; }>();
 
 const form_ref = ref<FormInst | null>(null);
@@ -45,13 +45,8 @@ watch(() => props.modal, (value) => local_modal.value = value);
 function validate(e: MouseEvent) {
   form_ref.value?.validate(async (valid) => {
     if (valid) {
-      const err = await props.login(form_value.value.username, form_value.value.password);
-      if (err)
-        message.error(err.message);
-      else {
+      if (await coco.KnowledgeBase.getInstance().login(form_value.value.username, form_value.value.password))
         emit('update:modal', false);
-        message.success('Logged in successfully');
-      }
     } else
       message.error('Please enter the required fields');
   });
