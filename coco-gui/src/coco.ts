@@ -43,6 +43,7 @@ export namespace coco {
   export class KnowledgeBase {
 
     user: user.User | null = null;
+    ssl: boolean = false;
     types: Map<string, taxonomy.Type>;
     items: Map<string, taxonomy.Item>;
     reactive_rules: Map<string, rule.ReactiveRule>;
@@ -194,7 +195,7 @@ export namespace coco {
     }
 
     async create_user(username: string, password: string, data: Record<string, any>): Promise<user.User> {
-      const response = await fetch('http://' + location.host + '/user', {
+      const response = await fetch((this.ssl ? 'https' : 'http') + '://' + location.host + '/user', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ username: username, password: password, data: data })
@@ -211,7 +212,7 @@ export namespace coco {
 
     async login(username: string, password: string): Promise<boolean> {
       this.user = null;
-      const response = await fetch('http://' + location.host + '/login', {
+      const response = await fetch((this.ssl ? 'https' : 'http') + '://' + location.host + '/login', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ username: username, password: password })
@@ -244,8 +245,8 @@ export namespace coco {
      * @param timeout The timeout value in milliseconds for reconnecting to the server if the connection is closed. Default is 5000.
      */
     connect(timeout = 5000) {
-      console.debug('Connecting to CoCo server (ws://' + location.host + '/coco)');
-      this.socket = new WebSocket('ws://' + location.host + '/coco');
+      console.debug('Connecting to CoCo server ' + (this.ssl ? 'wss' : 'ws') + '://' + location.host + '/coco');
+      this.socket = new WebSocket((this.ssl ? 'wss' : 'ws') + '://' + location.host + '/coco');
       this.socket.onopen = () => {
         console.debug('Connected to CoCo server');
         if (localStorage.getItem('token'))

@@ -26,7 +26,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char const *argv[])
 
     coco::coco_server server;
     auto srv_ft = std::async(std::launch::async, [&server]
-                             { server.start(); });
+                             { server.server::start(); });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 

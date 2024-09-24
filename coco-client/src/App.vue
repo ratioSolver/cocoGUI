@@ -170,4 +170,7 @@ function users_menu_options(items: Map<string, taxonomy.Item>): MenuOption[] {
     }
   });
 }
+
+coco.KnowledgeBase.getInstance().ssl = import.meta.env.VITE_SSL == 'ON';
+coco.KnowledgeBase.getInstance().connect();
 </script>

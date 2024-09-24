@@ -37,8 +37,6 @@ coco.KnowledgeBase.getInstance().info = (msg: string) => message.info(msg);
 coco.KnowledgeBase.getInstance().error = (msg: string) => message.error(msg);
 coco.KnowledgeBase.getInstance().warning = (msg: string) => message.warning(msg);
 coco.KnowledgeBase.getInstance().loading = (msg: string) => message.loading(msg);
-
-coco.KnowledgeBase.getInstance().connect();
 </script>
 
 <style scoped>
