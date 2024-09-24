@@ -245,6 +245,7 @@ export namespace taxonomy {
         id: string;
         name: string;
         description: string;
+        properties: Record<string, any>;
         parents: Map<string, Type>;
         static_properties: Map<string, Property>;
         dynamic_properties: Map<string, Property>;
@@ -256,14 +257,16 @@ export namespace taxonomy {
          * @param id The ID of the type.
          * @param name The name of the type.
          * @param description The description of the type.
+         * @param properties The properties of the type.
          * @param parents The parents of the type.
          * @param static_properties The static properties of the type.
          * @param dynamic_properties The dynamic properties of the type.
          */
-        constructor(id: string, name: string, description: string, parents: Map<string, Type> = new Map(), static_properties: Map<string, Property> = new Map(), dynamic_properties: Map<string, Property> = new Map()) {
+        constructor(id: string, name: string, description: string, properties: Record<string, any> = {}, parents: Map<string, Type> = new Map(), static_properties: Map<string, Property> = new Map(), dynamic_properties: Map<string, Property> = new Map()) {
             this.id = id;
             this.name = name;
             this.description = description;
+            this.properties = properties;
             this.parents = parents;
             this.static_properties = static_properties;
             this.dynamic_properties = dynamic_properties;

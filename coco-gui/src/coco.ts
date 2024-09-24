@@ -331,7 +331,7 @@ export namespace coco {
     private set_types(types_message: any): void {
       this.types.clear();
       for (const type_message of types_message.types)
-        this.types.set(type_message.id, new taxonomy.Type(type_message.id, type_message.name, type_message.description));
+        this.types.set(type_message.id, new taxonomy.Type(type_message.id, type_message.name, type_message.description, type_message.properties));
       for (const type_message of types_message.types) {
         const type = this.types.get(type_message.id)!;
         if (type_message.parents)
@@ -363,7 +363,7 @@ export namespace coco {
       if (new_type.dynamic_properties)
         for (const [prop_name, prop_type] of Object.entries(new_type.dynamic_properties))
           dynamic_properties.set(prop_name, create_property(this, prop_name, prop_type));
-      const type = new taxonomy.Type(new_type.id, new_type.name, new_type.description, parents, static_properties, dynamic_properties);
+      const type = new taxonomy.Type(new_type.id, new_type.name, new_type.description, new_type.properties, parents, static_properties, dynamic_properties);
       this.types.set(type.id, type);
       this.listeners.forEach(listener => listener.type_added(type));
     }
