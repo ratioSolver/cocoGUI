@@ -1,30 +1,27 @@
 <template>
   <coco-app>
-    <coco-layout>
-      <template #header>
-        <router-link to="/">
-          <h1>{{ name }}</h1>
-        </router-link>
-      </template>
-      <template #header-extra>
-        <n-dropdown trigger="click"
-          :options="coco.KnowledgeBase.getInstance().user ? loggedin_options : loggedout_options"
-          @select="handle_option">
-          <n-button>
-            <n-icon>
-              <Person20Filled />
-            </n-icon>
-          </n-button>
-        </n-dropdown>
-      </template>
-      <template #drawer>
-        <n-menu v-model:value="active_key" :options="menu" accordion />
-        <n-tree-select v-model:value="useCoCoStore().layers" :options="tree" multiple cascade checkable />
-      </template>
-      <router-view />
-      <coco-login v-if="!coco.KnowledgeBase.getInstance().user" :modal="login_dialog"
-        @update:modal="login_dialog = $event" />
-    </coco-layout>
+    <template #header>
+      <router-link to="/">
+        <h1>{{ name }}</h1>
+      </router-link>
+    </template>
+    <template #header-extra>
+      <n-dropdown trigger="click"
+        :options="coco.KnowledgeBase.getInstance().token ? loggedin_options : loggedout_options"
+        @select="handle_option">
+        <n-button v-if="coco.KnowledgeBase.getInstance().token" size="large">
+          <n-icon size="36" :component="Person20Filled" />
+        </n-button>
+        <n-button v-else size="large">Login</n-button>
+      </n-dropdown>
+    </template>
+    <template #drawer>
+      <n-menu v-model:value="active_key" :options="menu" accordion />
+      <n-tree-select v-model:value="useCoCoStore().layers" :options="tree" multiple cascade checkable />
+    </template>
+    <router-view />
+    <coco-login v-if="!coco.KnowledgeBase.getInstance().token" :modal="login_dialog"
+      @update:modal="login_dialog = $event" />
   </coco-app>
 </template>
 
@@ -32,7 +29,7 @@
 import 'coco-gui/dist/style.css';
 import { Person20Filled, Box20Regular, Circle20Regular, BrainCircuit20Regular, PauseCircle20Regular, PlayCircle20Regular, CheckmarkCircle20Regular, ErrorCircle20Regular } from '@vicons/fluent';
 import { NDropdown, NButton, NIcon, NMenu, NTreeSelect, type DropdownOption, type MenuOption, type TreeSelectOption } from 'naive-ui';
-import { CocoApp, CocoLayout, CocoLogin, taxonomy, rule, solver, coco } from 'coco-gui';
+import { CocoApp, CocoLogin, taxonomy, rule, solver, coco } from 'coco-gui';
 import { computed, h, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useCoCoStore } from './stores/coco';
@@ -49,7 +46,7 @@ const loggedin_options: DropdownOption[] = [
   { label: 'Profile', key: 'profile' },
   { label: 'Logout', key: 'logout' }
 ];
-function handle_option(key: string) {
+function handle_option(key: string): void {
   switch (key) {
     case 'login': login_dialog.value = true; break;
     case 'register': break;

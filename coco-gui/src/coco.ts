@@ -1,4 +1,3 @@
-import { user } from "./user"
 import { taxonomy } from "./taxonomy"
 import { rule } from "./rule"
 import { solver } from "./solver"
@@ -42,7 +41,7 @@ export namespace coco {
    */
   export class KnowledgeBase {
 
-    user: user.User | null = null;
+    token: string | null = localStorage.getItem('token');
     ssl: boolean = false;
     types: Map<string, taxonomy.Type>;
     items: Map<string, taxonomy.Item>;
@@ -194,35 +193,51 @@ export namespace coco {
       }
     }
 
-    async create_user(username: string, password: string, data: Record<string, any>): Promise<user.User> {
+    /**
+     * Creates a new user with the given username, password, roles, and additional data.
+     * 
+     * @param username - The username for the new user.
+     * @param password - The password for the new user.
+     * @param roles - The roles for the new user. Defaults to an empty array.
+     * @param data - Additional data to be associated with the user. Defaults to an empty object.
+     * @returns A promise that resolves to the token of the new user if the user was created successfully, or `null` otherwise.
+     */
+    async create_user(username: string, password: string, roles: number[] = [], data: Record<string, any> = {}): Promise<string | null> {
       const response = await fetch((this.ssl ? 'https' : 'http') + '://' + location.host + '/user', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ username: username, password: password, data: data })
+        headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + this.token },
+        body: JSON.stringify({ username: username, password: password, roles: roles, ...data })
       });
-      if (response.ok) {
+      if (response.ok) { // User created successfully
         const data = await response.json();
-        return new user.User(data.id, data.username, new Set(data.roles), data.data);
-      } else {
+        return data.token;
+      } else { // User creation failed
         const data = await response.json();
         this.error(data.message);
-        throw new Error(data.message);
+        return null;
       }
     }
 
+    /**
+     * Logs in a user with the provided username and password.
+     * 
+     * @param username - The username of the user attempting to log in.
+     * @param password - The password of the user attempting to log in.
+     * @returns A promise that resolves to a boolean indicating whether the login was successful.
+     */
     async login(username: string, password: string): Promise<boolean> {
-      this.user = null;
+      this.token = null;
       const response = await fetch((this.ssl ? 'https' : 'http') + '://' + location.host + '/login', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ username: username, password: password })
       });
-      if (response.ok) {
+      if (response.ok) { // Login successful
         const data = await response.json();
-        localStorage.setItem('token', data.id);
-        this.user = new user.User(data.id, data.username, new Set(data.roles), data.data);
+        localStorage.setItem('token', data.token);
+        this.token = data.token;
         return true;
-      } else {
+      } else { // Login failed
         const data = await response.json();
         this.error(data.message);
         return false;
@@ -236,7 +251,7 @@ export namespace coco {
      */
     logout(): void {
       localStorage.removeItem('token');
-      this.user = null;
+      this.token = null;
     }
 
     /**
@@ -249,8 +264,10 @@ export namespace coco {
       this.socket = new WebSocket((this.ssl ? 'wss' : 'ws') + '://' + location.host + '/coco');
       this.socket.onopen = () => {
         console.debug('Connected to CoCo server');
-        if (localStorage.getItem('token'))
-          this.socket!.send(JSON.stringify({ type: 'login', token: localStorage.getItem('token') }));
+        if (this.token) {
+          console.debug('Logging in with token', this.token);
+          this.socket!.send(JSON.stringify({ type: 'login', token: this.token }));
+        }
       };
       this.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
@@ -274,7 +291,7 @@ export namespace coco {
       console.debug('Publishing', item.id, data);
       fetch('http://' + location.host + '/data/' + item.id, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + this.token },
         body: JSON.stringify(data)
       }).then(res => {
         if (!res.ok)
@@ -293,7 +310,7 @@ export namespace coco {
       console.debug('Loading data for', item.get_name(), 'from', new Date(from), 'to', new Date(to));
       fetch('http://' + location.host + '/data/' + item.id + '?' + new URLSearchParams({ from: from.toString(), to: to.toString() }), {
         method: 'GET',
-        headers: { 'content-type': 'application/json' }
+        headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + this.token }
       }).then(res => {
         if (res.ok)
           res.json().then(data => this.set_data(item, data));
@@ -313,7 +330,7 @@ export namespace coco {
       console.debug('Getting items of type', type.name);
       const response = await fetch('http://' + location.host + '/items?type_id=' + type.id, {
         method: 'GET',
-        headers: { 'content-type': 'application/json' }
+        headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + this.token }
       });
       if (response.ok) {
         const items = await response.json();
