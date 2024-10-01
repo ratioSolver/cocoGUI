@@ -13,7 +13,7 @@
     </n-grid-item>
     <n-grid-item>
       <coco-frame title="Users">
-        <item-table type_name="User" />
+        <item-table type_name="User" :label="new Map([['role', user_role]])" />
       </coco-frame>
     </n-grid-item>
   </n-grid>
@@ -21,7 +21,7 @@
 
 <script setup lang="ts">
 import { NGrid, NGridItem } from 'naive-ui';
-import { CocoFrame, TaxonomyGraph, CocoMap, ItemTable, coco, taxonomy } from 'coco-gui';
+import { CocoFrame, TaxonomyGraph, CocoMap, ItemTable, coco } from 'coco-gui';
 import { useCoCoStore } from '../stores/coco';
 import L from "leaflet";
 import { computed } from 'vue';
@@ -35,5 +35,14 @@ function created(m: L.Map) {
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
+}
+
+function user_role(role: number) {
+  switch (role) {
+    case 0: return 'Admin';
+    case 1: return 'Coordinator';
+    case 2: return 'User';
+    default: return 'Unknown';
+  }
 }
 </script>

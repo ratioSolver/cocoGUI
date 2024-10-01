@@ -16,7 +16,7 @@ import { computed, reactive } from 'vue';
 
 type PropertyRow = { [key: string]: any };
 
-const props = defineProps<{ type_name: string; columns?: Map<string, string> }>();
+const props = defineProps<{ type_name: string; columns?: Map<string, string>; label?: Map<string, (value: any) => string> }>();
 
 const columns = reactive<DataTableColumns<PropertyRow>>([]);
 const static_props = reactive<Map<string, taxonomy.Property>>(new Map());
@@ -79,9 +79,9 @@ const items = computed(() => {
       if (item.type.is_instance_of(type.value)) {
         const row: PropertyRow = {};
         for (const prop of static_props.keys())
-          row[prop] = item.properties[prop];
+          row[prop] = (props.label && props.label.has(prop)) ? props.label.get(prop)!(item.properties[prop]) : item.properties[prop];
         for (const prop of dynamic_props.keys())
-          row[prop] = item.value.data[prop];
+          row[prop] = (props.label && props.label.has(prop)) ? props.label.get(prop)!(item.value.data[prop]) : item.value.data[prop];
         items.push(row);
       }
   return items;

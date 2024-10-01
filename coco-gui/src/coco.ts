@@ -44,6 +44,7 @@ export namespace coco {
     user_type: taxonomy.Type | null = null;
     user: taxonomy.Item | null = null;
     ssl: boolean = false;
+    auth: boolean = false;
     types: Map<string, taxonomy.Type>;
     items: Map<string, taxonomy.Item>;
     reactive_rules: Map<string, rule.ReactiveRule>;
@@ -76,14 +77,34 @@ export namespace coco {
       return KnowledgeBase.#instance;
     }
 
+    /**
+     * Initializes the connection settings for the application.
+     *
+     * @param ssl - A boolean indicating whether SSL should be used.
+     * @param auth - A boolean indicating whether authentication is required.
+     *
+     * If authentication is required and a token is found in local storage,
+     * it will attempt to connect using the token. Otherwise, it will connect
+     * without authentication.
+     */
+    init(ssl: boolean, auth: boolean): void {
+      this.ssl = ssl;
+      this.auth = auth;
+      if (this.auth) {
+        const token = localStorage.getItem('token');
+        if (token)
+          this.connect(token);
+      } else
+        this.connect();
+    }
+
     private update_knowledge(message: any): boolean {
       switch (message.type) {
-        case 'type':
-          this.user_type = new taxonomy.Type(message.id, message.name, message.description, message.properties);
+        case 'user_type':
+          this.set_user_type(message);
           return true;
-        case 'item':
-          this.user = new taxonomy.Item(message.id, this.user_type!, message.properties, { timestamp: message.value.timestamp, data: message.value.data });
-          localStorage.setItem('token', this.user.id);
+        case 'user':
+          this.set_user(message);
           return true;
         case 'types':
           this.set_types(message);
@@ -212,7 +233,7 @@ export namespace coco {
      */
     async create_user(username: string, password: string, roles: number[] = [], data: Record<string, any> = {}): Promise<string | null> {
       const headers: { 'content-type': string, 'authorization'?: string } = { 'content-type': 'application/json' };
-      if (this.user)
+      if (this.auth && this.user)
         headers['authorization'] = 'Bearer ' + this.user.id;
       const response = await fetch((this.ssl ? 'https' : 'http') + '://' + location.host + '/user', { method: 'POST', headers: headers, body: JSON.stringify({ username: username, password: password, roles: roles, ...data }) });
       if (response.ok) { // User created successfully
@@ -272,6 +293,11 @@ export namespace coco {
           this.socket!.send(JSON.stringify({ type: 'login', token: token }));
         }
       };
+      this.socket.onerror = (event) => {
+        console.error('Error connecting to CoCo server', event);
+        this.warning('Error connecting to CoCo server');
+        setTimeout(() => this.connect(token, timeout), timeout);
+      }
       this.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         console.debug('Received:', data);
@@ -280,7 +306,9 @@ export namespace coco {
       this.socket.onclose = () => {
         console.debug('Connection to CoCo server closed');
         this.warning('Connection to CoCo server closed');
-        setTimeout(() => this.connect(token, timeout), timeout);
+        localStorage.removeItem('token');
+        this.user = null;
+        this.socket = null;
       };
     }
 
@@ -293,7 +321,7 @@ export namespace coco {
     publish(item: taxonomy.Item, data: Record<string, any>) {
       console.debug('Publishing', item.id, data);
       const headers: { 'content-type': string, 'authorization'?: string } = { 'content-type': 'application/json' };
-      if (this.user)
+      if (this.auth && this.user)
         headers['authorization'] = 'Bearer ' + this.user.id;
       fetch('http://' + location.host + '/data/' + item.id, { method: 'POST', headers: headers, body: JSON.stringify(data) }).then(res => {
         if (!res.ok)
@@ -311,7 +339,7 @@ export namespace coco {
     load_data(item: taxonomy.Item, from = Date.now() - 1000 * 60 * 60 * 24 * 14, to = Date.now()) {
       console.debug('Loading data for', item.get_name(), 'from', new Date(from), 'to', new Date(to));
       const headers: { 'content-type': string, 'authorization'?: string } = { 'content-type': 'application/json' };
-      if (this.user)
+      if (this.auth && this.user)
         headers['authorization'] = 'Bearer ' + this.user.id;
       fetch('http://' + location.host + '/data/' + item.id + '?' + new URLSearchParams({ from: from.toString(), to: to.toString() }), { method: 'GET', headers: headers }).then(res => {
         if (res.ok)
@@ -331,7 +359,7 @@ export namespace coco {
     async get_items(type: taxonomy.Type): Promise<taxonomy.Item[]> {
       console.debug('Getting items of type', type.name);
       const headers: { 'content-type': string, 'authorization'?: string } = { 'content-type': 'application/json' };
-      if (this.user)
+      if (this.auth && this.user)
         headers['authorization'] = 'Bearer ' + this.user.id;
       const response = await fetch('http://' + location.host + '/items?type_id=' + type.id, { method: 'GET', headers: headers });
       if (response.ok) {
@@ -346,6 +374,31 @@ export namespace coco {
         this.error(data.message);
         throw new Error(data.message);
       }
+    }
+
+    private set_user_type(user_type_message: any): void {
+      const user_type = user_type_message.user_type;
+      const parents = new Map<string, taxonomy.Type>();
+      if (user_type.parents)
+        for (const parent_id of user_type.parents) {
+          const parent = this.types.get(parent_id)!;
+          parents.set(parent.id, parent);
+        }
+      const static_properties = new Map<string, taxonomy.Property>();
+      if (user_type.static_properties)
+        for (const [prop_name, prop_type] of Object.entries(user_type.static_properties))
+          static_properties.set(prop_name, create_property(this, prop_name, prop_type));
+      const dynamic_properties = new Map<string, taxonomy.Property>();
+      if (user_type.dynamic_properties)
+        for (const [prop_name, prop_type] of Object.entries(user_type.dynamic_properties))
+          dynamic_properties.set(prop_name, create_property(this, prop_name, prop_type));
+      this.user_type = new taxonomy.Type(user_type.id, user_type.name, user_type.description, user_type.properties, parents, static_properties, dynamic_properties);
+    }
+
+    private set_user(user_message: any): void {
+      const user = user_message.user;
+      this.user = new taxonomy.Item(user.id, this.user_type!, user.properties, { timestamp: user.value.timestamp, data: user.value.data });
+      localStorage.setItem('token', this.user.id);
     }
 
     private set_types(types_message: any): void {

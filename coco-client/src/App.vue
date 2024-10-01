@@ -6,10 +6,9 @@
       </router-link>
     </template>
     <template #header-extra>
-      <n-dropdown trigger="click"
-        :options="coco.KnowledgeBase.getInstance().token ? loggedin_options : loggedout_options"
-        @select="handle_option">
-        <n-button v-if="coco.KnowledgeBase.getInstance().token" size="large">
+      <n-dropdown v-if="coco.KnowledgeBase.getInstance().auth" trigger="click"
+        :options="coco.KnowledgeBase.getInstance().user ? loggedin_options : loggedout_options" @select="handle_option">
+        <n-button v-if="coco.KnowledgeBase.getInstance().user" size="large">
           <n-icon size="36" :component="Person20Filled" />
         </n-button>
         <n-button v-else size="large">Login</n-button>
@@ -19,9 +18,9 @@
       <n-menu v-model:value="active_key" :options="menu" accordion />
       <n-tree-select v-model:value="useCoCoStore().layers" :options="tree" multiple cascade checkable />
     </template>
-    <router-view />
-    <coco-login v-if="!coco.KnowledgeBase.getInstance().token" :modal="login_dialog"
-      @update:modal="login_dialog = $event" />
+    <router-view v-if="!coco.KnowledgeBase.getInstance().auth || coco.KnowledgeBase.getInstance().user" />
+    <coco-login v-if="coco.KnowledgeBase.getInstance().auth && !coco.KnowledgeBase.getInstance().user"
+      :modal="login_dialog" @update:modal="login_dialog = $event" />
   </coco-app>
 </template>
 
@@ -168,6 +167,5 @@ function users_menu_options(items: Map<string, taxonomy.Item>): MenuOption[] {
   });
 }
 
-coco.KnowledgeBase.getInstance().ssl = import.meta.env.VITE_SSL == 'ON';
-coco.KnowledgeBase.getInstance().connect();
+coco.KnowledgeBase.getInstance().init(import.meta.env.VITE_SSL == 'ON', import.meta.env.VITE_AUTH == 'ON');
 </script>
