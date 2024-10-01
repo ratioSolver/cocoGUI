@@ -14,8 +14,15 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char const *argv[])
     std::string db_host = MONGODB_HOST;
     std::string db_port = MONGODB_PORT;
 
+#ifdef ENABLE_TRANSFORMER
     std::string transformer_host = TRANSFORMER_HOST;
     std::size_t transformer_port = TRANSFORMER_PORT;
+#endif
+
+#ifdef ENABLE_AUTH
+    std::string users_db_host = MONGODB_USERS_HOST;
+    std::string users_db_port = MONGODB_USERS_PORT;
+#endif
 
     auto env_coco_name = std::getenv("COCO_NAME");
     if (env_coco_name)
@@ -44,10 +51,23 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char const *argv[])
         transformer_port = std::stoi(env_transformer_port);
 #endif
 
-#ifdef ENABLE_TRANSFORMER
-    coco::coco_server server(server_host, server_port, std::make_unique<coco::mongo_db>(json::json{{"name", coco_name}}, "mongodb://" + db_host + ":" + db_port), transformer_host, transformer_port);
+#ifdef ENABLE_AUTH
+    auto env_users_db_host = std::getenv("MONGODB_USERS_HOST");
+    if (env_users_db_host)
+        users_db_host = env_users_db_host;
+    auto env_users_db_port = std::getenv("MONGODB_USERS_PORT");
+    if (env_users_db_port)
+        users_db_port = env_users_db_port;
+
+    auto db = std::make_unique<coco::mongo_db>(json::json{{"name", coco_name}}, "mongodb://" + db_host + ":" + db_port, "mongodb://" + users_db_host + ":" + users_db_port);
 #else
-    coco::coco_server server(server_host, server_port, std::make_unique<coco::mongo_db>(json::json{{"name", coco_name}}, "mongodb://" + db_host + ":" + db_port));
+    auto db = std::make_unique<coco::mongo_db>(json::json{{"name", coco_name}}, "mongodb://" + db_host + ":" + db_port);
+#endif
+
+#ifdef ENABLE_TRANSFORMER
+    coco::coco_server server(server_host, server_port, std::move(db), transformer_host, transformer_port);
+#else
+    coco::coco_server server(server_host, server_port, std::move(db));
 #endif
 #ifdef ENABLE_SSL
     server.load_certificate("extern/coco/extern/rationet/tests/cert.pem", "extern/coco/extern/rationet/tests/key.pem");
