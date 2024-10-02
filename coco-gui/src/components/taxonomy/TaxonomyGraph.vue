@@ -125,6 +125,7 @@ class TypeListener extends coco.KnowledgeListener {
       if (prop instanceof taxonomy.ItemProperty)
         this.cy.add({ group: 'edges', data: { id: `${type.id}-${prop.type.id}`, type: 'dynamic_property', name: prop.name, source: type.id, target: prop.type.id } });
     this.cy.layout(this.layout).run();
+    this.cy.fit();
   }
   type_updated(type: taxonomy.Type) {
     this.cy.$id(type.id).data('name', type.name);
@@ -143,6 +144,7 @@ class TypeListener extends coco.KnowledgeListener {
   type_removed(id: string) {
     this.cy.$id(id).remove();
     this.cy.layout(this.layout).run();
+    this.cy.fit();
   }
 }
 

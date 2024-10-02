@@ -323,7 +323,7 @@ export namespace coco {
       const headers: { 'content-type': string, 'authorization'?: string } = { 'content-type': 'application/json' };
       if (this.auth && this.user)
         headers['authorization'] = 'Bearer ' + this.user.id;
-      fetch('http://' + location.host + '/data/' + item.id, { method: 'POST', headers: headers, body: JSON.stringify(data) }).then(res => {
+      fetch((this.ssl ? 'https' : 'http') + '://' + location.host + '/data/' + item.id, { method: 'POST', headers: headers, body: JSON.stringify(data) }).then(res => {
         if (!res.ok)
           res.json().then(data => this.error(data.message)).catch(err => console.error(err));
       });
@@ -341,7 +341,7 @@ export namespace coco {
       const headers: { 'content-type': string, 'authorization'?: string } = { 'content-type': 'application/json' };
       if (this.auth && this.user)
         headers['authorization'] = 'Bearer ' + this.user.id;
-      fetch('http://' + location.host + '/data/' + item.id + '?' + new URLSearchParams({ from: from.toString(), to: to.toString() }), { method: 'GET', headers: headers }).then(res => {
+      fetch((this.ssl ? 'https' : 'http') + '://' + location.host + '/data/' + item.id + '?' + new URLSearchParams({ from: from.toString(), to: to.toString() }), { method: 'GET', headers: headers }).then(res => {
         if (res.ok)
           res.json().then(data => this.set_data(item, data));
         else
@@ -361,7 +361,7 @@ export namespace coco {
       const headers: { 'content-type': string, 'authorization'?: string } = { 'content-type': 'application/json' };
       if (this.auth && this.user)
         headers['authorization'] = 'Bearer ' + this.user.id;
-      const response = await fetch('http://' + location.host + '/items?type_id=' + type.id, { method: 'GET', headers: headers });
+      const response = await fetch((this.ssl ? 'https' : 'http') + '://' + location.host + '/items?type_id=' + type.id, { method: 'GET', headers: headers });
       if (response.ok) {
         const items = await response.json();
         return items.map((item: any) => {
@@ -456,7 +456,7 @@ export namespace coco {
       }
       if (updated_type.static_properties) {
         const static_properties = new Map<string, taxonomy.Property>();
-        for (const [prop_name, prop_type] of Object.entries(updated_type.dynamic_properties))
+        for (const [prop_name, prop_type] of Object.entries(updated_type.static_properties))
           static_properties.set(prop_name, create_property(this, prop_name, prop_type));
         type.static_properties = static_properties;
       }
