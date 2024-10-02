@@ -8,9 +8,8 @@ import RealProperty from './components/properties/RealProperty.vue';
 import StringProperty from './components/properties/StringProperty.vue';
 import SymbolProperty from './components/properties/SymbolProperty.vue';
 import ItemProperty from './components/properties/ItemProperty.vue';
-import { Box20Regular, Circle20Regular, BrainCircuit20Regular, PauseCircle20Regular, PlayCircle20Regular, CheckmarkCircle20Regular, ErrorCircle20Regular, PlugConnected20Regular, PlugDisconnected20Regular, Checkmark20Regular } from '@vicons/fluent';
+import { Box20Regular, Circle20Regular, BrainCircuit20Regular, PauseCircle20Regular, PlayCircle20Regular, CheckmarkCircle20Regular, ErrorCircle20Regular, PlugConnected20Regular, PlugDisconnected20Regular, Checkmark16Regular } from '@vicons/fluent';
 import { coco } from "./coco";
-import { MenuOption, TreeSelectOption } from "naive-ui";
 
 /**
  * Renders a property component based on the type of the given property.
@@ -92,7 +91,7 @@ export function property_v(prop: taxonomy.Property, value: any) {
     if (prop.name === 'online')
       return value ? h(PlugConnected20Regular) : h(PlugDisconnected20Regular);
     else
-      return value ? h(Checkmark20Regular) : '';
+      return value ? h(Checkmark16Regular) : '';
   } else if (prop instanceof taxonomy.IntegerProperty) {
     return value;
   } else if (prop instanceof taxonomy.RealProperty) {
