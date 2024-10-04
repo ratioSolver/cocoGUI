@@ -88,10 +88,7 @@ export function property_h(prop: taxonomy.Property, value: Record<string, any>, 
  */
 export function property_v(prop: taxonomy.Property, value: any) {
   if (prop instanceof taxonomy.BooleanProperty) {
-    if (prop.name === 'online')
-      return value ? h(PlugConnected20Regular) : h(PlugDisconnected20Regular);
-    else
-      return value ? h(Checkmark16Regular) : '';
+    return value ? '✓' : '✗';
   } else if (prop instanceof taxonomy.IntegerProperty) {
     return value;
   } else if (prop instanceof taxonomy.RealProperty) {

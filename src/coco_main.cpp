@@ -1,6 +1,7 @@
 #include <mongocxx/instance.hpp>
 #include "coco_server.hpp"
 #include "mongo_db.hpp"
+#include "coco_api.hpp"
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char const *argv[])
 {
@@ -64,10 +65,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char const *argv[])
     auto db = std::make_unique<coco::mongo_db>(json::json{{"name", coco_name}}, "mongodb://" + db_host + ":" + db_port);
 #endif
 
+    json::json schemas;
+    for (const auto &[name, schema] : coco::geometry_schema.as_object())
+        schemas["components"]["schemas"][name] = schema;
+
 #ifdef ENABLE_TRANSFORMER
-    coco::coco_server server(server_host, server_port, std::move(db), transformer_host, transformer_port);
+    coco::coco_server server(server_host, server_port, std::move(db), std::move(schemas), transformer_host, transformer_port);
 #else
-    coco::coco_server server(server_host, server_port, std::move(db));
+    coco::coco_server server(server_host, server_port, std::move(db), std::move(schemas));
 #endif
 #ifdef ENABLE_SSL
     server.load_certificate("extern/coco/extern/rationet/tests/cert.pem", "extern/coco/extern/rationet/tests/key.pem");

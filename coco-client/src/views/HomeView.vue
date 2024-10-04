@@ -13,7 +13,7 @@
     </n-grid-item>
     <n-grid-item>
       <coco-frame title="Users">
-        <item-table type_name="User" :label="new Map([['role', user_role]])" />
+        <item-table type_name="User" :label="label_map" />
       </coco-frame>
     </n-grid-item>
   </n-grid>
@@ -37,7 +37,19 @@ function created(m: L.Map) {
   }).addTo(map);
 }
 
-function user_role(role: number) {
+const label_map = new Map<string, (value: any) => string>([['gender', user_gender], ['role', user_role]]);
+label_map.set('gender', user_gender);
+label_map.set('role', user_role);
+
+function user_gender(gender: string): string {
+  switch (gender) {
+    case 'Male': return '♂';
+    case 'Female': return '♀';
+    default: return '';
+  }
+}
+
+function user_role(role: number): string {
   switch (role) {
     case 0: return 'Admin';
     case 1: return 'Coordinator';

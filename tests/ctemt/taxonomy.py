@@ -24,16 +24,16 @@ def init_db(url):
     logger.info('Logged in!')
     logger.debug('Token: %s', login['token'])
 
-        # Update the user type
+    # Update the user type
     logger.info('Getting the User type')
     response = session.get(url + '/type?name=User', headers={'Authorization': 'Bearer ' + login['token']}, verify=False)
     user_type = response.json()
     logger.debug('User type id: %s', user_type['id'])
-    if not 'name' in user_type:
+    if not 'name' in user_type['static_properties']:
         logger.info('Updating the User type')
         response = session.put(url + '/type/' + user_type['id'], headers={'Authorization': 'Bearer ' + login['token']}, verify=False,
                                json={'static_properties': {'role': {'type': 'integer', 'default': 2, 'min': 0, 'max': 2}, 'name': {'type': 'string'}, 'gender': {'type': 'symbol', 'values': ['M', 'F']}},
-                                     'dynamic_properties': {'HR': {'type': 'integer', 'min': 40, 'max': 220}, 'me': {'type': 'boolean'}, 'text': {'type': 'string'}}})
+                                     'dynamic_properties': {'HR': {'type': 'integer', 'min': 40, 'max': 220}, 'online': {'type': 'boolean'}, 'me': {'type': 'boolean'}, 'text': {'type': 'string'}}})
 
     logger.info('Getting the Church type')
     response = session.get(url + '/type?name=Church', headers={'Authorization': 'Bearer ' + login['token']}, verify=False)
@@ -47,7 +47,7 @@ def init_db(url):
                                 json={'name': 'Church',
                                       'description': 'A type for churches',
                                       'properties': {'icon': 'church.png'},
-                                      'static_properties': {'name': {'type': 'string'}, 'position': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}}})
+                                      'static_properties': {'name': {'type': 'string'}, 'location': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}}})
         church_type = response.json()
         logger.debug('Church type %s created', church_type['id'])
 
@@ -66,6 +66,23 @@ def init_db(url):
                                       'properties': {'icon': 'cavechurch.png'}})
         cave_church_type = response.json()
         logger.debug('Cave church type %s created', cave_church_type['id'])
+
+    logger.info('Getting the Bus type')
+    response = session.get(url + '/type?name=Bus', headers={'Authorization': 'Bearer ' + login['token']}, verify=False)
+    if response.status_code == 200:
+        bus_type = response.json()
+        logger.debug('Bus type id: %s', bus_type['id'])
+    else:
+        # Create the bus type
+        logger.info('Creating the Bus type')
+        response = session.post(url + '/type', headers={'Authorization': 'Bearer ' + login['token']}, verify=False,
+                                json={'name': 'Bus',
+                                      'description': 'A type for buses',
+                                      'properties': {'icon': 'bus.png'},
+                                      'static_properties': {'name': {'type': 'string'}, 'capacity': {'type': 'integer', 'min': 0, 'max': 100}},
+                                      'dynamic_properties': {'position': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}}})
+        bus_type = response.json()
+        logger.debug('Bus type %s created', bus_type['id'])
 
 if __name__ == '__main__':
     url = sys.argv[1] if len(sys.argv) > 1 else 'https://localhost:8080'
