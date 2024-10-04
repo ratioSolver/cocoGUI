@@ -41,11 +41,11 @@ def init_db(url):
     if len(churches) == 0:
         logger.info('Creating churches')
         response = session.post(url + '/item', headers={'Authorization': 'Bearer ' + login['token']}, verify=False,
-                                json={'type': church_type['id'], 'properties': {'name': 'Acito San Campo', 'location': {'type': 'Point', 'coordinates': [16.627615, 40.653837]}}})
+                                json={'type': church_type['id'], 'properties': {'name': 'Acito San Campo', 'icon': 'church.png', 'location': {'type': 'Point', 'coordinates': [16.627615, 40.653837]}}})
         response = session.post(url + '/item', headers={'Authorization': 'Bearer ' + login['token']}, verify=False,
-                                json={'type': church_type['id'], 'properties': {'name': 'Asceterio di Murgia Timone o di San Lupo', 'location': {'type': 'Point', 'coordinates': [16.616093, 40.665063]}}})
+                                json={'type': church_type['id'], 'properties': {'name': 'Asceterio di Murgia Timone o di San Lupo', 'icon': 'church.png', 'location': {'type': 'Point', 'coordinates': [16.616093, 40.665063]}}})
         response = session.post(url + '/item', headers={'Authorization': 'Bearer ' + login['token']}, verify=False,
-                                json={'type': church_type['id'], 'properties': {'name': "Asceterio di Sant'Agnese o di Santa Maria dell'Arco", 'location': {'type': 'Point', 'coordinates': [16.615342, 40.663883]}}})
+                                json={'type': church_type['id'], 'properties': {'name': "Asceterio di Sant'Agnese o di Santa Maria dell'Arco", 'icon': 'church.png', 'location': {'type': 'Point', 'coordinates': [16.615342, 40.663883]}}})
 
     logger.info('Getting the CaveChurch type')
     response = session.get(url + '/type?name=CaveChurch', headers={'Authorization': 'Bearer ' + login['token']}, verify=False)
@@ -64,9 +64,9 @@ def init_db(url):
     if len(cave_churches) == 0:
         logger.info('Creating cave churches')
         response = session.post(url + '/item', headers={'Authorization': 'Bearer ' + login['token']}, verify=False,
-                                json={'type': cave_church_type['id'], 'properties': {'name': 'San Leonardo', 'location': {'type': 'Point', 'coordinates': [16.611671, 40.662238, 0.0]}}})
+                                json={'type': cave_church_type['id'], 'properties': {'name': 'San Leonardo', 'icon': 'cave_church.png', 'location': {'type': 'Point', 'coordinates': [16.611671, 40.662238, 0.0]}}})
         response = session.post(url + '/item', headers={'Authorization': 'Bearer ' + login['token']}, verify=False,
-                                json={'type': cave_church_type['id'], 'properties': {'name': 'Cappuccino Vecchio', 'location': {'type': 'Point', 'coordinates': [16.619395, 40.653033, 0.0]}}})
+                                json={'type': cave_church_type['id'], 'properties': {'name': 'Cappuccino Vecchio', 'icon': 'cave_church.png', 'location': {'type': 'Point', 'coordinates': [16.619395, 40.653033, 0.0]}}})
 
 if __name__ == '__main__':
     url = sys.argv[1] if len(sys.argv) > 1 else 'https://localhost:8080'

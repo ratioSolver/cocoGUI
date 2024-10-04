@@ -16,7 +16,7 @@
     </template>
     <template #drawer>
       <n-menu v-model:value="active_key" :options="menu" accordion />
-      <n-tree-select v-model:value="useCoCoStore().layers" :options="tree" multiple cascade checkable />
+      <n-tree-select v-model:value="useCoCoStore().layers" :options="tree" multiple checkable />
     </template>
     <router-view v-if="!coco.KnowledgeBase.getInstance().auth || coco.KnowledgeBase.getInstance().user" />
     <coco-login v-if="coco.KnowledgeBase.getInstance().auth && !coco.KnowledgeBase.getInstance().user"

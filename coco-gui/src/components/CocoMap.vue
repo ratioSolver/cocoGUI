@@ -239,12 +239,14 @@ function process_types(): void {
 function create_options(type: taxonomy.Type): L.GeoJSONOptions {
   const options: L.GeoJSONOptions = {
     style: (feature) => {
+      const static_props = taxonomy.static_properties(type);
+      const dynamic_props = taxonomy.dynamic_properties(type);
       const style: L.PathOptions = {};
-      if (taxonomy.static_properties(type).has('color') || taxonomy.dynamic_properties(type).has('color'))
+      if (static_props.has('color') || dynamic_props.has('color'))
         style.color = feature?.properties['color'];
-      if (taxonomy.static_properties(type).has('fillColor') || taxonomy.dynamic_properties(type).has('fillColor'))
+      if (static_props.has('fillColor') || dynamic_props.has('fillColor'))
         style.fillColor = feature?.properties['fillColor'];
-      if (taxonomy.static_properties(type).has('weight') || taxonomy.dynamic_properties(type).has('weight'))
+      if (static_props.has('weight') || dynamic_props.has('weight'))
         style.weight = feature?.properties['weight'];
       return style;
     },
@@ -255,12 +257,16 @@ function create_options(type: taxonomy.Type): L.GeoJSONOptions {
       layer.bindPopup(content);
     },
     pointToLayer: (feature, latlng) => {
+      const static_props = taxonomy.static_properties(type);
+      const dynamic_props = taxonomy.dynamic_properties(type);
+      if (static_props.has('icon') || dynamic_props.has('icon'))
+        return L.marker(latlng, { icon: L.icon({ iconUrl: feature?.properties['icon'], iconSize: [12, 16] }) });
       const options: L.CircleMarkerOptions = { radius: 5 };
-      if (taxonomy.static_properties(type).has('radius') || taxonomy.dynamic_properties(type).has('radius'))
+      if (static_props.has('radius') || dynamic_props.has('radius'))
         options.radius = feature?.properties['radius'];
-      if (taxonomy.static_properties(type).has('color') || taxonomy.dynamic_properties(type).has('color'))
+      if (static_props.has('color') || dynamic_props.has('color'))
         options.color = feature?.properties['color'];
-      if (taxonomy.static_properties(type).has('fillColor') || taxonomy.dynamic_properties(type).has('fillColor'))
+      if (static_props.has('fillColor') || dynamic_props.has('fillColor'))
         options.fillColor = feature?.properties['fillColor'];
       return L.circle(latlng, options);
     }

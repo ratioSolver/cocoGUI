@@ -46,8 +46,7 @@ def init_db(url):
         response = session.post(url + '/type', headers={'Authorization': 'Bearer ' + login['token']}, verify=False,
                                 json={'name': 'Church',
                                       'description': 'A type for churches',
-                                      'properties': {'icon': 'church.png'},
-                                      'static_properties': {'name': {'type': 'string'}, 'location': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}}})
+                                      'static_properties': {'name': {'type': 'string'}, 'icon': {'type': 'string'}, 'location': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}}})
         church_type = response.json()
         logger.debug('Church type %s created', church_type['id'])
 
@@ -62,8 +61,7 @@ def init_db(url):
         response = session.post(url + '/type', headers={'Authorization': 'Bearer ' + login['token']}, verify=False,
                                 json={'name': 'CaveChurch',
                                       'description': 'A type for cave churches',
-                                      'parents': [church_type['id']],
-                                      'properties': {'icon': 'cavechurch.png'}})
+                                      'parents': [church_type['id']]})
         cave_church_type = response.json()
         logger.debug('Cave church type %s created', cave_church_type['id'])
 
@@ -78,8 +76,7 @@ def init_db(url):
         response = session.post(url + '/type', headers={'Authorization': 'Bearer ' + login['token']}, verify=False,
                                 json={'name': 'Bus',
                                       'description': 'A type for buses',
-                                      'properties': {'icon': 'bus.png'},
-                                      'static_properties': {'name': {'type': 'string'}, 'capacity': {'type': 'integer', 'min': 0, 'max': 100}},
+                                      'static_properties': {'name': {'type': 'string'}, 'icon': {'type': 'string'}, 'capacity': {'type': 'integer', 'min': 0, 'max': 100}},
                                       'dynamic_properties': {'position': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}}})
         bus_type = response.json()
         logger.debug('Bus type %s created', bus_type['id'])
