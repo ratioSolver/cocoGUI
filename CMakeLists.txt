@@ -7,9 +7,9 @@ enable_testing()
 
 set(CLIENT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/coco-client CACHE STRING "Client directory" FORCE)
 set(ENABLE_API ON CACHE BOOL "Enable CoCo API" FORCE)
-set(ENABLE_TRANSFORMER ON CACHE BOOL "Enable CoCo transformer" FORCE)
-set(ENABLE_AUTH ON CACHE BOOL "Enable authentication for clients" FORCE)
-set(ENABLE_SSL ON CACHE BOOL "Enable Secure Sockets Layer (SSL) for secure communication" FORCE)
+#set(ENABLE_TRANSFORMER ON CACHE BOOL "Enable CoCo transformer" FORCE)
+#set(ENABLE_AUTH ON CACHE BOOL "Enable authentication for clients" FORCE)
+#set(ENABLE_SSL ON CACHE BOOL "Enable Secure Sockets Layer (SSL) for secure communication" FORCE)
 set(LOGGING_LEVEL "TRACE" CACHE STRING "Logging level" FORCE)
 
 add_subdirectory(extern/coco)
