@@ -48,13 +48,13 @@ export namespace values {
         }
 
         static item_title(itm: Item): string {
-            return itm.type.split(":").pop() + '(' + Array.from(itm.exprs.keys()).join(', ') + ')';;
+            return itm.type.split(':').pop() + '(' + Array.from(itm.exprs.keys()).join(', ') + ')';;
         }
 
         static item_content(itm: Item): string {
             const pars = [];
             for (const [name, val] of itm.exprs)
-                pars.push('<br>' + name + ': ' + value_to_string(val));
+                pars.push('<br>' + name + ': ' + value_to_string(val, true));
             return itm.type + '(' + pars.join(',') + '<br>)';
         }
     }
@@ -79,13 +79,14 @@ export namespace values {
         }
 
         static atom_title(atm: Atom): string {
-            return atm.type.split(":").pop() + '(' + Array.from(atm.exprs.keys()).filter(par => par != 'start' && par != 'end' && par != 'duration' && par != 'tau' && par != 'this').map(par => value_to_string(atm.exprs.get(par)!)).join(', ') + ')';
+            console.log(atm);
+            return atm.type.split('.').pop() + '(' + Array.from(atm.exprs.keys()).filter(par => par != 'start' && par != 'end' && par != 'duration' && par != 'tau' && par != 'this').map(par => value_to_string(atm.exprs.get(par)!)).join(', ') + ')';
         }
 
         static atom_content(atm: Atom): string {
             const pars = [];
             for (const [name, val] of atm.exprs)
-                pars.push('<br>' + name + ': ' + value_to_string(val));
+                pars.push('<br>' + name + ': ' + value_to_string(val, true));
             return '\u03C3' + atm.sigma + ' ' + atm.type + '(' + pars.join(',') + '<br>)';
         }
     }
@@ -111,11 +112,11 @@ export namespace values {
     export class Int {
 
         lin: string;
-        val: InfRational;
-        lb?: InfRational;
-        ub?: InfRational;
+        val: number;
+        lb?: number;
+        ub?: number;
 
-        constructor(lin: string, val: InfRational, lb?: InfRational, ub?: InfRational) {
+        constructor(lin: string, val: number, lb?: number, ub?: number) {
             this.lin = lin;
             this.val = val;
             this.lb = lb;
@@ -175,36 +176,62 @@ export namespace values {
 
     export type Value = Bool | Int | Real | Time | String | Enum | Item;
 
-    export function get_value(value: any, items: Map<string, Item>): Value {
+    export function get_value(value: any, items: Map<number, Item>): Value {
         switch (value.type) {
-            case "bool":
-                return { lit: value.lit, val: Lit[value.val as keyof typeof Lit] };
-            case "int":
-            case "real":
-            case "time":
-                return { lin: value.lin, val: get_inf_rational(value.val), lb: value.lb ? get_inf_rational(value.lb) : new InfRational(-1, 0), ub: value.ub ? get_inf_rational(value.ub) : new InfRational(1, 0) };
-            case "string":
-                return { val: value.val };
-            case "enum":
-                return { v: value.v, vals: value.vals.map((item: any) => items.get(item)) };
-            case "item":
+            case 'bool':
+                return new Bool(value.lit, Lit[value.val as keyof typeof Lit]);
+            case 'int':
+                return new Int(value.lin, value.val, value.lb, value.ub);
+            case 'real':
+                return new Real(value.lin, get_inf_rational(value.val), value.lb ? get_inf_rational(value.lb) : undefined, value.ub ? get_inf_rational(value.ub) : undefined);
+            case 'time':
+                return new Time(value.lin, get_inf_rational(value.val), value.lb ? get_inf_rational(value.lb) : undefined, value.ub ? get_inf_rational(value.ub) : undefined);
+            case 'string':
+                return new String(value.val);
+            case 'enum':
+                return new Enum(value.v, value.vals.map((item: any) => items.get(item)));
+            case 'item':
                 return items.get(value.id)!;
             default:
-                throw new Error(`Unknown evalueession type: ${value.type}`);
+                throw new Error(`Unknown type: ${value.type}`);
         }
     }
 
-    export function value_to_string(value: Value): string {
+    export function value_to_string(value: Value, expressive = false): string {
+        console.log(value.constructor.name);
         if (value instanceof Bool) {
-            return value.val === Lit.True ? "true" : value.val === Lit.False ? "false" : "undefined";
-        } else if (value instanceof Int || value instanceof Real || value instanceof Time) {
-            return `${value.lin} = ${value.val.num}/${value.val.den}${value.lb ? ` [${value.lb.num}/${value.lb.den}, ${value.ub!.num}/${value.ub!.den}]` : ""}`;
+            switch (value.val) {
+                case Lit.True:
+                    return expressive ? 'true' : '⊤';
+                case Lit.False:
+                    return expressive ? 'false' : '⊥';
+                default:
+                    return expressive ? 'undefined' : 'U';
+            }
+        } else if (value instanceof Int) {
+            if (expressive) {
+                let res = `${value.val}`;
+                if (value.lb || value.ub)
+                    res += `[${value.lb?.toString() ?? '-∞'}, ${value.ub?.toString() ?? '+∞'}]`;
+                return res + `(${value.lin})`;
+            } else
+                return value.val.toString();
+        } else if (value instanceof Real || value instanceof Time) {
+            if (expressive) {
+                let res = `${value.val.to_number()}`;
+                if (value.lb || value.ub)
+                    res += `[${value.lb?.to_number() ?? '-∞'}, ${value.ub?.to_number() ?? '+∞'}]`;
+                return res + `(${value.lin})`;
+            } else
+                return value.val.to_number().toString();
         } else if (value instanceof String) {
-            return `"${value.val}"`;
+            return `'${value.val}'`;
         } else if (value instanceof Enum) {
-            return `${value.v} = ${value.vals.map((item: Item) => item.name).join(", ")}`;
-        } else {
+            if (expressive)
+                return (value.vals.length == 1 ? value.vals[0].name : `{${value.vals.map((item: Item) => item.name).join(', ')}}`) + ` (${value.v})`;
+            else
+                return value.vals.length == 1 ? value.vals[0].name : `{${value.vals.map((item: Item) => item.name).join(', ')}}`;
+        } else
             return value.name;
-        }
     }
 }

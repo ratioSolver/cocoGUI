@@ -52,7 +52,7 @@ class TimelinesChart extends solver.SolverListener {
     solver.add_listener(this);
   }
 
-  state(items: Map<string, values.Item>, atoms: Map<string, values.Atom>, exprs: Map<string, values.Value>, timelines: Map<string, timelines.Timeline<timelines.TimelineValue>>, executing_tasks: Set<values.Atom>, time: values.Rational, state: solver.State): void {
+  state(items: Map<number, values.Item>, atoms: Map<number, values.Atom>, exprs: Map<string, values.Value>, timelines: Map<string, timelines.Timeline<timelines.TimelineValue>>, executing_tasks: Set<values.Atom>, time: values.Rational, state: solver.State): void {
     if (exprs.size == 0) {
       this.origin = 0;
       this.horizon = 1;

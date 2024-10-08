@@ -79,7 +79,7 @@ class SolverGraph extends solver.SolverListener {
           selector: 'node.current',
           style: {
             'border-width': '3px',
-            'border-color': '#000'
+            'border-color': '#919'
           }
         }
       ]

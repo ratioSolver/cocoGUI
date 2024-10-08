@@ -22,7 +22,7 @@ export namespace solver {
          * @param time The current time.
          * @param state The new solver state.
          */
-        state(items: Map<string, values.Item>, atoms: Map<string, values.Atom>, exprs: Map<string, values.Value>, timelines: Map<string, timelines.Timeline<timelines.TimelineValue>>, executing_tasks: Set<values.Atom>, time: values.Rational, state: State): void { }
+        state(items: Map<number, values.Item>, atoms: Map<number, values.Atom>, exprs: Map<string, values.Value>, timelines: Map<string, timelines.Timeline<timelines.TimelineValue>>, executing_tasks: Set<values.Atom>, time: values.Rational, state: State): void { }
 
         /**
          * Notifies the listener that the solver graph has changed.
@@ -150,8 +150,8 @@ export namespace solver {
         name: string;
         state: State;
 
-        items: Map<string, values.Item>;
-        atoms: Map<string, values.Atom>;
+        items: Map<number, values.Item>;
+        atoms: Map<number, values.Atom>;
         exprs: Map<string, values.Value>;
         timelines: Map<string, timelines.Timeline<timelines.TimelineValue>>;
         executing_tasks: Set<values.Atom>;
@@ -288,7 +288,12 @@ export namespace solver {
                 this.listeners.forEach(listener => listener.current_resolver_changed(this.current_resolver!));
                 this.current_resolver = undefined;
             }
+            if (this.current_flaw) {
+                this.current_flaw.current = false;
+                this.listeners.forEach(listener => listener.current_flaw_changed(this.current_flaw!));
+            }
             this.current_flaw = this.flaws.get(current_flaw_changed_message.id)!;
+            this.current_flaw.current = true;
             this.listeners.forEach(listener => listener.current_flaw_changed(this.current_flaw!));
         }
 
@@ -308,6 +313,7 @@ export namespace solver {
 
         set_current_resolver(current_resolver_changed_message: any): void {
             this.current_resolver = this.resolvers.get(current_resolver_changed_message.id)!;
+            this.current_resolver.current = true;
             this.listeners.forEach(listener => listener.current_resolver_changed(this.current_resolver!));
         }
 
@@ -347,22 +353,22 @@ export namespace solver {
         }
 
         starting(starting_message: any): void {
-            const tasks: Set<values.Atom> = new Set(starting_message.tasks.map((task: string) => this.atoms.get(task)!));
+            const tasks: Set<values.Atom> = new Set(starting_message.tasks.map((task: number) => this.atoms.get(task)!));
             this.listeners.forEach(listener => listener.starting(tasks));
         }
 
         ending(ending_message: any): void {
-            const tasks: Set<values.Atom> = new Set(ending_message.tasks.map((task: string) => this.atoms.get(task)!));
+            const tasks: Set<values.Atom> = new Set(ending_message.tasks.map((task: number) => this.atoms.get(task)!));
             this.listeners.forEach(listener => listener.ending(tasks));
         }
 
         start(start_message: any): void {
-            const tasks: Set<values.Atom> = new Set(start_message.tasks.map((task: string) => this.atoms.get(task)!));
+            const tasks: Set<values.Atom> = new Set(start_message.tasks.map((task: number) => this.atoms.get(task)!));
             this.listeners.forEach(listener => listener.start(tasks));
         }
 
         end(end_message: any): void {
-            const tasks: Set<values.Atom> = new Set(end_message.tasks.map((task: string) => this.atoms.get(task)!));
+            const tasks: Set<values.Atom> = new Set(end_message.tasks.map((task: number) => this.atoms.get(task)!));
             this.listeners.forEach(listener => listener.end(tasks));
         }
 
