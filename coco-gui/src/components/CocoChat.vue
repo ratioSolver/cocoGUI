@@ -13,6 +13,10 @@
     <n-grid-item>
       <n-input v-model:value="message" placeholder="Type a message..." style="width: 100%;" @keyup.enter="send_message">
         <template #suffix>
+          <n-button @click="open_mic" :bordered="false" v-if="has_speech_recognition"
+            :disabled="!props.item.type.dynamic_properties.has('open_mic') || speaking">
+            <n-icon :component="recognizing ? Mic24Filled : Mic24Regular" />
+          </n-button>
           <n-button @click="send_message" :bordered="false">
             <n-icon :component="Send24Regular" />
           </n-button>
@@ -24,7 +28,7 @@
 
 <script setup lang="ts">
 import { NGrid, NGridItem, NList, NListItem, NTag, NInput, NButton, NIcon } from 'naive-ui';
-import { Send24Regular } from '@vicons/fluent';
+import { Send24Regular, Mic24Regular, Mic24Filled } from '@vicons/fluent';
 import { taxonomy } from '@/taxonomy';
 import { coco } from '@/coco';
 import { ref, watch } from 'vue';
@@ -39,6 +43,52 @@ const chat = ref(null)
 
 const message = ref('');
 
+const recognition = new ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)();
+const has_speech_recognition = ref(!!recognition);
+const recognizing = ref(false);
+
+const synthesis = window.speechSynthesis;
+const speaking = ref(false);
+
+// Check if the browser supports the SpeechRecognition API
+if (recognition) {
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  recognition.onresult = (event: any) => {
+    message.value = event.results[0][0].transcript;
+  };
+
+  recognition.onspeechend = () => {
+    close_mic();
+    send_message();
+  };
+
+  watch(() => props.item.value, () => {
+    if (props.item.value.data.open_mic)
+      open_mic();
+    else
+      close_mic();
+  });
+}
+
+const open_mic = () => {
+  recognizing.value = true;
+  recognition.start();
+};
+
+const close_mic = () => {
+  recognizing.value = false;
+  recognition.stop();
+};
+
+const syntesize = (text: string) => {
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.onstart = () => speaking.value = true;
+  utterance.onend = () => speaking.value = false;
+  synthesis.speak(utterance);
+};
+
 const send_message = () => {
   if (!message.value)
     return;
@@ -52,6 +102,10 @@ const send_message = () => {
 };
 
 watch(() => props.item.values, () => (chat.value! as HTMLDivElement).scrollTop = (chat.value! as HTMLDivElement).scrollHeight);
+watch(() => props.item.value.data, (value => {
+  if (value.text && !value.me)
+    syntesize(value.text);
+}));
 </script>
 
 <script lang="ts">
