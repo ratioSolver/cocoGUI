@@ -73,11 +73,17 @@ if (recognition) {
 }
 
 const open_mic = () => {
+  const data: Record<string, any> = {};
+  data.open_mic = true;
+  coco.KnowledgeBase.getInstance().publish(props.item, data);
   recognizing.value = true;
   recognition.start();
 };
 
 const close_mic = () => {
+  const data: Record<string, any> = {};
+  data.open_mic = false;
+  coco.KnowledgeBase.getInstance().publish(props.item, data);
   recognizing.value = false;
   recognition.stop();
 };
