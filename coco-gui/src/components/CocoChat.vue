@@ -65,14 +65,15 @@ if (recognition) {
   };
 
   watch(() => props.item.value, () => {
-    if (props.item.value.data.open_mic)
+    if (props.item.value.data.open_mic && !recognizing.value)
       open_mic();
-    else
+    else if (!props.item.value.data.open_mic && recognizing.value)
       close_mic();
   });
 }
 
 const open_mic = () => {
+  console.debug('Opening micrphone');
   const data: Record<string, any> = {};
   data.open_mic = true;
   coco.KnowledgeBase.getInstance().publish(props.item, data);
@@ -81,6 +82,7 @@ const open_mic = () => {
 };
 
 const close_mic = () => {
+  console.debug('Closing micrphone');
   const data: Record<string, any> = {};
   data.open_mic = false;
   coco.KnowledgeBase.getInstance().publish(props.item, data);
@@ -89,6 +91,7 @@ const close_mic = () => {
 };
 
 const syntesize = (text: string) => {
+  console.debug('Synthesizing: ', text);
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.onstart = () => speaking.value = true;
   utterance.onend = () => speaking.value = false;
