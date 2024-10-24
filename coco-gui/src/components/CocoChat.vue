@@ -35,7 +35,7 @@ import { ref, watch } from 'vue';
 
 const range = ref<[number, number]>([new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).getTime(), new Date().getTime()]);
 
-const props = withDefaults(defineProps<{ item: taxonomy.Item; chat_id: string; }>(), { chat_id: 'chat' });
+const props = withDefaults(defineProps<{ item: taxonomy.Item; chat_id: string; lang: string; voice: string | null; }>(), { chat_id: 'chat', lang: 'en-US', voice: null });
 if (!props.item.values.length)
   coco.KnowledgeBase.getInstance().load_data(props.item, range.value[0], range.value[1]);
 
@@ -46,14 +46,24 @@ const message = ref('');
 const recognition = new ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)();
 const has_speech_recognition = ref(!!recognition);
 const recognizing = ref(false);
+let pending_recognition = false;
 
 const synthesis = window.speechSynthesis;
 const speaking = ref(false);
+let voice: SpeechSynthesisVoice | null = null;
+synthesis.onvoiceschanged = () => {
+  for (const v of synthesis.getVoices())
+    console.debug('Voice:', v.name, v.lang);
+  console.debug('Desired voice:', props.voice);
+  voice = props.voice ? synthesis.getVoices().find((v: SpeechSynthesisVoice) => v.name === props.voice)! : synthesis.getVoices().find((v: SpeechSynthesisVoice) => v.lang === props.lang)!;
+  console.debug('Selected voice:', voice);
+};
 
 // Check if the browser supports the SpeechRecognition API
 if (recognition) {
-  recognition.continuous = true;
+  recognition.continuous = false;
   recognition.interimResults = true;
+  recognition.lang = props.lang;
 
   recognition.onresult = (event: any) => {
     message.value = event.results[0][0].transcript;
@@ -64,11 +74,24 @@ if (recognition) {
     send_message();
   };
 
+  recognition.onerror = (event: any) => {
+    console.error('Speech recognition error:', event.error);
+    close_mic();
+  };
+
   watch(() => props.item.value, () => {
-    if (props.item.value.data.open_mic && !recognizing.value)
-      open_mic();
-    else if (!props.item.value.data.open_mic && recognizing.value)
+    if (props.item.value.data.open_mic && !recognizing.value) { // Open mic sent by the server
+      if (!pending_recognition)
+        open_mic();
+      else { // We are speaking, so we enqueue the recognition
+        console.debug('We enqueue the recognition');
+        pending_recognition = true;
+      }
+    }
+    else if (!props.item.value.data.open_mic && recognizing.value) { // Close mic sent by the server
+      pending_recognition = false;
       close_mic();
+    }
   });
 }
 
@@ -93,8 +116,21 @@ const close_mic = () => {
 const syntesize = (text: string) => {
   console.debug('Synthesizing: ', text);
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.onstart = () => speaking.value = true;
-  utterance.onend = () => speaking.value = false;
+  if (voice)
+    utterance.voice = voice;
+  speaking.value = true;
+  utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
+    console.error('Speech synthesis error:', event.error);
+    speaking.value = false;
+  };
+  utterance.onend = () => {
+    speaking.value = false;
+    if (pending_recognition) {
+      console.debug('We dequeue the recognition');
+      open_mic();
+      pending_recognition = false;
+    }
+  };
   synthesis.speak(utterance);
 };
 
