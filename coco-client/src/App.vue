@@ -167,5 +167,5 @@ function users_menu_options(items: Map<string, taxonomy.Item>): MenuOption[] {
   });
 }
 
-coco.KnowledgeBase.getInstance().init(import.meta.env.VITE_SSL == 'ON', import.meta.env.VITE_AUTH == 'ON');
+coco.KnowledgeBase.getInstance().init(import.meta.env.VITE_SSL == 'ON' || import.meta.env.VITE_SSL == 'TRUE', import.meta.env.VITE_AUTH == 'ON' || import.meta.env.VITE_AUTH == 'TRUE');
 </script>
