@@ -280,6 +280,67 @@ export namespace coco {
     }
 
     /**
+     * Creates a new type in the taxonomy system.
+     *
+     * @param name - The name of the type to be created.
+     * @param description - An optional description of the type.
+     * @param parents - An optional array of parent types.
+     * @param static_properties - An optional map of static properties for the type.
+     * @param dynamic_properties - An optional map of dynamic properties for the type.
+     * @returns A promise that resolves to a boolean indicating whether the type was successfully created.
+     */
+    async create_type(name: string, description: string | undefined = undefined, parents: taxonomy.Type[] | undefined = undefined, static_properties: Map<string, taxonomy.Property> | undefined = undefined, dynamic_properties: Map<string, taxonomy.Property> | undefined = undefined): Promise<boolean> {
+      const headers: { 'content-type': string, 'authorization'?: string } = { 'content-type': 'application/json' };
+      if (this.auth && this.user)
+        headers['authorization'] = 'Bearer ' + this.user.id;
+      const type: { name: string, description?: string, parents?: string[], static_properties?: Record<string, any>, dynamic_properties?: Record<string, any> } = { name: name };
+      if (description)
+        type.description = description;
+      if (parents)
+        type.parents = parents.map(parent => parent.id);
+      if (static_properties)
+        type.static_properties = static_properties;
+      if (dynamic_properties)
+        type.dynamic_properties = dynamic_properties;
+      const response = await fetch(this.host + '/type', { method: 'POST', headers: headers, body: JSON.stringify(type) });
+      if (response.ok) {
+        const data = await response.json();
+        return true;
+      } else {
+        const data = await response.json();
+        this.error(data.message);
+        return false;
+      }
+    }
+
+    /**
+     * Creates a new item of the specified type with the given properties.
+     *
+     * @param type - The type of the item to be created.
+     * @param properties - An optional map of properties for the item.
+     * @returns A promise that resolves to a boolean indicating whether the item was successfully created.
+     *
+     * @throws Will throw an error if the response is not ok and contains an error message.
+     */
+    async create_item(type: taxonomy.Type, properties: Record<string, any> | undefined = undefined): Promise<boolean> {
+      const headers: { 'content-type': string, 'authorization'?: string } = { 'content-type': 'application/json' };
+      if (this.auth && this.user)
+        headers['authorization'] = 'Bearer ' + this.user.id;
+      const item: { type_id: string, properties?: Record<string, any> } = { type_id: type.id };
+      if (properties)
+        item.properties = properties;
+      const response = await fetch(this.host + '/item', { method: 'POST', headers: headers, body: JSON.stringify(item) });
+      if (response.ok) {
+        const data = await response.json();
+        return true;
+      } else {
+        const data = await response.json();
+        this.error(data.message);
+        return false;
+      }
+    }
+
+    /**
      * Connects to the CoCo server using WebSocket.
      * 
      * @param timeout The timeout value in milliseconds for reconnecting to the server if the connection is closed. Default is 5000.

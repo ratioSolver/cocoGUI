@@ -2,8 +2,9 @@ import CocoApp from './components/CocoApp.vue';
 import CocoLayout from './components/CocoLayout.vue';
 import CocoChat from './components/CocoChat.vue';
 import CocoFrame from './components/CocoFrame.vue';
-import CocoLogin from './components/user/CocoLogin.vue';
-import CocoNewuser from './components/user/CocoNewuser.vue';
+import CocoToolbox from './components/CocoToolbox.vue';
+import LoginDialog from './components/user/LoginDialog.vue';
+import NewUserDialog from './components/user/NewUserDialog.vue';
 import CocoMap from './components/CocoMap.vue';
 
 import BooleanProperty from '@/components/properties/BooleanProperty.vue';
@@ -24,6 +25,8 @@ import TypeListItem from './components/taxonomy/TypeListItem.vue';
 import Type from './components/taxonomy/Type.vue';
 import TaxonomyGraph from './components/taxonomy/TaxonomyGraph.vue';
 
+import NewTypeDialog from './components/taxonomy/NewTypeDialog.vue';
+
 import Solver from './components/solver/Solver.vue';
 import SolverListItem from './components/solver/SolverListItem.vue';
 import SolverGraph from './components/solver/SolverGraph.vue';
@@ -34,9 +37,10 @@ export { coco } from './coco';
 export { taxonomy } from './taxonomy';
 export { solver } from './solver';
 export { rule } from './rule';
-export { CocoApp, CocoLayout, CocoChat, CocoFrame, CocoLogin, CocoNewuser, CocoMap };
+export { CocoApp, CocoLayout, CocoChat, CocoFrame, CocoToolbox, LoginDialog, NewUserDialog, CocoMap };
 export { BooleanProperty, IntegerProperty, RealProperty, StringProperty, SymbolProperty, ItemProperty };
 export { ReactiveRule, DeliberativeRule, Item, ItemListItem, ItemChart, ItemPublisher, ItemTable, TypeListItem, Type, TaxonomyGraph };
+export { NewTypeDialog };
 export { Solver, SolverListItem, SolverGraph, SolverTimelines };
 
 import cytoscape from 'cytoscape';

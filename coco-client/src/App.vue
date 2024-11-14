@@ -6,64 +6,26 @@
       </router-link>
     </template>
     <template #header-extra>
-      <div>
-        <n-button v-if="coco.KnowledgeBase.getInstance().user?.properties.role < 2" size="large"
-          @click="new_user_dialog = true">
-          <n-icon size="36" :component="PersonAdd20Filled" />
-        </n-button>
-        <n-dropdown v-if="coco.KnowledgeBase.getInstance().auth" trigger="click"
-          :options="coco.KnowledgeBase.getInstance().user ? loggedin_options : loggedout_options"
-          @select="handle_option">
-          <n-button v-if="coco.KnowledgeBase.getInstance().user" size="large">
-            <n-icon size="36" :component="Person20Filled" />
-          </n-button>
-          <n-button v-else size="large">Login</n-button>
-        </n-dropdown>
-      </div>
+      <coco-toolbox />
     </template>
     <template #drawer>
       <n-menu v-model:value="active_key" :options="menu" accordion />
       <n-tree-select v-model:value="useCoCoStore().layers" :options="tree" multiple checkable />
     </template>
     <router-view v-if="!coco.KnowledgeBase.getInstance().auth || coco.KnowledgeBase.getInstance().user" />
-    <coco-login v-if="coco.KnowledgeBase.getInstance().auth && !coco.KnowledgeBase.getInstance().user"
-      :modal="login_dialog" @update:modal="login_dialog = $event" />
-    <coco-newuser
-      v-if="!coco.KnowledgeBase.getInstance().user || coco.KnowledgeBase.getInstance().user!.properties.role < 2"
-      :modal="new_user_dialog" @update:modal="new_user_dialog = $event" />
   </coco-app>
 </template>
 
 <script setup lang="ts">
 import 'coco-gui/dist/style.css';
-import { PersonAdd20Filled, Person20Filled, Box20Regular, Circle20Regular, BrainCircuit20Regular, PauseCircle20Regular, PlayCircle20Regular, CheckmarkCircle20Regular, ErrorCircle20Regular } from '@vicons/fluent';
-import { NDropdown, NButton, NIcon, NMenu, NTreeSelect, type DropdownOption, type MenuOption, type TreeSelectOption } from 'naive-ui';
-import { CocoApp, CocoLogin, CocoNewuser, taxonomy, rule, solver, coco } from 'coco-gui';
+import { Box20Regular, Circle20Regular, BrainCircuit20Regular, PauseCircle20Regular, PlayCircle20Regular, CheckmarkCircle20Regular, ErrorCircle20Regular } from '@vicons/fluent';
+import { NMenu, NTreeSelect, type MenuOption, type TreeSelectOption } from 'naive-ui';
+import { CocoApp, CocoToolbox, taxonomy, rule, solver, coco } from 'coco-gui';
 import { computed, h, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useCoCoStore } from './stores/coco';
 
 const name = import.meta.env.VITE_NAME as string;
-
-const new_user_dialog = ref(false);
-const login_dialog = ref(false);
-
-const loggedout_options: DropdownOption[] = [
-  { label: 'Login', key: 'login' },
-  { label: 'Register', key: 'register' }
-];
-const loggedin_options: DropdownOption[] = [
-  { label: 'Profile', key: 'profile' },
-  { label: 'Logout', key: 'logout' }
-];
-function handle_option(key: string): void {
-  switch (key) {
-    case 'login': login_dialog.value = true; break;
-    case 'register': new_user_dialog.value = true; break;
-    case 'profile': break;
-    case 'logout': return coco.KnowledgeBase.getInstance().logout();
-  }
-}
 
 const active_key = ref<string | null>(null);
 const menu = computed<MenuOption[]>(() => [
