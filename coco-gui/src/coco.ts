@@ -43,7 +43,7 @@ export namespace coco {
 
     user_type: taxonomy.Type | null = null;
     user: taxonomy.Item | null = null;
-    ssl: boolean = false;
+    host: string = 'http://localhost:8080';
     auth: boolean = false;
     types: Map<string, taxonomy.Type>;
     items: Map<string, taxonomy.Item>;
@@ -87,8 +87,9 @@ export namespace coco {
      * it will attempt to connect using the token. Otherwise, it will connect
      * without authentication.
      */
-    init(ssl: boolean, auth: boolean): void {
-      this.ssl = ssl;
+    init(host: string = 'localhost', port: number = 8080, ssl: boolean = false, auth: boolean = false): void {
+      this.host = (ssl ? 'https' : 'http') + '://' + host + ':' + port;
+      console.log('CoCo server:', this.host);
       this.auth = auth;
       if (this.auth) {
         const token = localStorage.getItem('token');
@@ -227,15 +228,15 @@ export namespace coco {
      * 
      * @param username - The username for the new user.
      * @param password - The password for the new user.
-     * @param roles - The roles for the new user. Defaults to an empty array.
+     * @param personal_data - User data to be associated with the user. Defaults to an empty object.
      * @param data - Additional data to be associated with the user. Defaults to an empty object.
      * @returns A promise that resolves to the token of the new user if the user was created successfully, or `null` otherwise.
      */
-    async create_user(username: string, password: string, roles: number[] = [], data: Record<string, any> = {}): Promise<string | null> {
+    async create_user(username: string, password: string, personal_data: Record<string, any> = {}, data: Record<string, any> = {}): Promise<string | null> {
       const headers: { 'content-type': string, 'authorization'?: string } = { 'content-type': 'application/json' };
       if (this.auth && this.user)
         headers['authorization'] = 'Bearer ' + this.user.id;
-      const response = await fetch((this.ssl ? 'https' : 'http') + '://' + location.host + '/user', { method: 'POST', headers: headers, body: JSON.stringify({ username: username, password: password, roles: roles, ...data }) });
+      const response = await fetch(this.host + '/user', { method: 'POST', headers: headers, body: JSON.stringify({ username: username, password: password, personal_data: personal_data, data: data }) });
       if (response.ok) { // User created successfully
         const data = await response.json();
         return data.token;
@@ -255,7 +256,7 @@ export namespace coco {
      */
     async login(username: string, password: string): Promise<boolean> {
       this.user = null;
-      const response = await fetch((this.ssl ? 'https' : 'http') + '://' + location.host + '/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: username, password: password }) });
+      const response = await fetch(this.host + '/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username: username, password: password }) });
       if (response.ok) { // Login successful
         const data = await response.json();
         localStorage.setItem('token', data.token);
@@ -284,8 +285,8 @@ export namespace coco {
      * @param timeout The timeout value in milliseconds for reconnecting to the server if the connection is closed. Default is 5000.
      */
     connect(token: string | null = null, timeout = 5000) {
-      console.debug('Connecting to CoCo server ' + (this.ssl ? 'wss' : 'ws') + '://' + location.host + '/coco');
-      this.socket = new WebSocket((this.ssl ? 'wss' : 'ws') + '://' + location.host + '/coco');
+      console.debug('Connecting to CoCo server ' + this.host + '/coco');
+      this.socket = new WebSocket(this.host + '/coco');
       this.socket.onopen = () => {
         console.debug('Connected to CoCo server');
         if (token) {
@@ -323,7 +324,7 @@ export namespace coco {
       const headers: { 'content-type': string, 'authorization'?: string } = { 'content-type': 'application/json' };
       if (this.auth && this.user)
         headers['authorization'] = 'Bearer ' + this.user.id;
-      fetch((this.ssl ? 'https' : 'http') + '://' + location.host + '/data/' + item.id, { method: 'POST', headers: headers, body: JSON.stringify(data) }).then(res => {
+      fetch(this.host + '/data/' + item.id, { method: 'POST', headers: headers, body: JSON.stringify(data) }).then(res => {
         if (!res.ok)
           res.json().then(data => this.error(data.message)).catch(err => console.error(err));
       });
@@ -341,7 +342,7 @@ export namespace coco {
       const headers: { 'content-type': string, 'authorization'?: string } = { 'content-type': 'application/json' };
       if (this.auth && this.user)
         headers['authorization'] = 'Bearer ' + this.user.id;
-      fetch((this.ssl ? 'https' : 'http') + '://' + location.host + '/data/' + item.id + '?' + new URLSearchParams({ from: from.toString(), to: to.toString() }), { method: 'GET', headers: headers }).then(res => {
+      fetch(this.host + '/data/' + item.id + '?' + new URLSearchParams({ from: from.toString(), to: to.toString() }), { method: 'GET', headers: headers }).then(res => {
         if (res.ok)
           res.json().then(data => this.set_data(item, data));
         else
@@ -361,7 +362,7 @@ export namespace coco {
       const headers: { 'content-type': string, 'authorization'?: string } = { 'content-type': 'application/json' };
       if (this.auth && this.user)
         headers['authorization'] = 'Bearer ' + this.user.id;
-      const response = await fetch((this.ssl ? 'https' : 'http') + '://' + location.host + '/items?type_id=' + type.id, { method: 'GET', headers: headers });
+      const response = await fetch(this.host + '/items?type_id=' + type.id, { method: 'GET', headers: headers });
       if (response.ok) {
         const items = await response.json();
         return items.map((item: any) => {

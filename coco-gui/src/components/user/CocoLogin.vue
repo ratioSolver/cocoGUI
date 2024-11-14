@@ -1,5 +1,5 @@
 <template>
-  <n-modal v-model:show="local_modal">
+  <n-modal v-model:show="local_modal" :on-update:show="(value) => emit('update:modal', value)">
     <n-card title="Log in" style="width: 400px;">
       <n-form :model="form_value" :rules="rules" ref="form_ref">
         <n-form-item label="Username" path="username">
@@ -40,10 +40,10 @@ function validate(e: MouseEvent) {
   e.preventDefault();
   form_ref.value?.validate((errors: Array<FormValidationError> | undefined) => {
     if (!errors)
-      coco.KnowledgeBase.getInstance().login(form_value.value.username!, form_value.value.password!)
+      coco.KnowledgeBase.getInstance().login(form_value.value.username, form_value.value.password)
         .then((logged: boolean) => {
           if (logged)
-            emit('update:modal', false);
+            local_modal.value = false;
         }).catch((err) => message.error(err));
   }).catch((err) => console.debug(err));
 }
