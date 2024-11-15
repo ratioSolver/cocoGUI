@@ -22,26 +22,17 @@ RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DMONGOCXX_OVERRIDE_DEFAULT_INSTALL_PREF
 RUN cmake --build .
 RUN cmake --build . --target install
 
-# Install Node.js through NVM
-WORKDIR /tmp
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-SHELL ["/bin/bash", "-c"]
-RUN source ~/.nvm/nvm.sh && nvm install node && nvm alias default node
-
 # Clean up
 RUN rm -rf /tmp/*
 
-# Use a base image with CLIPS, MongoDB C++ driver, and Node.js
+# Use a base image with CLIPS and MongoDB C++ driver
 FROM coco_base AS coco
 
 # Expose the port that CoCo uses to run
 EXPOSE 8080
 
 # Set the environment variables
-ARG MONGODB_HOST=coco-db
-ARG MONGODB_PORT=27017
-ARG TRANSFORMER_HOST=coco-rasa
-ARG CLIENT_FOLDER=coco-client
+ARG CLIENT_DIR=coco-client
 
 # Install CoCo
 WORKDIR /home
@@ -49,11 +40,21 @@ RUN git clone -b memory --recursive https://github.com/ratioSolver/cocoGUI
 
 # Build CoCo Backend
 WORKDIR /home/cocoGUI
-RUN mkdir build && cd build && cmake -DMONGODB_HOST=${MONGODB_HOST} -DMONGODB_PORT=${MONGODB_PORT} -DTRANSFORMER_HOST=${TRANSFORMER_HOST} -DCLIENT_FOLDER=${CLIENT_FOLDER} .. && make
+RUN mkdir build && cd build && cmake -DCLIENT_DIR=${CLIENT_DIR} .. && make
+
+# Install Node.js through NVM
+WORKDIR /tmp
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+SHELL ["/bin/bash", "-c"]
+RUN source ~/.nvm/nvm.sh && nvm install node && nvm alias default node
 
 # Build CoCo Frontend
 WORKDIR /home/cocoGUI/coco-client
-RUN source ~/.nvm/nvm.sh && npm install && npm run build
+RUN source ~/.nvm/nvm.sh && npm install
+RUN source ~/.nvm/nvm.sh && npm run build
 
-WORKDIR /home/cocoGUI
+# Clean up
+RUN rm -rf /tmp/*
+
+# Run CoCo
 CMD /home/cocoGUI/build/CoCoGUI
