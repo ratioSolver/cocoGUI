@@ -6,7 +6,8 @@
       </router-link>
     </template>
     <template #header-extra>
-      <coco-toolbox />
+      <coco-toolbox
+        :personal_properties="[new taxonomy.StringProperty('First name'), new taxonomy.StringProperty('Last name')]" />
     </template>
     <template #drawer>
       <n-menu v-model:value="active_key" :options="menu" accordion />

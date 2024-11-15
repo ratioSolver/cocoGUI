@@ -1,6 +1,5 @@
-import { Component, computed, h } from "vue";
+import { h } from "vue";
 import { taxonomy } from "./taxonomy";
-import { rule } from "./rule";
 import { solver } from "./solver";
 import BooleanProperty from './components/properties/BooleanProperty.vue';
 import IntegerProperty from './components/properties/IntegerProperty.vue';

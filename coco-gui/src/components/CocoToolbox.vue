@@ -21,16 +21,19 @@
     </n-dropdown>
   </n-flex>
   <new-type-dialog
-    v-if="!coco.KnowledgeBase.getInstance().user || coco.KnowledgeBase.getInstance().user!.properties.role == 0"
+    v-if="coco.KnowledgeBase.getInstance().user && coco.KnowledgeBase.getInstance().user!.properties.role == 0"
     :modal="new_type_dialog" @update:modal="new_type_dialog = $event" />
   <new-item-dialog
-    v-if="!coco.KnowledgeBase.getInstance().user || coco.KnowledgeBase.getInstance().user!.properties.role < 1"
+    v-if="coco.KnowledgeBase.getInstance().user && coco.KnowledgeBase.getInstance().user!.properties.role < 1"
     :modal="new_item_dialog" @update:modal="new_item_dialog = $event" />
   <new-user-dialog
-    v-if="!coco.KnowledgeBase.getInstance().user || coco.KnowledgeBase.getInstance().user!.properties.role < 2"
-    :modal="new_user_dialog" @update:modal="new_user_dialog = $event" />
+    v-if="coco.KnowledgeBase.getInstance().user && coco.KnowledgeBase.getInstance().user!.properties.role < 2"
+    :modal="new_user_dialog" :personal_properties="props.personal_properties"
+    @update:modal="new_user_dialog = $event" />
   <login-dialog v-if="coco.KnowledgeBase.getInstance().auth && !coco.KnowledgeBase.getInstance().user"
     :modal="login_dialog" @update:modal="login_dialog = $event" />
+  <user-dialog v-if="coco.KnowledgeBase.getInstance().user" :modal="user_dialog"
+    :personal_properties="props.personal_properties" @update:modal="user_dialog = $event" />
 </template>
 
 <script setup lang="ts">
@@ -38,15 +41,20 @@ import NewTypeDialog from './taxonomy/NewTypeDialog.vue';
 import NewItemDialog from './taxonomy/NewItemDialog.vue';
 import NewUserDialog from './user/NewUserDialog.vue';
 import LoginDialog from './user/LoginDialog.vue';
+import UserDialog from './user/UserDialog.vue';
 import { coco } from '@/coco';
 import { AppsAddIn20Filled, AddSquare20Filled, PersonAdd20Filled, Person20Filled } from '@vicons/fluent';
 import { NFlex, NDropdown, NButton, NIcon, type DropdownOption } from 'naive-ui';
 import { ref } from 'vue';
+import { taxonomy } from '@/taxonomy';
+
+const props = withDefaults(defineProps<{ personal_properties: taxonomy.Property[] | undefined }>(), { personal_properties: undefined });
 
 const new_type_dialog = ref(false);
 const new_item_dialog = ref(false);
 const new_user_dialog = ref(false);
 const login_dialog = ref(false);
+const user_dialog = ref(false);
 
 const loggedout_options: DropdownOption[] = [
   { label: 'Login', key: 'login' },
@@ -60,7 +68,7 @@ function handle_option(key: string): void {
   switch (key) {
     case 'login': login_dialog.value = true; break;
     case 'register': new_user_dialog.value = true; break;
-    case 'profile': break;
+    case 'profile': user_dialog.value = true; break;
     case 'logout': return coco.KnowledgeBase.getInstance().logout();
   }
 }

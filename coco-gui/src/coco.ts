@@ -42,7 +42,7 @@ export namespace coco {
   export class KnowledgeBase {
 
     user_type: taxonomy.Type | null = null;
-    user: taxonomy.Item | null = null;
+    user: (taxonomy.Item & { personal_data: Record<string, any> }) | null = null;
     host: string = 'http://localhost:8080';
     auth: boolean = false;
     types: Map<string, taxonomy.Type>;
@@ -459,7 +459,9 @@ export namespace coco {
 
     private set_user(user_message: any): void {
       const user = user_message.user;
-      this.user = new taxonomy.Item(user.id, this.user_type!, user.properties, { timestamp: user.value.timestamp, data: user.value.data });
+      const personal_data = user_message.personal_data;
+      this.user = new taxonomy.Item(user.id, this.user_type!, user.properties, { timestamp: user.value.timestamp, data: user.value.data }) as taxonomy.Item & { personal_data: Record<string, any> };
+      this.user.personal_data = personal_data;
       localStorage.setItem('token', this.user.id);
     }
 
