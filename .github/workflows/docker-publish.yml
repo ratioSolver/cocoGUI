@@ -2,6 +2,7 @@ name: Publish Docker Image to Docker Hub
 
 on:
   release:
+    types: [published]
   
 jobs:
   build:
