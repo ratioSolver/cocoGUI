@@ -1,6 +1,9 @@
 name: Publish Package to npmjs
 
 on:
+  push:
+    branches:
+      - memory
   release:
     types: [published]
 
