@@ -28,6 +28,10 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
+      - name: Preview package contents
+        run: npm pack
+      - name: Inspect package
+        run: tar -tvf coco-gui-*.tgz
       - name: Publish
         run: npm publish --provenance --access public
         env:
