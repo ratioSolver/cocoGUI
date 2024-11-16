@@ -6,6 +6,25 @@ services:
     networks:
       - coco-net
 
+  coco-duckling:
+    container_name: coco-duckling
+    image: rasa/duckling
+    restart: always
+    networks:
+      - coco-net
+
+  coco-transformer:
+    container_name: coco-transformer
+    image: rasa/rasa:3.6.20-full
+    restart: always
+    networks:
+      - coco-net
+    volumes:
+      - ./:/app
+    command:
+      - run
+      - --enable-api
+
   coco-system:
     container_name: coco
     build:
@@ -19,6 +38,7 @@ services:
     restart: always
     environment:
       - MONGODB_HOST=coco-db
+      - TRANSFORMER_HOST=coco-transformer      
 
 networks:
   coco-net:
