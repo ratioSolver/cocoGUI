@@ -91,6 +91,7 @@ export namespace coco {
       this.host = (ssl ? 'https' : 'http') + '://' + host + ':' + port;
       console.log('CoCo server:', this.host);
       this.auth = auth;
+      console.log('Authentication:', this.auth);
       if (this.auth) {
         const token = localStorage.getItem('token');
         if (token)
