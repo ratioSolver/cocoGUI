@@ -3,7 +3,7 @@
   "version": "0.5.3",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ratioSolver/cocoGUI"
+    "url": "git+https://github.com/ratioSolver/cocoGUI.git"
   },
   "description": "Combined deductiOn and abduCtiOn (CoCo) core library",
   "type": "module",
