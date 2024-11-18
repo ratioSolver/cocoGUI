@@ -23,6 +23,7 @@ RUN cmake --build .
 RUN cmake --build . --target install
 
 # Clean up
+RUN ldconfig
 RUN rm -rf /tmp/*
 
 # Use a base image with CLIPS and MongoDB C++ driver
@@ -50,8 +51,7 @@ RUN source ~/.nvm/nvm.sh && nvm install node && nvm alias default node
 
 # Build CoCo Frontend
 WORKDIR /home/cocoGUI/coco-client
-RUN source ~/.nvm/nvm.sh && npm install
-RUN source ~/.nvm/nvm.sh && npm run build
+RUN source ~/.nvm/nvm.sh && npm install && npm run build
 
 # Clean up
 RUN rm -rf /tmp/*
