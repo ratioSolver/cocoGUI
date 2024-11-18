@@ -27,6 +27,7 @@ services:
 
   coco-system:
     container_name: coco
+    image: pstlab/coco
     build:
       context: .
     ports:
@@ -35,9 +36,12 @@ services:
       - coco-net
     depends_on:
       - coco-db
+      - coco-duckling
+      - coco-transformer
     restart: always
     environment:
       - MONGODB_HOST=coco-db
+      - MONGODB_USERS_HOST=coco-db
       - TRANSFORMER_HOST=coco-transformer      
 
 networks:
