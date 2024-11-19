@@ -44,6 +44,7 @@ export namespace coco {
     user_type: taxonomy.Type | null = null;
     user: (taxonomy.Item & { personal_data: Record<string, any> }) | null = null;
     host: string = 'http://localhost:8080';
+    socket_host: string = 'ws://localhost:8080';
     auth: boolean = false;
     types: Map<string, taxonomy.Type>;
     items: Map<string, taxonomy.Item>;
@@ -89,6 +90,7 @@ export namespace coco {
      */
     init(host: string = 'localhost', port: number = 8080, ssl: boolean = false, auth: boolean = false): void {
       this.host = (ssl ? 'https' : 'http') + '://' + host + ':' + port;
+      this.socket_host = (ssl ? 'wss' : 'ws') + '://' + host + ':' + port;
       console.log('CoCo server:', this.host);
       this.auth = auth;
       console.log('Authentication:', this.auth);
@@ -347,8 +349,8 @@ export namespace coco {
      * @param timeout The timeout value in milliseconds for reconnecting to the server if the connection is closed. Default is 5000.
      */
     connect(token: string | null = null, timeout = 5000) {
-      console.debug('Connecting to CoCo server ' + this.host + '/coco');
-      this.socket = new WebSocket(this.host + '/coco');
+      console.debug('Connecting to CoCo server ' + this.socket_host + '/coco');
+      this.socket = new WebSocket(this.socket_host + '/coco');
       this.socket.onopen = () => {
         console.debug('Connected to CoCo server');
         if (token) {
