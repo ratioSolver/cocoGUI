@@ -1,3 +1,5 @@
+import { coco } from "./coco";
+
 export namespace values {
 
     export class Rational {
@@ -198,7 +200,6 @@ export namespace values {
     }
 
     export function value_to_string(value: Value, expressive = false): string {
-        console.log(value.constructor.name);
         if (value instanceof Bool) {
             switch (value.val) {
                 case Lit.True:
@@ -225,7 +226,10 @@ export namespace values {
             } else
                 return value.val.to_number().toString();
         } else if (value instanceof String) {
-            return `'${value.val}'`;
+            if (coco.KnowledgeBase.getInstance().items.has(value.val) && coco.KnowledgeBase.getInstance().items.get(value.val)!.type.static_properties.has('name'))
+                return coco.KnowledgeBase.getInstance().items.get(value.val)!.properties.get('name');
+            else
+                return `'${value.val}'`;
         } else if (value instanceof Enum) {
             if (expressive)
                 return (value.vals.length == 1 ? value.vals[0].name : `{${value.vals.map((item: Item) => item.name).join(', ')}}`) + ` (${value.v})`;

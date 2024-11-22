@@ -349,7 +349,7 @@ export namespace solver {
 
         tick(tick_message: any): void {
             this.current_time = new values.Rational(tick_message.time.num, tick_message.time.den);
-            this.listeners.forEach(listener => listener.tick(tick_message.time));
+            this.listeners.forEach(listener => listener.tick(this.current_time));
         }
 
         starting(starting_message: any): void {
