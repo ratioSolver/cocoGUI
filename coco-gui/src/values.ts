@@ -227,7 +227,7 @@ export namespace values {
                 return value.val.to_number().toString();
         } else if (value instanceof String) {
             if (coco.KnowledgeBase.getInstance().items.has(value.val) && coco.KnowledgeBase.getInstance().items.get(value.val)!.type.static_properties.has('name'))
-                return coco.KnowledgeBase.getInstance().items.get(value.val)!.properties.get('name');
+                return coco.KnowledgeBase.getInstance().items.get(value.val)!.properties.name;
             else
                 return `'${value.val}'`;
         } else if (value instanceof Enum) {
