@@ -25,6 +25,17 @@ services:
       - run
       - --enable-api
 
+  coco-mosquitto:
+    container_name: coco-mosquitto
+    image: eclipse-mosquitto:latest
+    restart: always
+    networks:
+      - coco-net
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./tests/mosquitto:/mosquitto/config
+
   coco-system:
     container_name: coco
     image: pstlab/coco
@@ -38,6 +49,7 @@ services:
       - coco-db
       - coco-duckling
       - coco-transformer
+      - coco-mosquitto
     restart: always
     environment:
       - MONGODB_HOST=coco-db
