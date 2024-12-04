@@ -3,6 +3,7 @@ import requests
 import logging
 import json
 from pyproj import Transformer
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -45,7 +46,10 @@ def create_vehicular_sensors(db_session, db_url, coco_session, coco_url, token):
     response = coco_session.post(coco_url + '/type', headers={'Authorization': 'Bearer ' + token}, verify=False,
                                     json={'name': 'Sensore_veicolare', 'description': 'Sensore veicolare di Matera',
                                           'static_properties': {'Ubicazione': {'type': 'string'},
-                                                                'Posizione': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}}})
+                                                                'Posizione': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}},
+                                          'dynamic_properties': {'Speed': {'type': 'integer', 'min': 0, 'max': 200},
+                                                                 'Length': {'type': 'integer', 'min': 0, 'max': 10},
+                                                                 'Range': {'type': 'integer', 'min': 0, 'max': 100},}})
     if response.status_code != 200:
         logger.error(response.json())
         return
@@ -124,6 +128,17 @@ def create_vehicular_sensors(db_session, db_url, coco_session, coco_url, token):
         return
     sensor_dante = response.json()['id']
 
+    response = db_session.get(get_url(db_url, 'Veicoli', '24B3017-SP10'))
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    data = response.json()
+    with open('24B3017-SP10.json', 'w') as f:
+        json.dump(data, f)
+    for datum in data:
+        logger.info(datetime.strptime(datum[' date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z')
+        logger.info(datum)
+
 
 def create_sit(db_session, db_url, coco_session, coco_url, token):
     response = db_session.get(get_url(db_url, 'sensors', 'sensors_list'))
@@ -132,7 +147,7 @@ def create_sit(db_session, db_url, coco_session, coco_url, token):
         return
     data = response.json()
     with open('sit.json', 'w') as f:
-        json.dump(data, f)    
+        json.dump(data, f)
 
 
 def create_poi(db_session, db_url, coco_session, coco_url, token):
