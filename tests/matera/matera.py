@@ -41,6 +41,90 @@ def create_arbusti(db_session, db_url, coco_session, coco_url, token):
                                                                             'Posizione': arbusto['geometry']}})
 
 
+def create_vehicular_sensors(db_session, db_url, coco_session, coco_url, token):
+    response = coco_session.post(coco_url + '/type', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                    json={'name': 'Sensore_veicolare', 'description': 'Sensore veicolare di Matera',
+                                          'static_properties': {'Ubicazione': {'type': 'string'},
+                                                                'Posizione': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    sensor_type = response.json()['id']
+
+    response = coco_session.post(coco_url + '/item', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                 json={'type': sensor_type, 'properties': {'Ubicazione': 'Via Montescaglioso',
+                                                                           'Posizione': {'type': 'Point', 'coordinates': [16.61627, 40.65447]}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    sensor_montescaglioso = response.json()['id']
+
+    response = coco_session.post(coco_url + '/item', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                 json={'type': sensor_type, 'properties': {'Ubicazione': 'Strada Provinciale 10 Matera SUD',
+                                                                           'Posizione': {'type': 'Point', 'coordinates': [16.61066, 40.65522]}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    sensor_sp10 = response.json()['id']
+
+    response = coco_session.post(coco_url + '/item', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                 json={'type': sensor_type, 'properties': {'Ubicazione': 'Via Lucana',
+                                                                           'Posizione': {'type': 'Point', 'coordinates': [16.60611, 40.66533]}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    sensor_lucana = response.json()['id']
+
+    response = coco_session.post(coco_url + '/item', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                 json={'type': sensor_type, 'properties': {'Ubicazione': 'Intersezione Via Marconi - Via Fratelli Cervi',
+                                                                           'Posizione': {'type': 'Point', 'coordinates': [16.59963, 40.67561]}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    sensor_marconi = response.json()['id']
+    
+
+    response = coco_session.post(coco_url + '/item', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                 json={'type': sensor_type, 'properties': {'Ubicazione': 'Via Nazionale',
+                                                                           'Posizione': {'type': 'Point', 'coordinates': [16.58963, 40.67913]}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    sensor_nazionale = response.json()['id']
+
+    response = coco_session.post(coco_url + '/item', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                 json={'type': sensor_type, 'properties': {'Ubicazione': 'Via Gravina',
+                                                                           'Posizione': {'type': 'Point', 'coordinates': [16.58272, 40.68102]}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    sensor_gravina = response.json()['id']
+
+    response = coco_session.post(coco_url + '/item', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                 json={'type': sensor_type, 'properties': {'Ubicazione': 'Intersezione Via La Martella - Via Giardinelle',
+                                                                           'Posizione': {'type': 'Point', 'coordinates': [16.57702, 40.66963]}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    sensor_martella = response.json()['id']
+
+    response = coco_session.post(coco_url + '/item', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                 json={'type': sensor_type, 'properties': {'Ubicazione': 'Via Timmari',
+                                                                           'Posizione': {'type': 'Point', 'coordinates': [16.59408, 40.66108]}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    sensor_timmari = response.json()['id']
+
+    response = coco_session.post(coco_url + '/item', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                 json={'type': sensor_type, 'properties': {'Ubicazione': 'Via Dante Alighieri',
+                                                                           'Posizione': {'type': 'Point', 'coordinates': [16.59838, 40.66958]}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    sensor_dante = response.json()['id']
+
+
 def create_sit(db_session, db_url, coco_session, coco_url, token):
     response = db_session.get(get_url(db_url, 'sensors', 'sensors_list'))
     if response.status_code != 200:
@@ -96,7 +180,8 @@ def load_data(db_url, coco_url):
         return
     token = login_response.json()['token']
 
-    create_arbusti(db_session, db_url, coco_session, coco_url, token)    
+    create_arbusti(db_session, db_url, coco_session, coco_url, token)
+    create_vehicular_sensors(db_session, db_url, coco_session, coco_url, token)
     create_sit(db_session, db_url, coco_session, coco_url, token)
     create_poi(db_session, db_url, coco_session, coco_url, token)
 

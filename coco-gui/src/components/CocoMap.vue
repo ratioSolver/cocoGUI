@@ -253,7 +253,8 @@ function create_options(type: taxonomy.Type): L.GeoJSONOptions {
     onEachFeature: (feature, layer) => {
       let content = '';
       for (const [key, value] of Object.entries(feature.properties))
-        content += `<b>${key}</b>: ${value}<br>`;
+        if (key !== 'color' && key !== 'fillColor' && key !== 'fillOpacity' && key !== 'weight' && key !== 'icon' && key !== 'radius')
+          content += `<b>${key}</b>: ${value}<br>`;
       layer.bindPopup(content);
     },
     pointToLayer: (feature, latlng) => {
