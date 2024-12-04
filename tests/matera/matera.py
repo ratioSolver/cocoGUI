@@ -37,8 +37,47 @@ def create_arbusti(db_session, db_url, coco_session, coco_url, token):
     for arbusto in data[0]['features']:
         response = coco_session.post(coco_url + '/item', headers={'Authorization': 'Bearer ' + token}, verify=False,
                                  json={'type': arbusto_type, 'properties': {'Tipologia': arbusto['properties']['TIPOLOGIA'],
-                                                                                      'Ubicazione': arbusto['properties']['UBICAZIONE'],
-                                                                                      'Posizione': arbusto['geometry']}})
+                                                                            'Ubicazione': arbusto['properties']['UBICAZIONE'],
+                                                                            'Posizione': arbusto['geometry']}})
+
+
+def create_sit(db_session, db_url, coco_session, coco_url, token):
+    response = db_session.get(get_url(db_url, 'sensors', 'sensors_list'))
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    data = response.json()
+    with open('sit.json', 'w') as f:
+        json.dump(data, f)    
+
+
+def create_poi(db_session, db_url, coco_session, coco_url, token):
+    response = db_session.get(get_url(db_url, 'Grafo_Matera', 'Matera_POI'))
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    data = response.json()
+    with open('poi.json', 'w') as f:
+        json.dump(data, f)    
+
+    response = coco_session.post(coco_url + '/type', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                 json={'name': 'POI', 'description': 'Point of Interest di Matera',
+                                       'static_properties': {'Nome': {'type': 'string'},
+                                                             'Tipo': {'type': 'string'},
+                                                             'Apertura': {'type': 'string'},
+                                                             'Chiusura': {'type': 'string'},
+                                                             'Posizione': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    poi_type = response.json()['id']
+    for poi in data[0]['features']:
+        response = coco_session.post(coco_url + '/item', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                     json={'type': poi_type, 'properties': {'Nome': poi['properties']['name'],
+                                                                          'Tipo': poi['properties']['poitype'],
+                                                                          'Apertura': poi['properties']['opening'],
+                                                                          'Chiusura': poi['properties']['closing'],
+                                                                          'Posizione': {'type': 'Point', 'coordinates': [float(poi['properties']['longitude']), float(poi['properties']['latitude'])]}}})
 
 def load_data(db_url, coco_url):
     db_session = requests.Session()
@@ -57,7 +96,9 @@ def load_data(db_url, coco_url):
         return
     token = login_response.json()['token']
 
-    create_arbusti(db_session, db_url, coco_session, coco_url, token)
+    create_arbusti(db_session, db_url, coco_session, coco_url, token)    
+    create_sit(db_session, db_url, coco_session, coco_url, token)
+    create_poi(db_session, db_url, coco_session, coco_url, token)
 
 if __name__ == '__main__':
     db_url = sys.argv[1] if len(sys.argv) > 1 else 'https://matera-rest-api.na.icar.cnr.it'
