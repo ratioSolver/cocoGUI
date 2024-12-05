@@ -730,8 +730,8 @@ export namespace coco {
         return new taxonomy.BooleanProperty(name, property.default_value);
       case "integer":
         return new taxonomy.IntegerProperty(name, property.min, property.max, property.default_value);
-      case "real":
-        return new taxonomy.RealProperty(name, property.min, property.max, property.default_value);
+      case "float":
+        return new taxonomy.FloatProperty(name, property.min, property.max, property.default_value);
       case "string":
         return new taxonomy.StringProperty(name, property.default_value);
       case "symbol":

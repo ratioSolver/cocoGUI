@@ -76,7 +76,7 @@ export namespace taxonomy {
     /**
      * Represents a real property.
      */
-    export class RealProperty extends Property {
+    export class FloatProperty extends Property {
 
         min: number;
         max: number;

@@ -72,7 +72,7 @@ class ItemChart extends taxonomy.ItemListener {
     const domain_size = 1 / dynamic_props.size;
     const domain_separator = 0.05 * domain_size;
     for (const [par_name, par] of dynamic_props) {
-      if (par instanceof taxonomy.RealProperty || par instanceof taxonomy.IntegerProperty) {
+      if (par instanceof taxonomy.FloatProperty || par instanceof taxonomy.IntegerProperty) {
         if (i == 1) {
           this.y_axes.set(par_name, 'y');
           this.traces.set(par_name, [{ x: this.vals_xs, y: this.vals_ys.get(par_name), name: par_name, type: 'scatter', yaxis: this.y_axes.get(par_name) }]);
@@ -139,7 +139,7 @@ class ItemChart extends taxonomy.ItemListener {
         c_value = this.vals_ys.get(par_name)![this.vals_ys.get(par_name)!.length - 1];
       else
         c_value = undefined;
-      if (par instanceof taxonomy.RealProperty || par instanceof taxonomy.IntegerProperty)
+      if (par instanceof taxonomy.FloatProperty || par instanceof taxonomy.IntegerProperty)
         this.traces.get(par_name)![0].y.push(c_value);
       else if (par instanceof taxonomy.BooleanProperty || par instanceof taxonomy.StringProperty || par instanceof taxonomy.SymbolProperty || par instanceof taxonomy.ItemProperty) {
         if (this.traces.get(par_name)!.length > 0) // Update the end of the previous trace

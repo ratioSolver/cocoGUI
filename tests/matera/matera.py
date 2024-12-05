@@ -47,9 +47,9 @@ def create_vehicular_sensors(db_session, db_url, coco_session, coco_url, token):
                                     json={'name': 'Sensore_veicolare', 'description': 'Sensore veicolare di Matera',
                                           'static_properties': {'Ubicazione': {'type': 'string'},
                                                                 'Posizione': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}},
-                                          'dynamic_properties': {'Speed': {'type': 'integer', 'min': 0, 'max': 200},
-                                                                 'Length': {'type': 'integer', 'min': 0, 'max': 10},
-                                                                 'Range': {'type': 'integer', 'min': 0, 'max': 100},}})
+                                          'dynamic_properties': {'Speed': {'type': 'float', 'min': -200, 'max': 200},
+                                                                 'Length': {'type': 'float', 'min': -30, 'max': 30},
+                                                                 'Range': {'type': 'float', 'min': 0, 'max': 100}}})
     if response.status_code != 200:
         logger.error(response.json())
         return
@@ -132,12 +132,28 @@ def create_vehicular_sensors(db_session, db_url, coco_session, coco_url, token):
     if response.status_code != 200:
         logger.error(response.json())
         return
-    data = response.json()
+    db_data = response.json()
     with open('24B3017-SP10.json', 'w') as f:
-        json.dump(data, f)
-    for datum in data:
-        logger.info(datetime.strptime(datum[' date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z')
-        logger.info(datum)
+        json.dump(db_data, f)
+    for db_datum in db_data:
+        datum = {}
+        if (db_datum['typ'] == '001'):
+            if (db_datum.get(' speed [km/h]') is not None):
+                datum['Speed'] = float(db_datum[' speed [km/h]'].replace(',', '.').strip())
+            elif (db_datum.get('speed [km/h]') is not None):
+                datum['Speed'] = float(db_datum['speed [km/h]'].replace(',', '.').strip())
+            if (db_datum.get(' length [m]') is not None):
+                datum['Length'] = float(db_datum[' length [m]'].replace(',', '.').strip())
+            elif (db_datum.get('length [m]') is not None):
+                datum['Length'] = float(db_datum['length [m]'].replace(',', '.').strip())
+            if (db_datum.get(' range [m]') is not None):
+                datum['Range'] = float(db_datum[' range [m]'].replace(',', '.').strip())
+            elif (db_datum.get('range [m]') is not None):
+                datum['Range'] = float(db_datum['range [m]'].replace(',', '.').strip())
+            if (db_datum.get(' date and time') is not None):
+                coco_session.post(coco_url + '/data/' + sensor_sp10, headers={'Authorization': 'Bearer ' + token}, verify=False, json={'data': datum, 'timestamp': datetime.strptime(db_datum[' date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z'})
+            elif (db_datum.get('date and time') is not None):
+                coco_session.post(coco_url + '/data/' + sensor_sp10, headers={'Authorization': 'Bearer ' + token}, verify=False, json={'data': datum})
 
 
 def create_sit(db_session, db_url, coco_session, coco_url, token):

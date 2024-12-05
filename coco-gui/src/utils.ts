@@ -37,7 +37,7 @@ export function property_h(prop: taxonomy.Property, value: Record<string, any>, 
           delete value[prop.name];
       }
     });
-  } else if (prop instanceof taxonomy.RealProperty) {
+  } else if (prop instanceof taxonomy.FloatProperty) {
     return h(RealProperty, {
       par: prop, value: value[prop.name], disabled: disabled, onUpdate: (v: number | null) => {
         if (v)
@@ -90,7 +90,7 @@ export function property_v(prop: taxonomy.Property, value: any) {
     return value ? '✓' : '✗';
   } else if (prop instanceof taxonomy.IntegerProperty) {
     return value;
-  } else if (prop instanceof taxonomy.RealProperty) {
+  } else if (prop instanceof taxonomy.FloatProperty) {
     return value;
   } else if (prop instanceof taxonomy.StringProperty) {
     return value;

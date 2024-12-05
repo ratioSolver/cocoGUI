@@ -62,7 +62,7 @@ const columns: DataTableColumns<PropertyRow> = [
         return 'bool' + (row.property.default_value ? ' (' + row.property.default_value + ')' : '');
       } else if (row.property instanceof taxonomy.IntegerProperty) {
         return 'int [' + row.property.min + ', ' + row.property.max + ']' + (row.property.default_value ? ' (' + row.property.default_value + ')' : '');
-      } else if (row.property instanceof taxonomy.RealProperty) {
+      } else if (row.property instanceof taxonomy.FloatProperty) {
         return 'real [' + row.property.min + ', ' + row.property.max + ']' + (row.property.default_value ? ' (' + row.property.default_value + ')' : '');
       } else if (row.property instanceof taxonomy.StringProperty) {
         return 'string' + (row.property.default_value ? ' (' + row.property.default_value + ')' : '');
