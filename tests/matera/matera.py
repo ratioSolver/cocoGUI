@@ -42,6 +42,103 @@ def create_arbusti(db_session, db_url, coco_session, coco_url, token):
                                  json={'type': arbusto_type, 'properties': {'Tipologia': arbusto['properties']['TIPOLOGIA'],
                                                                             'Ubicazione': arbusto['properties']['UBICAZIONE'],
                                                                             'Posizione': arbusto['geometry']}})
+        if response.status_code != 200:
+            logger.error(response.json())
+            return
+
+def create_ludic_tools(coco_session, coco_url, token):
+    response = coco_session.post(coco_url + '/type', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                             json={'name': 'Attrezzatura_ludica', 'description': 'Attrezzatura ludica di Matera',
+                                      'static_properties': {'Nome': {'type': 'string'},
+                                                            'Ubicazione': {'type': 'string'},
+                                                            'Stato': {'type': 'string'},
+                                                            'Posizione': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    ludic_tool_type = response.json()['id']
+
+    with open('Attrezzature_Ludiche_PdV.geojson', 'r') as f:
+        data = json.load(f)
+        for ludic_tool in tqdm(data['features']):
+            response = coco_session.post(coco_url + '/item', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                     json={'type': ludic_tool_type, 'properties': {'Nome': ludic_tool['properties']['VIA'],
+                                                                                'Ubicazione': ludic_tool['properties']['LUOGO'],
+                                                                                'Stato': ludic_tool['properties']['STATOARR'],
+                                                                                'Posizione': ludic_tool['geometry']}})
+            if response.status_code != 200:
+                logger.error(response.json())
+                return
+
+
+def create_TPL_stops(coco_session, coco_url, token):
+    response = coco_session.post(coco_url + '/type', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                             json={'name': 'Fermata_TPL', 'description': 'Fermata TPL di Matera',
+                                   'static_properties': {'Nome': {'type': 'string'},
+                                                         'Ubicazione': {'type': 'string'},
+                                                         'Posizione': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    tpl_stop_type = response.json()['id']
+
+    with open('Fermate_TPL.geojson', 'r') as f:
+        data = json.load(f)
+        for tpl_stop in tqdm(data['features']):
+            response = coco_session.post(coco_url + '/item', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                     json={'type': tpl_stop_type, 'properties': {'Nome': tpl_stop['properties']['NOME'],
+                                                                            'Ubicazione': tpl_stop['properties']['INDIRIZZO'],
+                                                                            'Posizione': tpl_stop['geometry']}})
+            if response.status_code != 200:
+                logger.error(response.json())
+                return
+
+
+def create_churches(coco_session, coco_url, token):
+    response = coco_session.post(coco_url + '/type', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                             json={'name': 'Chiesa', 'description': 'Chiesa di Matera',
+                                   'static_properties': {'Nome': {'type': 'string'},
+                                                         'Ubicazione': {'type': 'string'},
+                                                         'Link': {'type': 'string'},
+                                                         'Posizione': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    church_type = response.json()['id']
+
+    with open('Chiese.geojson', 'r') as f:
+        data = json.load(f)
+        for church in tqdm(data['features']):
+            response = coco_session.post(coco_url + '/item', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                     json={'type': church_type, 'properties': {'Nome': church['properties']['name'],
+                                                                            'Ubicazione': church['properties']['UBICAZIONE'],
+                                                                            'Link': church['properties']['LINK_Webso'],
+                                                                            'Posizione': church['geometry']}})
+            if response.status_code != 200:
+                logger.error(response.json())
+                return
+
+    response = coco_session.post(coco_url + '/type', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                             json={'name': 'Chiesa_rupestre', 'description': 'Chiesa rupestre di Matera', 'parents': [church_type],
+                                   'static_properties': {'Anteprima': {'type': 'string'},
+                                                         'Accessibilita': {'type': 'string'}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    cave_church_type = response.json()['id']
+
+    with open('Chiese_Rupestri.geojson', 'r') as f:
+        data = json.load(f)
+        for cave_church in tqdm(data['features']):
+            response = coco_session.post(coco_url + '/item', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                     json={'type': cave_church_type, 'properties': {'Nome': cave_church['properties']['Name'],
+                                                                                    'Link': cave_church['properties']['Link'],
+                                                                                    'Anteprima': cave_church['properties']['Anteprima'],
+                                                                                    'Accessibilita': cave_church['properties']['accessibil'],
+                                                                                    'Posizione': cave_church['geometry']}})
+            if response.status_code != 200:
+                logger.error(response.json())
+                return
 
 
 def create_vehicular_sensors(db_session, db_url, coco_session, coco_url, token):
@@ -379,6 +476,41 @@ def create_poi(db_session, db_url, coco_session, coco_url, token):
                                                                           'Chiusura': poi['properties']['closing'],
                                                                           'Posizione': {'type': 'Point', 'coordinates': [float(poi['properties']['longitude']), float(poi['properties']['latitude'])]}}})
 
+
+def create_street_lights(db_session, db_url, coco_session, coco_url, token):
+    response = coco_session.post(coco_url + '/type', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                    json={'name': 'Lampione', 'description': 'Lampione di Matera',
+                                          'static_properties': {'Ubicazione': {'type': 'string'},
+                                                                'Posizione': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}},
+                                          'dynamic_properties': {'Potenza': {'type': 'float', 'min': 0, 'max': 5},
+                                                                 'Voltaggio': {'type': 'float', 'min': 0, 'max': 300},
+                                                                 'Corrente': {'type': 'float', 'min': 0, 'max': 20},
+                                                                 'Temperatura': {'type': 'float', 'min': -20, 'max': 100}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    
+    lampione_type = response.json()['id']
+
+    response = coco_session.post(coco_url + '/item', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                 json={'type': lampione_type, 'properties': {'Ubicazione': 'Via Montescaglioso',
+                                                                           'Posizione': {'type': 'Point', 'coordinates': [16.61627, 40.65447]}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    lampione_montescaglioso = response.json()['id']
+    logger.info('Lampione Montescaglioso: ' + lampione_montescaglioso)
+
+    response = coco_session.post(coco_url + '/item', headers={'Authorization': 'Bearer ' + token}, verify=False,
+                                 json={'type': lampione_type, 'properties': {'Ubicazione': 'Strada Provinciale 10 Matera SUD',
+                                                                           'Posizione': {'type': 'Point', 'coordinates': [16.61066, 40.65522]}}})
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    lampione_sp10 = response.json()['id']
+    logger.info('Lampione SP10: ' + lampione_sp10)
+
+
 def load_data(db_url, coco_url):
     db_session = requests.Session()
     coco_session = requests.Session()
@@ -397,9 +529,13 @@ def load_data(db_url, coco_url):
     token = login_response.json()['token']
 
     create_arbusti(db_session, db_url, coco_session, coco_url, token)
-    create_vehicular_sensors(db_session, db_url, coco_session, coco_url, token)
-    create_sit(db_session, db_url, coco_session, coco_url, token)
+    create_ludic_tools(coco_session, coco_url, token)
+    create_TPL_stops(coco_session, coco_url, token)
+    create_churches(coco_session, coco_url, token)
+    #create_vehicular_sensors(db_session, db_url, coco_session, coco_url, token)
+    #create_sit(db_session, db_url, coco_session, coco_url, token)
     create_poi(db_session, db_url, coco_session, coco_url, token)
+    create_street_lights(db_session, db_url, coco_session, coco_url, token)
 
 if __name__ == '__main__':
     db_url = sys.argv[1] if len(sys.argv) > 1 else 'https://matera-rest-api.na.icar.cnr.it'
