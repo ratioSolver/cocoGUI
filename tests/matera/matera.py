@@ -438,16 +438,6 @@ def create_vehicular_sensors(db_session, db_url, coco_session, coco_url, token):
                 collection.insert_one({'item_id': sensor_dante, 'timestamp': datetime.strptime(db_datum['date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
 
 
-def create_sit(db_session, db_url, coco_session, coco_url, token):
-    response = db_session.get(get_url(db_url, 'sensors', 'sensors_list'))
-    if response.status_code != 200:
-        logger.error(response.json())
-        return
-    data = response.json()
-    with open('sit.json', 'w') as f:
-        json.dump(data, f)
-
-
 def create_poi(db_session, db_url, coco_session, coco_url, token):
     response = db_session.get(get_url(db_url, 'Grafo_Matera', 'Matera_POI'))
     if response.status_code != 200:
@@ -532,8 +522,7 @@ def load_data(db_url, coco_url):
     create_ludic_tools(coco_session, coco_url, token)
     create_TPL_stops(coco_session, coco_url, token)
     create_churches(coco_session, coco_url, token)
-    #create_vehicular_sensors(db_session, db_url, coco_session, coco_url, token)
-    #create_sit(db_session, db_url, coco_session, coco_url, token)
+    create_vehicular_sensors(db_session, db_url, coco_session, coco_url, token)
     create_poi(db_session, db_url, coco_session, coco_url, token)
     create_street_lights(db_session, db_url, coco_session, coco_url, token)
 
