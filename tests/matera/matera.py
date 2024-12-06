@@ -2,8 +2,10 @@ import sys
 import requests
 import logging
 import json
+from tqdm import tqdm
 from pyproj import Transformer
 from datetime import datetime
+from pymongo import MongoClient
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -48,8 +50,7 @@ def create_vehicular_sensors(db_session, db_url, coco_session, coco_url, token):
                                           'static_properties': {'Ubicazione': {'type': 'string'},
                                                                 'Posizione': {'type': 'json', 'schema': {'$ref': '#/components/schemas/geometry'}}},
                                           'dynamic_properties': {'Speed': {'type': 'float', 'min': -200, 'max': 200},
-                                                                 'Length': {'type': 'float', 'min': -30, 'max': 30},
-                                                                 'Range': {'type': 'float', 'min': 0, 'max': 100}}})
+                                                                 'Length': {'type': 'float', 'min': -30, 'max': 30}}})
     if response.status_code != 200:
         logger.error(response.json())
         return
@@ -128,14 +129,18 @@ def create_vehicular_sensors(db_session, db_url, coco_session, coco_url, token):
         return
     sensor_dante = response.json()['id']
 
-    response = db_session.get(get_url(db_url, 'Veicoli', '24B3017-SP10'))
+    mongo_client = MongoClient('localhost', 27017)
+    db = mongo_client['CoCo']
+    collection = db['item_data']
+
+    response = db_session.get(get_url(db_url, 'Veicoli', '24B3018-Montescaglioso'))
     if response.status_code != 200:
         logger.error(response.json())
         return
     db_data = response.json()
-    with open('24B3017-SP10.json', 'w') as f:
+    with open('24B3018-Montescaglioso.json', 'w') as f:
         json.dump(db_data, f)
-    for db_datum in db_data:
+    for db_datum in tqdm(db_data):
         datum = {}
         if (db_datum['typ'] == '001'):
             if (db_datum.get(' speed [km/h]') is not None):
@@ -146,14 +151,194 @@ def create_vehicular_sensors(db_session, db_url, coco_session, coco_url, token):
                 datum['Length'] = float(db_datum[' length [m]'].replace(',', '.').strip())
             elif (db_datum.get('length [m]') is not None):
                 datum['Length'] = float(db_datum['length [m]'].replace(',', '.').strip())
-            if (db_datum.get(' range [m]') is not None):
-                datum['Range'] = float(db_datum[' range [m]'].replace(',', '.').strip())
-            elif (db_datum.get('range [m]') is not None):
-                datum['Range'] = float(db_datum['range [m]'].replace(',', '.').strip())
             if (db_datum.get(' date and time') is not None):
-                coco_session.post(coco_url + '/data/' + sensor_sp10, headers={'Authorization': 'Bearer ' + token}, verify=False, json={'data': datum, 'timestamp': datetime.strptime(db_datum[' date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z'})
+                collection.insert_one({'item_id': sensor_montescaglioso, 'timestamp': datetime.strptime(db_datum[' date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
             elif (db_datum.get('date and time') is not None):
-                coco_session.post(coco_url + '/data/' + sensor_sp10, headers={'Authorization': 'Bearer ' + token}, verify=False, json={'data': datum})
+                collection.insert_one({'item_id': sensor_montescaglioso, 'timestamp': datetime.strptime(db_datum['date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
+
+    response = db_session.get(get_url(db_url, 'Veicoli', '24B3017-SP10'))
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    db_data = response.json()
+    with open('24B3017-SP10.json', 'w') as f:
+        json.dump(db_data, f)
+    for db_datum in tqdm(db_data):
+        datum = {}
+        if (db_datum['typ'] == '001'):
+            if (db_datum.get(' speed [km/h]') is not None):
+                datum['Speed'] = float(db_datum[' speed [km/h]'].replace(',', '.').strip())
+            elif (db_datum.get('speed [km/h]') is not None):
+                datum['Speed'] = float(db_datum['speed [km/h]'].replace(',', '.').strip())
+            if (db_datum.get(' length [m]') is not None):
+                datum['Length'] = float(db_datum[' length [m]'].replace(',', '.').strip())
+            elif (db_datum.get('length [m]') is not None):
+                datum['Length'] = float(db_datum['length [m]'].replace(',', '.').strip())
+            if (db_datum.get(' date and time') is not None):
+                collection.insert_one({'item_id': sensor_sp10, 'timestamp': datetime.strptime(db_datum[' date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
+            elif (db_datum.get('date and time') is not None):
+                collection.insert_one({'item_id': sensor_sp10, 'timestamp': datetime.strptime(db_datum['date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
+
+    # response = db_session.get(get_url(db_url, 'Veicoli', '24B3019-Lucana'))
+    # if response.status_code != 200:
+    #     logger.error(response.json())
+    #     return
+    # db_data = response.json()
+    # with open('24B3019-Lucana.json', 'w') as f:
+    #     json.dump(db_data, f)
+    # for db_datum in tqdm(db_data):
+    #     datum = {}
+    #     if (db_datum['typ'] == '001'):
+    #         if (db_datum.get(' speed [km/h]') is not None):
+    #             datum['Speed'] = float(db_datum[' speed [km/h]'].replace(',', '.').strip())
+    #         elif (db_datum.get('speed [km/h]') is not None):
+    #             datum['Speed'] = float(db_datum['speed [km/h]'].replace(',', '.').strip())
+    #         if (db_datum.get(' length [m]') is not None):
+    #             datum['Length'] = float(db_datum[' length [m]'].replace(',', '.').strip())
+    #         elif (db_datum.get('length [m]') is not None):
+    #             datum['Length'] = float(db_datum['length [m]'].replace(',', '.').strip())
+    #         if (db_datum.get(' date and time') is not None):
+    #             collection.insert_one({'item_id': sensor_lucana, 'timestamp': datetime.strptime(db_datum[' date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
+    #         elif (db_datum.get('date and time') is not None):
+    #             collection.insert_one({'item_id': sensor_lucana, 'timestamp': datetime.strptime(db_datum['date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
+
+    response = db_session.get(get_url(db_url, 'Veicoli', '24B3025-Marconi'))
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    db_data = response.json()
+    with open('24B3025-Marconi.json', 'w') as f:
+        json.dump(db_data, f)
+    for db_datum in tqdm(db_data):
+        datum = {}
+        if (db_datum['typ'] == '001'):
+            if (db_datum.get(' speed [km/h]') is not None):
+                datum['Speed'] = float(db_datum[' speed [km/h]'].replace(',', '.').strip())
+            elif (db_datum.get('speed [km/h]') is not None):
+                datum['Speed'] = float(db_datum['speed [km/h]'].replace(',', '.').strip())
+            if (db_datum.get(' length [m]') is not None):
+                datum['Length'] = float(db_datum[' length [m]'].replace(',', '.').strip())
+            elif (db_datum.get('length [m]') is not None):
+                datum['Length'] = float(db_datum['length [m]'].replace(',', '.').strip())
+            if (db_datum.get(' date and time') is not None):
+                collection.insert_one({'item_id': sensor_marconi, 'timestamp': datetime.strptime(db_datum[' date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
+            elif (db_datum.get('date and time') is not None):
+                collection.insert_one({'item_id': sensor_marconi, 'timestamp': datetime.strptime(db_datum['date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
+
+    response = db_session.get(get_url(db_url, 'Veicoli', '24B3024-Nazionale'))
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    db_data = response.json()
+    with open('24B3024-Nazionale.json', 'w') as f:
+        json.dump(db_data, f)
+    for db_datum in tqdm(db_data):
+        datum = {}
+        if (db_datum['typ'] == '001'):
+            if (db_datum.get(' speed [km/h]') is not None):
+                datum['Speed'] = float(db_datum[' speed [km/h]'].replace(',', '.').strip())
+            elif (db_datum.get('speed [km/h]') is not None):
+                datum['Speed'] = float(db_datum['speed [km/h]'].replace(',', '.').strip())
+            if (db_datum.get(' length [m]') is not None):
+                datum['Length'] = float(db_datum[' length [m]'].replace(',', '.').strip())
+            elif (db_datum.get('length [m]') is not None):
+                datum['Length'] = float(db_datum['length [m]'].replace(',', '.').strip())
+            if (db_datum.get(' date and time') is not None):
+                collection.insert_one({'item_id': sensor_nazionale, 'timestamp': datetime.strptime(db_datum[' date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
+            elif (db_datum.get('date and time') is not None):
+                collection.insert_one({'item_id': sensor_nazionale, 'timestamp': datetime.strptime(db_datum['date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
+
+    response = db_session.get(get_url(db_url, 'Veicoli', '24B3021-Gravina'))
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    db_data = response.json()
+    with open('24B3021-Gravina.json', 'w') as f:
+        json.dump(db_data, f)
+    for db_datum in tqdm(db_data):
+        datum = {}
+        if (db_datum['typ'] == '001'):
+            if (db_datum.get(' speed [km/h]') is not None):
+                datum['Speed'] = float(db_datum[' speed [km/h]'].replace(',', '.').strip())
+            elif (db_datum.get('speed [km/h]') is not None):
+                datum['Speed'] = float(db_datum['speed [km/h]'].replace(',', '.').strip())
+            if (db_datum.get(' length [m]') is not None):
+                datum['Length'] = float(db_datum[' length [m]'].replace(',', '.').strip())
+            elif (db_datum.get('length [m]') is not None):
+                datum['Length'] = float(db_datum['length [m]'].replace(',', '.').strip())
+            if (db_datum.get(' date and time') is not None):
+                collection.insert_one({'item_id': sensor_gravina, 'timestamp': datetime.strptime(db_datum[' date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
+            elif (db_datum.get('date and time') is not None):
+                collection.insert_one({'item_id': sensor_gravina, 'timestamp': datetime.strptime(db_datum['date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
+
+    response = db_session.get(get_url(db_url, 'Veicoli', '24B3023-Martella'))
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    db_data = response.json()
+    with open('24B3023-Martella.json', 'w') as f:
+        json.dump(db_data, f)
+    for db_datum in tqdm(db_data):
+        datum = {}
+        if (db_datum['typ'] == '001'):
+            if (db_datum.get(' speed [km/h]') is not None):
+                datum['Speed'] = float(db_datum[' speed [km/h]'].replace(',', '.').strip())
+            elif (db_datum.get('speed [km/h]') is not None):
+                datum['Speed'] = float(db_datum['speed [km/h]'].replace(',', '.').strip())
+            if (db_datum.get(' length [m]') is not None):
+                datum['Length'] = float(db_datum[' length [m]'].replace(',', '.').strip())
+            elif (db_datum.get('length [m]') is not None):
+                datum['Length'] = float(db_datum['length [m]'].replace(',', '.').strip())
+            if (db_datum.get(' date and time') is not None):
+                collection.insert_one({'item_id': sensor_martella, 'timestamp': datetime.strptime(db_datum[' date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
+            elif (db_datum.get('date and time') is not None):
+                collection.insert_one({'item_id': sensor_martella, 'timestamp': datetime.strptime(db_datum['date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
+
+    response = db_session.get(get_url(db_url, 'Veicoli', '24B3020-Timmari'))
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    db_data = response.json()
+    with open('24B3020-Timmari.json', 'w') as f:
+        json.dump(db_data, f)
+    for db_datum in tqdm(db_data):
+        datum = {}
+        if (db_datum['typ'] == '001'):
+            if (db_datum.get(' speed [km/h]') is not None):
+                datum['Speed'] = float(db_datum[' speed [km/h]'].replace(',', '.').strip())
+            elif (db_datum.get('speed [km/h]') is not None):
+                datum['Speed'] = float(db_datum['speed [km/h]'].replace(',', '.').strip())
+            if (db_datum.get(' length [m]') is not None):
+                datum['Length'] = float(db_datum[' length [m]'].replace(',', '.').strip())
+            elif (db_datum.get('length [m]') is not None):
+                datum['Length'] = float(db_datum['length [m]'].replace(',', '.').strip())
+            if (db_datum.get(' date and time') is not None):
+                collection.insert_one({'item_id': sensor_timmari, 'timestamp': datetime.strptime(db_datum[' date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
+            elif (db_datum.get('date and time') is not None):
+                collection.insert_one({'item_id': sensor_timmari, 'timestamp': datetime.strptime(db_datum['date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
+
+    response = db_session.get(get_url(db_url, 'Veicoli', '24B3022-Dante'))
+    if response.status_code != 200:
+        logger.error(response.json())
+        return
+    db_data = response.json()
+    with open('24B3022-Dante.json', 'w') as f:
+        json.dump(db_data, f)
+    for db_datum in tqdm(db_data):
+        datum = {}
+        if (db_datum['typ'] == '001'):
+            if (db_datum.get(' speed [km/h]') is not None):
+                datum['Speed'] = float(db_datum[' speed [km/h]'].replace(',', '.').strip())
+            elif (db_datum.get('speed [km/h]') is not None):
+                datum['Speed'] = float(db_datum['speed [km/h]'].replace(',', '.').strip())
+            if (db_datum.get(' length [m]') is not None):
+                datum['Length'] = float(db_datum[' length [m]'].replace(',', '.').strip())
+            elif (db_datum.get('length [m]') is not None):
+                datum['Length'] = float(db_datum['length [m]'].replace(',', '.').strip())
+            if (db_datum.get(' date and time') is not None):
+                collection.insert_one({'item_id': sensor_dante, 'timestamp': datetime.strptime(db_datum[' date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
+            elif (db_datum.get('date and time') is not None):
+                collection.insert_one({'item_id': sensor_dante, 'timestamp': datetime.strptime(db_datum['date and time'], " %Y/%m/%d %H:%M:%S,%f").isoformat() + 'Z', 'data': datum})
 
 
 def create_sit(db_session, db_url, coco_session, coco_url, token):
