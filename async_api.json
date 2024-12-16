@@ -129,6 +129,7 @@
                 "payload": {
                     "properties": {
                         "id": {
+                            "description": "The ID of the solver",
                             "type": "integer"
                         },
                         "type": {
@@ -318,15 +319,8 @@
             "new_data_message": {
                 "payload": {
                     "properties": {
-                        "data": {
-                            "type": "object"
-                        },
                         "item_id": {
                             "format": "uuid",
-                            "type": "string"
-                        },
-                        "timestamp": {
-                            "format": "date-time",
                             "type": "string"
                         },
                         "type": {
@@ -334,6 +328,9 @@
                                 "new_data"
                             ],
                             "type": "string"
+                        },
+                        "value": {
+                            "$ref": "#/components/schemas/data"
                         }
                     },
                     "type": "object"
@@ -391,9 +388,11 @@
                 "payload": {
                     "properties": {
                         "id": {
+                            "description": "The ID of the solver",
                             "type": "integer"
                         },
                         "name": {
+                            "description": "The name of the solver",
                             "type": "string"
                         },
                         "state": {
@@ -514,6 +513,7 @@
                 "payload": {
                     "properties": {
                         "id": {
+                            "description": "The ID of the solver",
                             "type": "integer"
                         },
                         "state": {
@@ -557,6 +557,7 @@
                             "type": "array"
                         },
                         "id": {
+                            "description": "The ID of the solver",
                             "type": "integer"
                         },
                         "time": {
@@ -599,7 +600,8 @@
             "tick_message": {
                 "payload": {
                     "properties": {
-                        "solver_id": {
+                        "id": {
+                            "description": "The ID of the solver",
                             "type": "integer"
                         },
                         "time": {
@@ -692,6 +694,38 @@
                             "type": "string"
                         },
                         "updated_type": {
+                            "$ref": "#/components/schemas/coco_type"
+                        }
+                    },
+                    "type": "object"
+                }
+            },
+            "user_message": {
+                "payload": {
+                    "properties": {
+                        "type": {
+                            "enum": [
+                                "user"
+                            ],
+                            "type": "string"
+                        },
+                        "user": {
+                            "$ref": "#/components/schemas/coco_item"
+                        }
+                    },
+                    "type": "object"
+                }
+            },
+            "user_type_message": {
+                "payload": {
+                    "properties": {
+                        "type": {
+                            "enum": [
+                                "user_type"
+                            ],
+                            "type": "string"
+                        },
+                        "user_type": {
                             "$ref": "#/components/schemas/coco_type"
                         }
                     },
@@ -807,15 +841,15 @@
                         "format": "uuid",
                         "type": "string"
                     },
-                    "name": {
-                        "type": "string"
-                    },
                     "properties": {
                         "type": "object"
                     },
                     "type": {
                         "format": "uuid",
                         "type": "string"
+                    },
+                    "value": {
+                        "$ref": "#/components/schemas/data"
                     }
                 },
                 "type": "object"
@@ -864,6 +898,9 @@
                             "type": "string"
                         },
                         "type": "array"
+                    },
+                    "properties": {
+                        "type": "object"
                     },
                     "static_properties": {
                         "additionalProperties": {
@@ -1393,9 +1430,11 @@
             "solver": {
                 "properties": {
                     "id": {
+                        "description": "The ID of the solver",
                         "type": "integer"
                     },
                     "name": {
+                        "description": "The name of the solver",
                         "type": "string"
                     },
                     "state": {
@@ -1688,6 +1727,12 @@
                     }
                 ]
             }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "scheme": "bearer",
+                "type": "http"
+            }
         }
     },
     "info": {
@@ -1697,9 +1742,9 @@
     },
     "servers": {
         "coco": {
-            "host": "0.0.0.0:8081",
+            "host": "0.0.0.0:8080",
             "pathname": "/coco",
-            "protocol": "ws"
+            "protocol": "wss"
         }
     }
 }
