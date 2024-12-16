@@ -388,7 +388,7 @@ export namespace coco {
       const headers: { 'content-type': string, 'authorization'?: string } = { 'content-type': 'application/json' };
       if (this.auth && this.user)
         headers['authorization'] = 'Bearer ' + this.user.id;
-      fetch(this.host + '/data/' + item.id, { method: 'POST', headers: headers, body: JSON.stringify(data) }).then(res => {
+      fetch(this.host + '/data/' + item.id, { method: 'POST', headers: headers, body: JSON.stringify({ 'data': data }) }).then(res => {
         if (!res.ok)
           res.json().then(data => this.error(data.message)).catch(err => console.error(err));
       });

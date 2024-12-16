@@ -1,6 +1,6 @@
 {
   "name": "coco-gui",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ratioSolver/cocoGUI.git"
