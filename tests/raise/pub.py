@@ -96,7 +96,7 @@ def start_publishing(url, type_name, interval=.1):
     while True:
         for item in items:
             value = get_random_value(session, url, token, dynamic_properties)
-            response = session.post(url + '/data/' + item['id'], headers={'Authorization': 'Bearer ' + token}, verify=False, json=value)
+            response = session.post(url + '/data/' + item['id'], headers={'Authorization': 'Bearer ' + token}, verify=False, json={'data': value})
             if response.status_code != 204:
                 logger.error(response.json())
                 return
